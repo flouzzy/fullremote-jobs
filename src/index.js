@@ -8,6 +8,7 @@ import { scrapeAllJobs } from "./scraper.js";
 import { FALLBACK_JOBS } from "./fallback-data.js";
 import { renderHTML } from "./ui.js";
 import { initDb, saveJobsToDb, queryJobsFromDb, getDbStats } from "./db.js";
+import { renderJobDetailPage, generateRssFeed, generateSitemap } from "./seo.js";
 
 // Cache mémoire local en runtime Worker
 let cachedJobs = null;
@@ -45,7 +46,6 @@ async function getOrFetchJobs(env) {
       lastIngestionTime = new Date().toISOString();
 
       if (env && env.DB) {
-        // Sauvegarde asynchrone dans D1
         saveJobsToDb(env.DB, liveJobs).catch(console.error);
       }
 
@@ -63,11 +63,12 @@ async function getOrFetchJobs(env) {
 
 export default {
   /**
-   * Point d'entrée HTTP (Requêtes web & API)
+   * Point d'entrée HTTP (Requêtes web, SEO, RSS & API)
    */
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const pathname = url.pathname;
+    const siteUrl = `${url.protocol}//${url.host}`;
 
     // Headers standards de sécurité et CORS
     const corsHeaders = {
@@ -87,68 +88,90 @@ export default {
       });
     }
 
-    // 2. Route API : /api/jobs
+    // 2. Route Flux RSS 2.0 : /rss ou /feed
+    if (pathname === "/rss" || pathname === "/feed" || pathname === "/feed.xml") {
+      const { jobs } = await getOrFetchJobs(env);
+      const xml = generateRssFeed(jobs, siteUrl);
+      return new Response(xml, {
+        headers: {
+          "Content-Type": "application/rss+xml; charset=utf-8",
+          "Cache-Control": "public, max-age=600, s-maxage=1800",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 3. Route Sitemap XML : /sitemap.xml
+    if (pathname === "/sitemap.xml") {
+      const { jobs } = await getOrFetchJobs(env);
+      const xml = generateSitemap(jobs, siteUrl);
+      return new Response(xml, {
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=1800, s-maxage=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 4. Route SEO fiche dédiée : /jobs/:id
+    if (pathname.startsWith("/jobs/")) {
+      const jobId = decodeURIComponent(pathname.replace("/jobs/", "")).trim();
+      const { jobs } = await getOrFetchJobs(env);
+      const job = jobs.find((j) => j.id === jobId);
+
+      if (job) {
+        const html = renderJobDetailPage(job, { siteUrl });
+        return new Response(html, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "public, max-age=600, s-maxage=3600",
+            ...corsHeaders,
+          },
+        });
+      }
+      // Redirection si l'offre n'existe plus
+      return Response.redirect(new URL("/", request.url).toString(), 302);
+    }
+
+    // 5. Route API : /api/jobs
     if (pathname === "/api/jobs") {
       const regionParam = url.searchParams.get("region") || "all";
       const contractParam = url.searchParams.get("contract") || "all";
       const langParam = url.searchParams.get("lang") || "all";
       const catParam = url.searchParams.get("category") || "all";
+      const minSalaryParam = parseInt(url.searchParams.get("min_salary") || "0", 10);
       const qParam = (url.searchParams.get("q") || "").toLowerCase().trim();
-      const hasSalary = url.searchParams.get("salary") === "1" || url.searchParams.get("salary") === "true";
       const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
       const limit = Math.min(150, Math.max(1, parseInt(url.searchParams.get("limit") || "60", 10)));
       const offset = (page - 1) * limit;
 
-      let jobs = [];
-      let totalUnfiltered = 0;
-      let updatedAt = new Date().toISOString();
+      const dataset = await getOrFetchJobs(env);
+      const updatedAt = dataset.updated_at;
+      let filtered = [...dataset.jobs];
 
-      if (env && env.DB) {
-        try {
-          await initDb(env.DB);
-          const dbJobs = await queryJobsFromDb(env.DB, {
-            region: regionParam,
-            contract: contractParam,
-            category: catParam,
-            language: langParam,
-            search: qParam,
-            hasSalary: hasSalary,
-            limit: limit,
-            offset: offset,
-          });
-          if (dbJobs) {
-            jobs = dbJobs;
-            const stats = await getDbStats(env.DB);
-            totalUnfiltered = stats ? stats.total : jobs.length;
-          }
-        } catch (e) {
-          console.warn("API D1 fallback to memory:", e);
-        }
+      if (regionParam !== "all") filtered = filtered.filter((j) => j.regionId === regionParam);
+      if (contractParam !== "all") filtered = filtered.filter((j) => (j.contractTypeId || "cdi_fulltime") === contractParam);
+      if (langParam !== "all") filtered = filtered.filter((j) => j.language === langParam);
+      if (catParam !== "all") filtered = filtered.filter((j) => j.categoryId === catParam);
+      if (minSalaryParam > 0) {
+        filtered = filtered.filter((j) => {
+          const maxS = Math.max(j.salary_max_eur || 0, j.salary_max_usd || 0, j.salary_min_eur || 0, j.salary_min_usd || 0);
+          return maxS >= minSalaryParam;
+        });
+      }
+      if (qParam) {
+        filtered = filtered.filter(
+          (j) =>
+            j.title.toLowerCase().includes(qParam) ||
+            j.company.toLowerCase().includes(qParam) ||
+            (j.contractType && j.contractType.toLowerCase().includes(qParam)) ||
+            (j.tags && j.tags.some((t) => t.toLowerCase().includes(qParam)))
+        );
       }
 
-      if (jobs.length === 0) {
-        const dataset = await getOrFetchJobs(env);
-        updatedAt = dataset.updated_at;
-        let filtered = [...dataset.jobs];
-
-        if (regionParam !== "all") filtered = filtered.filter((j) => j.regionId === regionParam);
-        if (contractParam !== "all") filtered = filtered.filter((j) => (j.contractTypeId || "cdi_fulltime") === contractParam);
-        if (langParam !== "all") filtered = filtered.filter((j) => j.language === langParam);
-        if (catParam !== "all") filtered = filtered.filter((j) => j.categoryId === catParam);
-        if (hasSalary) filtered = filtered.filter((j) => j.salary && j.salary.trim() !== "");
-        if (qParam) {
-          filtered = filtered.filter(
-            (j) =>
-              j.title.toLowerCase().includes(qParam) ||
-              j.company.toLowerCase().includes(qParam) ||
-              (j.contractType && j.contractType.toLowerCase().includes(qParam)) ||
-              (j.tags && j.tags.some((t) => t.toLowerCase().includes(qParam)))
-          );
-        }
-
-        totalUnfiltered = dataset.jobs.length;
-        jobs = filtered.slice(offset, offset + limit);
-      }
+      const totalUnfiltered = dataset.jobs.length;
+      const paginatedJobs = filtered.slice(offset, offset + limit);
 
       return new Response(
         JSON.stringify(
@@ -156,7 +179,8 @@ export default {
             success: true,
             page: page,
             limit: limit,
-            count: jobs.length,
+            count: paginatedJobs.length,
+            total_matching: filtered.length,
             total_unfiltered: totalUnfiltered,
             updated_at: updatedAt,
             filters: {
@@ -164,10 +188,10 @@ export default {
               contract: contractParam,
               language: langParam,
               category: catParam,
+              min_salary: minSalaryParam > 0 ? minSalaryParam : null,
               search: qParam || null,
-              hasSalary: hasSalary,
             },
-            jobs: jobs,
+            jobs: paginatedJobs,
           },
           null,
           2
@@ -182,7 +206,7 @@ export default {
       );
     }
 
-    // 3. Route API Stats : /api/stats
+    // 6. Route API Stats : /api/stats
     if (pathname === "/api/stats") {
       let stats = null;
       if (env && env.DB) {
@@ -228,7 +252,7 @@ export default {
       );
     }
 
-    // 4. Déclencheur manuel de rafraîchissement : /api/refresh
+    // 7. Déclencheur manuel de rafraîchissement : /api/refresh
     if (pathname === "/api/refresh") {
       const freshJobs = await scrapeAllJobs();
       cachedJobs = freshJobs;
@@ -254,7 +278,7 @@ export default {
       );
     }
 
-    // 5. Route Racine (/) : Interface Web Responsive
+    // 8. Route Racine (/) : Interface Web Responsive
     if (pathname === "/" || pathname === "/index.html") {
       const { jobs, updated_at } = await getOrFetchJobs(env);
       const html = renderHTML(jobs, { updated_at });

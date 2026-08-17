@@ -23,6 +23,7 @@ export function renderHTML(jobs = [], meta = {}) {
   <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance, CDD ou Stage en France, Europe et Worldwide." />
   <meta property="og:url" content="https://fullremote-jobs.edounze.com" />
   <meta property="og:type" content="website" />
+  <link rel="alternate" type="application/rss+xml" title="Flux RSS FullRemote.Jobs" href="/rss" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -357,7 +358,7 @@ export function renderHTML(jobs = [], meta = {}) {
       color: white;
     }
 
-    .pill.pill-toggle.active {
+    .pill.pill-salary.active {
       background: #059669;
       border-color: #10b981;
       color: white;
@@ -544,6 +545,14 @@ export function renderHTML(jobs = [], meta = {}) {
       padding: 1px 6px;
       border-radius: 4px;
       font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tag-item:hover {
+      background: #1e293b;
+      color: #60a5fa;
+      border-color: #3b82f6;
     }
 
     .job-card-footer {
@@ -775,6 +784,9 @@ export function renderHTML(jobs = [], meta = {}) {
         <button id="navFavBtn" class="nav-btn nav-btn-fav" title="Voir mes favoris">
           <span>❤️</span> <span class="hide-mobile">Favoris</span> (<span id="favCount">0</span>)
         </button>
+        <a href="/rss" target="_blank" class="nav-btn" title="Flux RSS officiel">
+          <span>📡</span> <span class="hide-mobile">Flux RSS</span>
+        </a>
         <a href="/api/jobs" target="_blank" class="nav-btn">
           <span>⚡</span> <span class="hide-mobile">API JSON</span>
         </a>
@@ -845,7 +857,16 @@ export function renderHTML(jobs = [], meta = {}) {
           <button class="pill pill-contract" data-contract="internship">🎓 Stage / Alternance</button>
         </div>
 
-        <!-- Categories, Lang, Salary -->
+        <!-- Salary Thresholds (Normalisation € / $) -->
+        <div class="filter-pills" id="salaryFilters">
+          <button class="pill pill-salary active" data-min-salary="0">💰 Tous salaires</button>
+          <button class="pill pill-salary" data-min-salary="50000">💰 > 50k € / $</button>
+          <button class="pill pill-salary" data-min-salary="75000">💰 > 75k € / $</button>
+          <button class="pill pill-salary" data-min-salary="100000">💰 > 100k € / $</button>
+          <button class="pill pill-salary" data-min-salary="130000">💰 > 130k € / $</button>
+        </div>
+
+        <!-- Categories & Lang -->
         <div class="filter-pills" id="categoryFilters">
           <button class="pill active" data-cat="all">💼 Tous métiers</button>
           <button class="pill" data-cat="tech">💻 Tech & Dev</button>
@@ -856,7 +877,6 @@ export function renderHTML(jobs = [], meta = {}) {
           <button class="pill" data-cat="marketing_sales">📈 Marketing & Sales</button>
           <button class="pill" data-lang="fr">🇫🇷 Offres FR</button>
           <button class="pill" data-lang="en">🇬🇧 Offres EN</button>
-          <button class="pill pill-toggle" id="salaryToggleBtn">💰 Salaire affiché</button>
         </div>
       </div>
     </div>
@@ -904,7 +924,7 @@ export function renderHTML(jobs = [], meta = {}) {
     <div id="emptyState" class="empty-state" style="display:none;">
       <div class="empty-state-icon">🔎</div>
       <h3 style="color:var(--text); margin-bottom:0.5rem;">Aucune offre trouvée</h3>
-      <p>Essayez de réinitialiser vos critères de recherche.</p>
+      <p>Essayez d'élargir vos critères ou de réinitialiser les filtres.</p>
       <button id="resetFiltersBtn" class="pill active" style="margin-top:1rem; cursor:pointer;">
         Réinitialiser tous les filtres
       </button>
@@ -926,6 +946,9 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-footer">
+        <a id="modalSeoLink" href="#" target="_blank" class="btn-icon" title="Ouvrir la page dédiée" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
+          📄 Fiche SEO
+        </a>
         <button id="modalCopyBtn" class="btn-icon" title="Copier le lien" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
           🔗 Copier le lien
         </button>
@@ -944,7 +967,9 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
       <div class="footer-links">
         <a href="https://fullremote-jobs.edounze.com">fullremote-jobs.edounze.com</a>
-        <a href="/api/jobs" target="_blank">Endpoint JSON</a>
+        <a href="/rss" target="_blank">Flux RSS</a>
+        <a href="/sitemap.xml" target="_blank">Sitemap</a>
+        <a href="/api/jobs" target="_blank">API JSON</a>
         <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank">GitHub</a>
       </div>
     </div>
@@ -962,7 +987,7 @@ export function renderHTML(jobs = [], meta = {}) {
     let currentContract = 'all';
     let currentCategory = 'all';
     let currentLang = 'all';
-    let onlySalary = false;
+    let minSalary = 0;
     let onlyFavorites = false;
     let searchQuery = '';
 
@@ -986,7 +1011,6 @@ export function renderHTML(jobs = [], meta = {}) {
     const visibleCount = document.getElementById('visibleCount');
     const emptyState = document.getElementById('emptyState');
     const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-    const salaryToggleBtn = document.getElementById('salaryToggleBtn');
     const navFavBtn = document.getElementById('navFavBtn');
     const viewCardsBtn = document.getElementById('viewCardsBtn');
     const viewMdBtn = document.getElementById('viewMdBtn');
@@ -1003,6 +1027,7 @@ export function renderHTML(jobs = [], meta = {}) {
     const modalBody = document.getElementById('modalBody');
     const modalApplyBtn = document.getElementById('modalApplyBtn');
     const modalCopyBtn = document.getElementById('modalCopyBtn');
+    const modalSeoLink = document.getElementById('modalSeoLink');
 
     function showToast(msg) {
       toastMsg.textContent = msg;
@@ -1047,6 +1072,15 @@ export function renderHTML(jobs = [], meta = {}) {
     }
     window.toggleFavorite = toggleFavorite;
 
+    function filterByTag(tag) {
+      searchInput.value = tag;
+      searchQuery = tag;
+      searchClear.style.display = 'block';
+      renderJobs();
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    }
+    window.filterByTag = filterByTag;
+
     function openModal(jobId) {
       const job = JOBS_DATA.find(j => j.id === jobId);
       if (!job) return;
@@ -1066,16 +1100,18 @@ export function renderHTML(jobs = [], meta = {}) {
           <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
           \${job.salary ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\` : ''}
           <span class="badge badge-lang">\${job.language === 'fr' ? '🇫🇷 Français' : '🇬🇧 English'}</span>
-          <span class="badge badge-lang">100% Télétravail</span>
+          <span class="badge badge-lang">100% Télétravail Garanti</span>
         </div>
         <p style="margin-bottom:1.25rem;">\${escapeHtml(job.description_snippet || 'Aucun aperçu disponible.')}</p>
         <div style="font-size:0.8rem; color:var(--text-dim);">Date de publication : \${new Date(job.published_at).toLocaleString('fr-FR')}</div>
       \`;
 
       modalApplyBtn.href = job.url;
+      modalSeoLink.href = \`/jobs/\${encodeURIComponent(job.id)}\`;
       modalCopyBtn.onclick = () => {
+        const shareUrl = \`\${window.location.origin}/jobs/\${encodeURIComponent(job.id)}\`;
         if (navigator.clipboard) {
-          navigator.clipboard.writeText(job.url).then(() => showToast('Lien de candidature copié !'));
+          navigator.clipboard.writeText(shareUrl).then(() => showToast('Lien de partage copié !'));
         }
       };
 
@@ -1095,7 +1131,12 @@ export function renderHTML(jobs = [], meta = {}) {
         if (currentContract !== 'all' && (job.contractTypeId || 'cdi_fulltime') !== currentContract) return false;
         if (currentCategory !== 'all' && job.categoryId !== currentCategory) return false;
         if (currentLang !== 'all' && job.language !== currentLang) return false;
-        if (onlySalary && (!job.salary || job.salary.trim() === '')) return false;
+
+        // Salary Threshold Filter (EUR / USD)
+        if (minSalary > 0) {
+          const maxSalary = Math.max(job.salary_max_eur || 0, job.salary_max_usd || 0, job.salary_min_eur || 0, job.salary_min_usd || 0);
+          if (maxSalary < minSalary) return false;
+        }
 
         if (q) {
           const matchTitle = (job.title || '').toLowerCase().includes(q);
@@ -1138,7 +1179,7 @@ export function renderHTML(jobs = [], meta = {}) {
           : \`<span class="badge badge-lang">🇬🇧 EN</span>\`;
 
         const tagsHtml = (job.tags || [])
-          .map(t => \`<span class="tag-item">\${escapeHtml(t)}</span>\`)
+          .map(t => \`<span class="tag-item" onclick="filterByTag('\${escapeHtml(t)}')">\${escapeHtml(t)}</span>\`)
           .join('');
 
         return \`
@@ -1176,7 +1217,7 @@ export function renderHTML(jobs = [], meta = {}) {
                 <button class="btn-icon" title="Détails" onclick="openModal('\${escapeHtml(job.id)}')">
                   👁️
                 </button>
-                <button class="btn-icon" title="Copier le lien" onclick="copyUrl('\${escapeHtml(job.url)}')">
+                <button class="btn-icon" title="Copier le lien" onclick="copyUrl('/jobs/\${encodeURIComponent(job.id)}')">
                   🔗
                 </button>
                 <a href="\${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply">
@@ -1202,9 +1243,10 @@ export function renderHTML(jobs = [], meta = {}) {
       \`).join('');
     }
 
-    window.copyUrl = function(url) {
+    window.copyUrl = function(path) {
+      const fullUrl = window.location.origin + path;
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => showToast('Lien copié dans le presse-papiers !'));
+        navigator.clipboard.writeText(fullUrl).then(() => showToast('Lien de partage copié !'));
       }
     };
 
@@ -1243,8 +1285,18 @@ export function renderHTML(jobs = [], meta = {}) {
       });
     });
 
+    // Salary Pills
+    document.querySelectorAll('#salaryFilters .pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#salaryFilters .pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        minSalary = parseInt(btn.dataset.minSalary || '0', 10);
+        renderJobs();
+      });
+    });
+
     // Category & Lang
-    document.querySelectorAll('#categoryFilters .pill:not(#salaryToggleBtn)').forEach(btn => {
+    document.querySelectorAll('#categoryFilters .pill').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.dataset.lang) {
           if (btn.classList.contains('active')) {
@@ -1264,13 +1316,6 @@ export function renderHTML(jobs = [], meta = {}) {
       });
     });
 
-    // Salary Toggle
-    salaryToggleBtn.addEventListener('click', () => {
-      onlySalary = !onlySalary;
-      salaryToggleBtn.classList.toggle('active', onlySalary);
-      renderJobs();
-    });
-
     // Favorites Nav Button
     navFavBtn.addEventListener('click', () => {
       onlyFavorites = !onlyFavorites;
@@ -1285,16 +1330,16 @@ export function renderHTML(jobs = [], meta = {}) {
       currentContract = 'all';
       currentCategory = 'all';
       currentLang = 'all';
-      onlySalary = false;
+      minSalary = 0;
       onlyFavorites = false;
       searchQuery = '';
       searchInput.value = '';
       searchClear.style.display = 'none';
-      salaryToggleBtn.classList.remove('active');
       navFavBtn.classList.remove('active');
       document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
       document.querySelector('#regionFilters .pill[data-region="all"]').classList.add('active');
       document.querySelector('#contractFilters .pill[data-contract="all"]').classList.add('active');
+      document.querySelector('#salaryFilters .pill[data-min-salary="0"]').classList.add('active');
       document.querySelector('#categoryFilters .pill[data-cat="all"]').classList.add('active');
       renderJobs();
     });

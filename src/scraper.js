@@ -1,6 +1,6 @@
 /**
  * FullRemote-Jobs - Moteur d'Ingestion & Normalisation Multi-Sources
- * Sources supportées : Remotive, Jobicy, Arbeitnow, RemoteOK, We Work Remotely, Hacker News
+ * Sources : Remotive, Jobicy, Arbeitnow, RemoteOK, We Work Remotely, Hacker News
  */
 
 const USER_AGENT = "FullRemoteJobsBot/1.0 (+https://fullremote-jobs.edounze.com; contact@edounze.com)";
@@ -23,6 +23,99 @@ export function stripHtml(html = "") {
     .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Normalisation avancée des salaires (€ et $)
+ */
+export function parseSalaryDetails(rawSalary = "") {
+  if (!rawSalary) {
+    return {
+      raw: "",
+      min_eur: 0,
+      max_eur: 0,
+      min_usd: 0,
+      max_usd: 0,
+      currency: "EUR",
+    };
+  }
+
+  const clean = rawSalary.replace(/\s+/g, " ").trim();
+  const isHourly = /\b(hour|hr|heure|h|tjm|jour|day)\b/i.test(clean);
+  const isEur = /€|\beur\b/i.test(clean);
+  const isUsd = /\$|\busd\b/i.test(clean);
+  const isGbp = /£|\bgbp\b/i.test(clean);
+
+  // Extraction des montants numériques
+  const numbers = (clean.match(/\d+[\d\s,.]*/g) || [])
+    .map((n) => parseInt(n.replace(/[\s,.]/g, ""), 10))
+    .filter((n) => !isNaN(n) && n > 0);
+
+  if (numbers.length === 0) {
+    return {
+      raw: clean,
+      min_eur: 0,
+      max_eur: 0,
+      min_usd: 0,
+      max_usd: 0,
+      currency: isEur ? "EUR" : "USD",
+    };
+  }
+
+  let min = numbers[0];
+  let max = numbers.length > 1 ? numbers[1] : min;
+
+  // Conversion taux horaire / journalier vers équivalent annuel indicatif (~1900h / an)
+  if (isHourly && min < 1000) {
+    min = min * 1900;
+    max = max * 1900;
+  }
+
+  let min_eur = min;
+  let max_eur = max;
+  let min_usd = min;
+  let max_usd = max;
+  let currency = "EUR";
+
+  if (isEur) {
+    currency = "EUR";
+    min_eur = min;
+    max_eur = max;
+    min_usd = Math.round(min * 1.08);
+    max_usd = Math.round(max * 1.08);
+  } else if (isGbp) {
+    currency = "GBP";
+    min_eur = Math.round(min * 1.17);
+    max_eur = Math.round(max * 1.17);
+    min_usd = Math.round(min * 1.27);
+    max_usd = Math.round(max * 1.27);
+  } else {
+    currency = "USD";
+    min_usd = min;
+    max_usd = max;
+    min_eur = Math.round(min / 1.08);
+    max_eur = Math.round(max / 1.08);
+  }
+
+  return { raw: clean, min_eur, max_eur, min_usd, max_usd, currency };
+}
+
+/**
+ * Filtre anti-faux remote (élimine les annonces avec présence obligatoire sur site)
+ */
+export function isStrictlyRemote(title = "", description = "") {
+  const text = `${title} ${description}`.toLowerCase();
+  const antiRemoteKeywords = [
+    "hybrid schedule",
+    "days in office",
+    "days a week in office",
+    "must be located in",
+    "must relocate",
+    "présence obligatoire",
+    "jours de présence",
+    "télétravail partiel",
+  ];
+  return !antiRemoteKeywords.some((k) => text.includes(k));
 }
 
 /**
@@ -92,52 +185,28 @@ export function detectRegion(location = "", title = "", tags = []) {
 }
 
 /**
- * Détection du type de contrat (CDI/Full-time, Freelance/Contract, CDD/Part-time, Stage/Internship)
+ * Détection du type de contrat (CDI, Freelance, CDD, Stage)
  */
 export function detectContractType(title = "", rawJobType = "", description = "", tags = []) {
   const text = `${title} ${rawJobType} ${tags.join(" ")} ${description.slice(0, 600)}`.toLowerCase();
 
-  // 1. Stage / Alternance / Internship
   if (/\b(stage|alternance|internship|intern|apprenticeship|trainee|student job|working student)\b/i.test(text)) {
-    return {
-      id: "internship",
-      label: "Stage / Alternance",
-      icon: "🎓",
-      badge: "Stage / Intern",
-    };
+    return { id: "internship", label: "Stage / Alternance", icon: "🎓", badge: "Stage / Intern" };
   }
 
-  // 2. Freelance / Contract / B2B / Indépendant
   if (
     /\b(freelance|contract|contractor|contractuel|ind[eé]pendant|b2b|subcontract|hourly|per hour|\/hour|\/hr|mission|consultant|freelancing)\b/i.test(
       text
     )
   ) {
-    return {
-      id: "freelance_contract",
-      label: "Freelance / Contract",
-      icon: "⚡",
-      badge: "Freelance / Contract",
-    };
+    return { id: "freelance_contract", label: "Freelance / Contract", icon: "⚡", badge: "Freelance / Contract" };
   }
 
-  // 3. CDD / Part-time / Temporary
   if (/\b(cdd|part-time|part time|temps partiel|temporary|temp|dur[eé]e d[eé]termin[eé]e|int[eé]rim)\b/i.test(text)) {
-    return {
-      id: "cdd_parttime",
-      label: "CDD / Part-time",
-      icon: "⏱️",
-      badge: "CDD / Part-time",
-    };
+    return { id: "cdd_parttime", label: "CDD / Part-time", icon: "⏱️", badge: "CDD / Part-time" };
   }
 
-  // 4. CDI / Full-time (Défaut)
-  return {
-    id: "cdi_fulltime",
-    label: "CDI / Full-time",
-    icon: "💼",
-    badge: "CDI / Full-time",
-  };
+  return { id: "cdi_fulltime", label: "CDI / Full-time", icon: "💼", badge: "CDI / Full-time" };
 }
 
 /**
@@ -236,7 +305,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 }
 
 /**
- * Parseur XML ultra-léger pour les flux RSS
+ * Parseur XML ultra-léger pour flux RSS
  */
 function parseRssItems(xmlText = "") {
   const items = [];
@@ -283,36 +352,46 @@ async function scrapeRemotive() {
     const res = await fetchWithTimeout("https://remotive.com/api/remote-jobs?limit=70");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return (data.jobs || []).map((j) => {
-      const region = detectRegion(j.candidate_required_location, j.title, j.tags || []);
-      const lang = detectLanguage(j.title, j.description, j.tags || []);
-      const category = categorizeJob(j.title, j.category, j.tags || []);
-      const contract = detectContractType(j.title, j.job_type, j.description, j.tags || []);
-      return {
-        id: `remotive-${j.id}`,
-        title: j.title,
-        company: j.company_name,
-        company_logo: j.company_logo || j.company_logo_url || "",
-        url: j.url,
-        category: category.name,
-        categoryId: category.id,
-        categoryIcon: category.icon,
-        contractType: contract.label,
-        contractTypeId: contract.id,
-        contractIcon: contract.icon,
-        tags: Array.isArray(j.tags) ? j.tags.slice(0, 6) : [],
-        job_type: j.job_type || contract.label,
-        location: j.candidate_required_location || "Worldwide",
-        region: region.label,
-        regionId: region.id,
-        regionFlag: region.flag,
-        salary: j.salary || "",
-        published_at: j.publication_date || new Date().toISOString(),
-        description_snippet: stripHtml(j.description).slice(0, 260) + "...",
-        source: "Remotive",
-        language: lang,
-      };
-    });
+    return (data.jobs || [])
+      .filter((j) => isStrictlyRemote(j.title, j.description))
+      .map((j) => {
+        const region = detectRegion(j.candidate_required_location, j.title, j.tags || []);
+        const lang = detectLanguage(j.title, j.description, j.tags || []);
+        const category = categorizeJob(j.title, j.category, j.tags || []);
+        const contract = detectContractType(j.title, j.job_type, j.description, j.tags || []);
+        const salaryObj = parseSalaryDetails(j.salary || "");
+
+        return {
+          id: `remotive-${j.id}`,
+          title: j.title,
+          company: j.company_name,
+          company_logo: j.company_logo || j.company_logo_url || "",
+          url: j.url,
+          category: category.name,
+          categoryId: category.id,
+          categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
+          tags: Array.isArray(j.tags) ? j.tags.slice(0, 6) : [],
+          job_type: j.job_type || contract.label,
+          location: j.candidate_required_location || "Worldwide",
+          region: region.label,
+          regionId: region.id,
+          regionFlag: region.flag,
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
+          published_at: j.publication_date || new Date().toISOString(),
+          description_snippet: stripHtml(j.description).slice(0, 280) + "...",
+          source: "Remotive",
+          language: lang,
+          is_verified: 1,
+        };
+      });
   } catch (err) {
     console.warn("Source Remotive erreur:", err.message);
     return [];
@@ -327,38 +406,48 @@ async function scrapeJobicy() {
     const res = await fetchWithTimeout("https://jobicy.com/api/v2/remote-jobs?count=60");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return (data.jobs || []).map((j) => {
-      const rawTags = Array.isArray(j.jobIndustry) ? j.jobIndustry : [j.jobIndustry].filter(Boolean);
-      const rawJobType = Array.isArray(j.jobType) ? j.jobType.join(", ") : (j.jobType || "");
-      const region = detectRegion(j.jobGeo, j.jobTitle, rawTags);
-      const lang = detectLanguage(j.jobTitle, j.jobExcerpt || j.jobDescription, rawTags);
-      const category = categorizeJob(j.jobTitle, rawTags[0] || "", rawTags);
-      const contract = detectContractType(j.jobTitle, rawJobType, j.jobExcerpt || j.jobDescription, rawTags);
-      return {
-        id: `jobicy-${j.id}`,
-        title: j.jobTitle,
-        company: j.companyName,
-        company_logo: j.companyLogo || "",
-        url: j.url,
-        category: category.name,
-        categoryId: category.id,
-        categoryIcon: category.icon,
-        contractType: contract.label,
-        contractTypeId: contract.id,
-        contractIcon: contract.icon,
-        tags: rawTags.slice(0, 6),
-        job_type: rawJobType || contract.label,
-        location: j.jobGeo || "Worldwide",
-        region: region.label,
-        regionId: region.id,
-        regionFlag: region.flag,
-        salary: "",
-        published_at: j.pubDate || new Date().toISOString(),
-        description_snippet: stripHtml(j.jobExcerpt || j.jobDescription).slice(0, 260) + "...",
-        source: "Jobicy",
-        language: lang,
-      };
-    });
+    return (data.jobs || [])
+      .filter((j) => isStrictlyRemote(j.jobTitle, j.jobExcerpt || j.jobDescription))
+      .map((j) => {
+        const rawTags = Array.isArray(j.jobIndustry) ? j.jobIndustry : [j.jobIndustry].filter(Boolean);
+        const rawJobType = Array.isArray(j.jobType) ? j.jobType.join(", ") : j.jobType || "";
+        const region = detectRegion(j.jobGeo, j.jobTitle, rawTags);
+        const lang = detectLanguage(j.jobTitle, j.jobExcerpt || j.jobDescription, rawTags);
+        const category = categorizeJob(j.jobTitle, rawTags[0] || "", rawTags);
+        const contract = detectContractType(j.jobTitle, rawJobType, j.jobExcerpt || j.jobDescription, rawTags);
+        const salaryObj = parseSalaryDetails("");
+
+        return {
+          id: `jobicy-${j.id}`,
+          title: j.jobTitle,
+          company: j.companyName,
+          company_logo: j.companyLogo || "",
+          url: j.url,
+          category: category.name,
+          categoryId: category.id,
+          categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
+          tags: rawTags.slice(0, 6),
+          job_type: rawJobType || contract.label,
+          location: j.jobGeo || "Worldwide",
+          region: region.label,
+          regionId: region.id,
+          regionFlag: region.flag,
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
+          published_at: j.pubDate || new Date().toISOString(),
+          description_snippet: stripHtml(j.jobExcerpt || j.jobDescription).slice(0, 280) + "...",
+          source: "Jobicy",
+          language: lang,
+          is_verified: 1,
+        };
+      });
   } catch (err) {
     console.warn("Source Jobicy erreur:", err.message);
     return [];
@@ -374,7 +463,7 @@ async function scrapeArbeitnow() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return (data.data || [])
-      .filter((j) => j.remote === true || (j.tags && j.tags.some((t) => t.toLowerCase().includes("remote"))))
+      .filter((j) => (j.remote === true || (j.tags && j.tags.some((t) => t.toLowerCase().includes("remote")))) && isStrictlyRemote(j.title, j.description))
       .slice(0, 40)
       .map((j) => {
         const rawTags = j.tags || [];
@@ -384,6 +473,8 @@ async function scrapeArbeitnow() {
         const lang = detectLanguage(j.title, j.description, rawTags);
         const category = categorizeJob(j.title, rawTags[0] || "", rawTags);
         const contract = detectContractType(j.title, rawJobType, j.description, rawTags);
+        const salaryObj = parseSalaryDetails("");
+
         return {
           id: `arbeitnow-${j.slug}`,
           title: j.title,
@@ -402,11 +493,17 @@ async function scrapeArbeitnow() {
           region: region.label,
           regionId: region.id,
           regionFlag: region.flag,
-          salary: "",
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
           published_at: j.created_at ? new Date(j.created_at * 1000).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(j.description).slice(0, 260) + "...",
+          description_snippet: stripHtml(j.description).slice(0, 280) + "...",
           source: "Arbeitnow",
           language: lang,
+          is_verified: 1,
         };
       });
   } catch (err) {
@@ -424,48 +521,55 @@ async function scrapeRemoteOk() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const jobsList = Array.isArray(data) ? data.filter((j) => j.id && j.position) : [];
-    return jobsList.slice(0, 50).map((j) => {
-      const rawTags = Array.isArray(j.tags) ? j.tags : [];
-      const region = detectRegion(j.location || "Worldwide", j.position, rawTags);
-      const lang = detectLanguage(j.position, j.description, rawTags);
-      const category = categorizeJob(j.position, rawTags[0] || "", rawTags);
-      const contract = detectContractType(j.position, "", j.description, rawTags);
-      
-      let salaryText = "";
-      if (j.salary_min && j.salary_max) {
-        salaryText = `$${j.salary_min.toLocaleString()} - $${j.salary_max.toLocaleString()} / an`;
-      } else if (j.salary_min) {
-        salaryText = `À partir de $${j.salary_min.toLocaleString()} / an`;
-      }
+    return jobsList
+      .filter((j) => isStrictlyRemote(j.position, j.description))
+      .slice(0, 50)
+      .map((j) => {
+        const rawTags = Array.isArray(j.tags) ? j.tags : [];
+        const region = detectRegion(j.location || "Worldwide", j.position, rawTags);
+        const lang = detectLanguage(j.position, j.description, rawTags);
+        const category = categorizeJob(j.position, rawTags[0] || "", rawTags);
+        const contract = detectContractType(j.position, "", j.description, rawTags);
+        
+        let salaryText = "";
+        if (j.salary_min && j.salary_max) {
+          salaryText = `$${j.salary_min.toLocaleString()} - $${j.salary_max.toLocaleString()} / an`;
+        } else if (j.salary_min) {
+          salaryText = `À partir de $${j.salary_min.toLocaleString()} / an`;
+        }
+        const salaryObj = parseSalaryDetails(salaryText);
 
-      return {
-        id: `remoteok-${j.id}`,
-        title: j.position,
-        company: j.company,
-        company_logo: j.logo || "",
-        url: j.url || j.apply_url || `https://remoteok.com/remote-jobs/${j.id}`,
-        category: category.name,
-        categoryId: category.id,
-        categoryIcon: category.icon,
-        contractType: contract.label,
-        contractTypeId: contract.id,
-        contractIcon: contract.icon,
-        tags: rawTags.slice(0, 6),
-        job_type: contract.label,
-        location: j.location || "Worldwide",
-        region: region.label,
-        regionId: region.id,
-        regionFlag: region.flag,
-        salary: salaryText,
-        salary_min: j.salary_min || 0,
-        salary_max: j.salary_max || 0,
-        currency: "USD",
-        published_at: j.date ? new Date(j.date).toISOString() : new Date().toISOString(),
-        description_snippet: stripHtml(j.description).slice(0, 260) + "...",
-        source: "RemoteOK",
-        language: lang,
-      };
-    });
+        return {
+          id: `remoteok-${j.id}`,
+          title: j.position,
+          company: j.company,
+          company_logo: j.logo || "",
+          url: j.url || j.apply_url || `https://remoteok.com/remote-jobs/${j.id}`,
+          category: category.name,
+          categoryId: category.id,
+          categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
+          tags: rawTags.slice(0, 6),
+          job_type: contract.label,
+          location: j.location || "Worldwide",
+          region: region.label,
+          regionId: region.id,
+          regionFlag: region.flag,
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
+          published_at: j.date ? new Date(j.date).toISOString() : new Date().toISOString(),
+          description_snippet: stripHtml(j.description).slice(0, 280) + "...",
+          source: "RemoteOK",
+          language: lang,
+          is_verified: 1,
+        };
+      });
   } catch (err) {
     console.warn("Source RemoteOK erreur:", err.message);
     return [];
@@ -495,37 +599,47 @@ async function scrapeWeWorkRemotely() {
     .filter((r) => r.status === "fulfilled")
     .flatMap((r) => r.value);
 
-  return allItems.map((item) => {
-    const region = detectRegion(item.region, item.title, []);
-    const lang = detectLanguage(item.title, item.description, []);
-    const category = categorizeJob(item.title, "", []);
-    const contract = detectContractType(item.title, "", item.description, []);
-    const idHash = (item.title + item.company).replace(/[^a-zA-Z0-9]/g, "").toLowerCase().slice(0, 25);
-    return {
-      id: `wwr-${idHash}`,
-      title: item.title,
-      company: item.company,
-      company_logo: "",
-      url: item.url,
-      category: category.name,
-      categoryId: category.id,
-      categoryIcon: category.icon,
-      contractType: contract.label,
-      contractTypeId: contract.id,
-      contractIcon: contract.icon,
-      tags: ["Remote", category.name],
-      job_type: contract.label,
-      location: item.region || "Worldwide",
-      region: region.label,
-      regionId: region.id,
-      regionFlag: region.flag,
-      salary: "",
-      published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-      description_snippet: stripHtml(item.description).slice(0, 260) + "...",
-      source: "WeWorkRemotely",
-      language: lang,
-    };
-  });
+  return allItems
+    .filter((item) => isStrictlyRemote(item.title, item.description))
+    .map((item) => {
+      const region = detectRegion(item.region, item.title, []);
+      const lang = detectLanguage(item.title, item.description, []);
+      const category = categorizeJob(item.title, "", []);
+      const contract = detectContractType(item.title, "", item.description, []);
+      const idHash = (item.title + item.company).replace(/[^a-zA-Z0-9]/g, "").toLowerCase().slice(0, 25);
+      const salaryObj = parseSalaryDetails("");
+
+      return {
+        id: `wwr-${idHash}`,
+        title: item.title,
+        company: item.company,
+        company_logo: "",
+        url: item.url,
+        category: category.name,
+        categoryId: category.id,
+        categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
+        tags: ["Remote", category.name],
+        job_type: contract.label,
+        location: item.region || "Worldwide",
+        region: region.label,
+        regionId: region.id,
+        regionFlag: region.flag,
+        salary: salaryObj.raw,
+        salary_min_eur: salaryObj.min_eur,
+        salary_max_eur: salaryObj.max_eur,
+        salary_min_usd: salaryObj.min_usd,
+        salary_max_usd: salaryObj.max_usd,
+        currency: salaryObj.currency,
+        published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+        description_snippet: stripHtml(item.description).slice(0, 280) + "...",
+        source: "WeWorkRemotely",
+        language: lang,
+        is_verified: 1,
+      };
+    });
 }
 
 /**
@@ -556,7 +670,7 @@ async function scrapeHackerNews() {
     for (const c of comments) {
       if (!c || !c.text || c.deleted || c.dead) continue;
       const clean = stripHtml(c.text);
-      if (!/\bremote\b/i.test(clean)) continue;
+      if (!/\bremote\b/i.test(clean) || !isStrictlyRemote("", clean)) continue;
 
       const lines = clean.split("\n").filter(Boolean);
       const firstLine = lines[0] || "";
@@ -568,6 +682,7 @@ async function scrapeHackerNews() {
       const lang = detectLanguage(title, clean, []);
       const category = categorizeJob(title, "", []);
       const contract = detectContractType(title, firstLine, clean, []);
+      const salaryObj = parseSalaryDetails("");
 
       remotePosts.push({
         id: `hn-${c.id}`,
@@ -587,11 +702,17 @@ async function scrapeHackerNews() {
         region: region.label,
         regionId: region.id,
         regionFlag: region.flag,
-        salary: "",
+        salary: salaryObj.raw,
+        salary_min_eur: salaryObj.min_eur,
+        salary_max_eur: salaryObj.max_eur,
+        salary_min_usd: salaryObj.min_usd,
+        salary_max_usd: salaryObj.max_usd,
+        currency: salaryObj.currency,
         published_at: c.time ? new Date(c.time * 1000).toISOString() : new Date().toISOString(),
-        description_snippet: clean.slice(0, 260) + "...",
+        description_snippet: clean.slice(0, 280) + "...",
         source: "HackerNews",
         language: lang,
+        is_verified: 1,
       });
     }
 
@@ -603,7 +724,7 @@ async function scrapeHackerNews() {
 }
 
 /**
- * Pipeline d'agrégation globale
+ * Pipeline d'agrégation globale avec purge des offres obsolètes (> 35 jours)
  */
 export async function scrapeAllJobs() {
   const tasks = [
@@ -618,18 +739,25 @@ export async function scrapeAllJobs() {
   const results = await Promise.allSettled(tasks);
   const combined = [];
 
-  results.forEach((r, idx) => {
+  results.forEach((r) => {
     if (r.status === "fulfilled" && Array.isArray(r.value)) {
       combined.push(...r.value);
     }
   });
 
-  // Dédoublonnage robuste par titre normalisé + entreprise
+  const nowMs = Date.now();
+  const maxAgeMs = 35 * 24 * 60 * 60 * 1000; // 35 jours max
+
   const seen = new Set();
   const uniqueJobs = [];
 
   for (const job of combined) {
     if (!job.title || !job.company) continue;
+
+    // Purge des annonces de plus de 35 jours
+    const pubMs = new Date(job.published_at).getTime();
+    if (!isNaN(pubMs) && nowMs - pubMs > maxAgeMs) continue;
+
     const cleanTitle = job.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 30);
     const cleanCompany = job.company.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20);
     const key = `${cleanTitle}_${cleanCompany}`;
