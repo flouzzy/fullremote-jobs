@@ -1628,7 +1628,7 @@ export function renderHTML(jobs = [], meta = {}) {
             alertFeedback.style.backgroundColor = 'rgba(244, 63, 94, 0.15)';
             alertFeedback.style.color = '#fb7185';
             alertFeedback.style.border = '1px solid rgba(244, 63, 94, 0.3)';
-            alertFeedback.textContent = '✕ ' + (data.error || 'Erreur lors de l\'enregistrement');
+            alertFeedback.textContent = "✕ " + (data.error || "Erreur lors de l'enregistrement");
             alertSubmitBtn.disabled = false;
             alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
           }
@@ -1637,7 +1637,7 @@ export function renderHTML(jobs = [], meta = {}) {
           alertFeedback.style.backgroundColor = 'rgba(244, 63, 94, 0.15)';
           alertFeedback.style.color = '#fb7185';
           alertFeedback.style.border = '1px solid rgba(244, 63, 94, 0.3)';
-          alertFeedback.textContent = '✕ Impossible de joindre le serveur : ' + err.message;
+          alertFeedback.textContent = "✕ Impossible de joindre le serveur : " + err.message;
           alertSubmitBtn.disabled = false;
           alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
         }
@@ -1709,12 +1709,12 @@ export function renderHTML(jobs = [], meta = {}) {
           }
           showToast('🔔 Notifications Web activées avec succès !');
         } else {
-          showToast('Erreur lors de l\'enregistrement des notifications.');
+          showToast("Erreur lors de l'enregistrement des notifications.");
           if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
         }
       } catch (err) {
         console.error('Erreur Web Push :', err);
-        showToast('Erreur activation notifications : ' + err.message);
+        showToast("Erreur activation notifications : " + err.message);
         if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
       }
     };
