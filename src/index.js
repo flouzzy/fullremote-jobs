@@ -34,6 +34,15 @@ import {
   sendWebPushNotification,
 } from "./push.js";
 import { renderJobDetailPage, generateRssFeed, generateSitemap } from "./seo.js";
+import {
+  generateRobotsTxt,
+  generateLlmsTxt,
+  generateLlmsFullTxt,
+  generateOpenApiSchema,
+  generateAiPluginManifest,
+  handleMcpRequest,
+} from "./geo.js";
+import { renderPostJobPage } from "./b2b.js";
 
 // Cache mémoire local en runtime Worker
 let cachedJobs = null;
@@ -263,7 +272,115 @@ export default {
       });
     }
 
-    // 2. Route Service Worker : /sw.js
+    // 2. Route robots.txt (Optimisé SEO & GEO Crawlers IA)
+    if (pathname === "/robots.txt") {
+      const robots = generateRobotsTxt({ siteUrl });
+      return new Response(robots, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "public, max-age=86400",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 3. Route llms.txt (Standard LLM Index - Answer.ai)
+    if (pathname === "/llms.txt") {
+      const llmsTxt = generateLlmsTxt({ siteUrl });
+      return new Response(llmsTxt, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 4. Route llms-full.txt & /jobs.md (Catalogue complet Markdown optimisé token)
+    if (pathname === "/llms-full.txt" || pathname === "/jobs.md") {
+      const { jobs } = await getOrFetchJobs(env);
+      const fullMd = generateLlmsFullTxt(jobs, { siteUrl });
+      return new Response(fullMd, {
+        headers: {
+          "Content-Type": "text/markdown; charset=utf-8",
+          "Cache-Control": "public, max-age=600, s-maxage=1800",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 5. Route OpenAPI 3.0 (/openapi.json)
+    if (pathname === "/openapi.json") {
+      const schema = generateOpenApiSchema({ siteUrl });
+      return new Response(JSON.stringify(schema, null, 2), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 6. Route AI Plugin Manifest (/.well-known/ai-plugin.json)
+    if (pathname === "/.well-known/ai-plugin.json") {
+      const manifest = generateAiPluginManifest({ siteUrl });
+      return new Response(JSON.stringify(manifest, null, 2), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 7. Route Serveur MCP (/mcp) — Model Context Protocol
+    if (pathname === "/mcp") {
+      const { jobs } = await getOrFetchJobs(env);
+      return handleMcpRequest(request, env, ctx, { jobs, siteUrl });
+    }
+
+    // 8. Route Recruteurs : /post-a-job (B2B 49€)
+    if (pathname === "/post-a-job") {
+      const html = renderPostJobPage({ siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 9. API Enregistrement Brouillon Offre Recruteur : POST /api/jobs/draft
+    if (pathname === "/api/jobs/draft" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        if (!body.title || !body.company || !body.url || !body.email) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Veuillez renseigner tous les champs obligatoires (*)." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        const draftId = `draft_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Votre offre a été enregistrée en brouillon. L'étape de paiement Stripe (49 €) est prête.",
+            draft_id: draftId,
+          }),
+          { headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ success: false, error: e.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // 10. Route Service Worker : /sw.js
     if (pathname === "/sw.js") {
       return new Response(SERVICE_WORKER_CODE, {
         headers: {
@@ -637,9 +754,23 @@ export default {
       );
     }
 
-    // 13. Route Racine (/) : Interface Web Responsive
+    // 21. Route Racine (/) : Interface Web Responsive & Content Negotiation Markdown
     if (pathname === "/" || pathname === "/index.html") {
       const { jobs, updated_at } = await getOrFetchJobs(env);
+
+      // Support Content Negotiation pour Agents IA (Accept: text/markdown)
+      const acceptHeader = request.headers.get("Accept") || "";
+      if (acceptHeader.includes("text/markdown")) {
+        const fullMd = generateLlmsFullTxt(jobs, { siteUrl });
+        return new Response(fullMd, {
+          headers: {
+            "Content-Type": "text/markdown; charset=utf-8",
+            "Cache-Control": "public, max-age=600, s-maxage=1800",
+            ...corsHeaders,
+          },
+        });
+      }
+
       const html = renderHTML(jobs, { updated_at });
 
       return new Response(html, {

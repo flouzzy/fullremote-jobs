@@ -13,7 +13,7 @@ export function renderHTML(jobs = [], meta = {}) {
   });
 
   return `<!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -29,7 +29,36 @@ export function renderHTML(jobs = [], meta = {}) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
   <style>
-    :root {
+    :root, html.light {
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --border-focus: #3b82f6;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent: #0284c7;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.1);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.1);
+      --rose: #e11d48;
+      --radius: 12px;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --controls-bg: rgba(248, 250, 252, 0.95);
+      --table-header-bg: #f1f5f9;
+      --tag-bg: #f1f5f9;
+      --tag-border: #e2e8f0;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --footer-bg: #ffffff;
+    }
+
+    html.dark {
       --bg: #090d16;
       --bg-card: #111726;
       --bg-card-hover: #172033;
@@ -46,9 +75,13 @@ export function renderHTML(jobs = [], meta = {}) {
       --amber: #f59e0b;
       --amber-bg: rgba(245, 158, 11, 0.12);
       --rose: #f43f5e;
-      --radius: 12px;
-      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      --header-bg: rgba(9, 13, 22, 0.88);
+      --controls-bg: rgba(9, 13, 22, 0.95);
+      --table-header-bg: #0d1424;
+      --tag-bg: #0d1424;
+      --tag-border: #1e293b;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      --footer-bg: #060910;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -62,6 +95,7 @@ export function renderHTML(jobs = [], meta = {}) {
       display: flex;
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     a { color: inherit; text-decoration: none; }
@@ -76,7 +110,7 @@ export function renderHTML(jobs = [], meta = {}) {
     /* Header */
     header {
       border-bottom: 1px solid var(--border);
-      background: rgba(9, 13, 22, 0.88);
+      background: var(--header-bg);
       backdrop-filter: blur(16px);
       position: sticky;
       top: 0;
@@ -873,6 +907,9 @@ export function renderHTML(jobs = [], meta = {}) {
       </a>
 
       <nav class="nav-links">
+        <a href="/post-a-job" class="nav-btn" style="background:var(--primary); color:white; font-weight:600; border:none;" title="Recruteurs : Publier une offre">
+          <span>💼</span> <span class="hide-mobile">Publier (49€)</span>
+        </a>
         <button id="navAlertBtn" class="nav-btn nav-btn-alert" title="Créer une alerte personnalisée" onclick="openAlertModal()">
           <span>🔔</span> <span class="hide-mobile">Alertes</span>
         </button>
@@ -883,11 +920,14 @@ export function renderHTML(jobs = [], meta = {}) {
           <span>📡</span> <span class="hide-mobile">Flux RSS</span>
         </a>
         <a href="/api/jobs" target="_blank" class="nav-btn">
-          <span>⚡</span> <span class="hide-mobile">API JSON</span>
+          <span>⚡</span> <span class="hide-mobile">API</span>
         </a>
-        <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank" class="nav-btn nav-btn-primary">
+        <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank" class="nav-btn" title="Dépôt GitHub">
           <span>★</span> GitHub
         </a>
+        <button id="themeToggleBtn" class="nav-btn" title="Basculer le thème (Clair / Sombre)">
+          <span>🌙</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -1196,9 +1236,33 @@ export function renderHTML(jobs = [], meta = {}) {
     const navFavBtn = document.getElementById('navFavBtn');
     const viewCardsBtn = document.getElementById('viewCardsBtn');
     const viewMdBtn = document.getElementById('viewMdBtn');
-    const copyMdBtn = document.getElementById('copyMdBtn');
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+    // Theme Management
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(currentTheme);
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        if (themeToggleBtn) themeToggleBtn.innerHTML = '<span>☀️</span>';
+      } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+        if (themeToggleBtn) themeToggleBtn.innerHTML = '<span>🌙</span>';
+      }
+      localStorage.setItem('theme', theme);
+    }
+
+    if (themeToggleBtn) {
+      themeToggleBtn.onclick = () => {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        applyTheme(currentTheme);
+      };
+    }
 
     // Modal elements
     const jobModal = document.getElementById('jobModal');

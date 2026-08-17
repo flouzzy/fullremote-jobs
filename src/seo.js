@@ -75,7 +75,7 @@ export function renderJobDetailPage(job, meta = {}) {
   const initial = (job.company || "C").charAt(0).toUpperCase();
 
   return `<!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -102,7 +102,22 @@ export function renderJobDetailPage(job, meta = {}) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
   <style>
-    :root {
+    :root, html.light {
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.1);
+      --meta-bg: #f1f5f9;
+      --radius: 12px;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+    html.dark {
       --bg: #090d16;
       --bg-card: #111726;
       --border: #1e293b;
@@ -113,8 +128,7 @@ export function renderJobDetailPage(job, meta = {}) {
       --primary-hover: #2563eb;
       --emerald: #10b981;
       --emerald-bg: rgba(16, 185, 129, 0.12);
-      --radius: 12px;
-      --font-sans: 'Inter', system-ui, sans-serif;
+      --meta-bg: rgba(0, 0, 0, 0.2);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -126,12 +140,13 @@ export function renderJobDetailPage(job, meta = {}) {
       display: flex;
       flex-direction: column;
       padding: 0;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
     a { color: inherit; text-decoration: none; }
     .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; width: 100%; }
     header {
       border-bottom: 1px solid var(--border);
-      background: rgba(9, 13, 22, 0.9);
+      background: var(--bg-card);
       padding: 1rem 0;
     }
     .header-inner {
@@ -156,7 +171,7 @@ export function renderJobDetailPage(job, meta = {}) {
       border-radius: var(--radius);
       padding: 2.5rem;
       margin-top: 1.5rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
     .job-header {
       display: flex;
@@ -168,13 +183,13 @@ export function renderJobDetailPage(job, meta = {}) {
       width: 64px;
       height: 64px;
       border-radius: 12px;
-      background: #1e293b;
+      background: #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
       font-size: 1.5rem;
-      color: #94a3b8;
+      color: #64748b;
       flex-shrink: 0;
       overflow: hidden;
     }
@@ -188,10 +203,10 @@ export function renderJobDetailPage(job, meta = {}) {
       border-radius: 6px;
       font-weight: 600;
     }
-    .badge-contract { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
-    .badge-region { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .badge-salary { background: var(--emerald-bg); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-remote { background: rgba(6, 182, 212, 0.15); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-contract { background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-region { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-salary { background: var(--emerald-bg); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-remote { background: rgba(6, 182, 212, 0.15); color: #0891b2; border: 1px solid rgba(6, 182, 212, 0.3); }
     .btn-apply {
       background: var(--primary);
       color: white;
@@ -210,10 +225,10 @@ export function renderJobDetailPage(job, meta = {}) {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 1rem;
-      background: rgba(0, 0, 0, 0.2);
+      background: var(--meta-bg);
       padding: 1.25rem;
       border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
       margin-bottom: 2rem;
     }
     .meta-item-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
@@ -224,7 +239,10 @@ export function renderJobDetailPage(job, meta = {}) {
   <header>
     <div class="header-inner">
       <a href="/" class="back-btn">← Retour à l'annuaire FullRemote.Jobs</a>
-      <a href="/" style="font-weight:700;">🌍 FullRemote<span style="color:var(--primary);">.Jobs</span></a>
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <a href="/post-a-job" style="font-size:0.85rem; font-weight:600; color:var(--primary);">Publier une offre</a>
+        <button id="themeToggleBtn" style="background:var(--bg-card); border:1px solid var(--border); padding:0.35rem 0.65rem; border-radius:6px; cursor:pointer;" title="Changer le thème">🌙</button>
+      </div>
     </div>
   </header>
 
@@ -287,6 +305,31 @@ export function renderJobDetailPage(job, meta = {}) {
       </div>
     </article>
   </main>
+  <script>
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(currentTheme);
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+      } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+        if (themeToggleBtn) themeToggleBtn.textContent = '🌙';
+      }
+      localStorage.setItem('theme', theme);
+    }
+
+    if (themeToggleBtn) {
+      themeToggleBtn.onclick = () => {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        applyTheme(currentTheme);
+      };
+    }
+  </script>
 </body>
 </html>`;
 }

@@ -9,7 +9,7 @@
     "deploy": "wrangler deploy",
     "db:migrate:local": "wrangler d1 execute fullremote-jobs-db --local --file=./migrations/0001_init.sql && wrangler d1 execute fullremote-jobs-db --local --file=./migrations/0002_notifications.sql",
     "db:migrate:remote": "wrangler d1 execute fullremote-jobs-db --remote --file=./migrations/0001_init.sql && wrangler d1 execute fullremote-jobs-db --remote --file=./migrations/0002_notifications.sql",
-    "test": "node --check src/index.js && node --check src/scraper.js && node --check src/db.js && node --check src/ui.js && node --check src/seo.js && node --check src/fallback-data.js && node --check src/email.js && node --check src/push.js"
+    "test": "node --check src/index.js && node --check src/scraper.js && node --check src/db.js && node --check src/ui.js && node --check src/seo.js && node --check src/fallback-data.js && node --check src/email.js && node --check src/push.js && node --check src/geo.js && node --check src/b2b.js"
   },
   "devDependencies": {
     "wrangler": "^3.114.0"

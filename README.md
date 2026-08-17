@@ -147,6 +147,14 @@ GET https://fullremote-jobs.edounze.com/jobs/:id
   GET https://fullremote-jobs.edounze.com/api/notifications/vapid-public-key
   ```
 
+### 5. Protocole IA, GEO & Serveur MCP (Model Context Protocol)
+- **Index LLM Standard (`/llms.txt`)** : `GET https://fullremote-jobs.edounze.com/llms.txt`
+- **Catalogue Complet Markdown (`/llms-full.txt` ou `/jobs.md`)** : `GET https://fullremote-jobs.edounze.com/llms-full.txt`
+- **Spécification OpenAPI 3.0** : `GET https://fullremote-jobs.edounze.com/openapi.json`
+- **Manifeste OpenAI Plugin** : `GET https://fullremote-jobs.edounze.com/.well-known/ai-plugin.json`
+- **Serveur MCP (Claude Desktop, Cursor, AI Agents)** : `POST https://fullremote-jobs.edounze.com/mcp`
+- **Page Publication Recruteurs B2B** : `GET https://fullremote-jobs.edounze.com/post-a-job`
+
 ---
 
 ## 🗄️ Base de données Cloudflare D1
