@@ -325,7 +325,12 @@ export function renderHTML(jobs = [], meta = {}) {
        3. UNIFIED COMMAND SEARCH BAR (AIRBNB / LINEAR)
     ══════════════════════════════════════════════════ */
     .search-section {
-      margin-bottom: 2rem;
+      position: sticky;
+      top: 56px;
+      z-index: 80;
+      background: var(--bg);
+      padding: 0.5rem 0 0.75rem 0;
+      margin-bottom: 1.25rem;
     }
 
     .master-search-card {

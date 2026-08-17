@@ -313,17 +313,32 @@ export function renderJobDetailPage(job, meta = {}) {
     <!-- Section Offres Similaires 100% Télétravail -->
     ${(() => {
       const allJobs = meta.allJobs || [];
+      const currentTags = new Set((job.tags || []).map((t) => t.toLowerCase()));
+      const stopWords = new Set(['and', 'the', 'for', 'with', 'chez', 'pour', 'dans', 'des', 'les', 'une', 'sur', 'des', 'est', 'par']);
+      const titleWords = (job.title || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 3 && !stopWords.has(w));
+
       const similarJobs = allJobs
         .filter((j) => j.id !== job.id)
         .map((j) => {
           let score = 0;
-          if (j.categoryId && job.categoryId && j.categoryId === job.categoryId) score += 4;
+          if (j.categoryId && job.categoryId && j.categoryId === job.categoryId) score += 6;
+          if (j.company && job.company && j.company.toLowerCase() === job.company.toLowerCase()) score += 10;
           if (j.contractTypeId && job.contractTypeId && j.contractTypeId === job.contractTypeId) score += 2;
           if (j.regionId && job.regionId && (j.regionId === job.regionId || j.regionId === "worldwide")) score += 1;
-          const currentTags = new Set((job.tags || []).map((t) => t.toLowerCase()));
+          
           for (const t of (j.tags || [])) {
-            if (currentTags.has(t.toLowerCase())) score += 2;
+            if (currentTags.has(t.toLowerCase())) score += 3;
           }
+
+          const jTitleLower = (j.title || '').toLowerCase();
+          for (const w of titleWords) {
+            if (jTitleLower.includes(w)) score += 4;
+          }
+
           return { job: j, score };
         })
         .sort((a, b) => b.score - a.score || new Date(b.job.published_at) - new Date(a.job.published_at))
@@ -333,16 +348,16 @@ export function renderJobDetailPage(job, meta = {}) {
       if (similarJobs.length === 0) return "";
 
       return `
-      <section style="margin-top: 3rem; padding-top: 2rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em;" data-i18n="sim_title">
+      <section style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em;" data-i18n="sim_title">
             💼 Offres similaires 100% Télétravail
           </h3>
-          <a href="/" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);" data-i18n="sim_see_all">
+          <a href="/" style="font-size: 0.88rem; font-weight: 600; color: var(--primary);" data-i18n="sim_see_all">
             Voir tout l'annuaire →
           </a>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem;">
           ${similarJobs.map((sj) => {
             const sjDetailsUrl = `${siteUrl}/jobs/${encodeURIComponent(sj.id)}`;
             const sjInitial = (sj.company || "C").charAt(0).toUpperCase();
@@ -350,28 +365,38 @@ export function renderJobDetailPage(job, meta = {}) {
               ? `<img src="${escapeHtml(sj.company_logo)}" alt="${escapeHtml(sj.company)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.textContent='${sjInitial}'" />`
               : sjInitial;
             const salaryBadge = sj.salary
-              ? `<span style="font-size:0.72rem; font-weight:700; color:var(--emerald); background:var(--emerald-bg); padding:2px 6px; border-radius:4px; border:1px solid rgba(16,185,129,0.25);">💰 ${escapeHtml(sj.salary)}</span>`
+              ? `<span style="font-size:0.75rem; font-weight:700; color:var(--emerald); background:var(--emerald-bg); padding:3px 8px; border-radius:6px; border:1px solid rgba(16,185,129,0.25);">💰 ${escapeHtml(sj.salary)}</span>`
               : "";
+            const cleanDesc = stripHtml(sj.description_snippet || "").replace(/\\s+/g, ' ').trim();
+            const tagsHtml = (sj.tags || []).slice(0, 3).map(t => `<span style="font-size:0.72rem; color:var(--text-dim); background:var(--meta-bg); border:1px solid var(--border); padding:2px 6px; border-radius:4px;">#${escapeHtml(t)}</span>`).join(' ');
+
             return `
-            <a href="${sjDetailsUrl}" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)';">
+            <a href="${sjDetailsUrl}" class="similar-job-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.85rem; text-decoration: none; color: inherit; transition: all 0.18s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.03);" onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)';">
               <div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                  <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--meta-bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; color: var(--primary); flex-shrink: 0; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.85rem;">
+                  <div style="width: 42px; height: 42px; border-radius: 10px; background: var(--meta-bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--primary); flex-shrink: 0; overflow: hidden;">
                     ${sjAvatar}
                   </div>
                   <div style="min-width: 0;">
-                    <div style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(sj.company)}</div>
-                    <div style="font-size: 0.9rem; font-weight: 700; color: var(--text); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(sj.title)}</div>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(sj.company)}</div>
+                    <div style="font-size: 1rem; font-weight: 700; color: var(--text); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(sj.title)}</div>
                   </div>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem;">
-                  <span style="font-size: 0.72rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(99,102,241,0.1); color: #6366f1;">${sj.contractIcon || "💼"} ${escapeHtml(sj.contractType || "CDI")}</span>
-                  <span style="font-size: 0.72rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(37,99,235,0.1); color: #2563eb;">${sj.regionFlag || "🌍"} ${escapeHtml(sj.region || "Worldwide")}</span>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem;">
+                  <span style="font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(99,102,241,0.1); color: #6366f1;">${sj.contractIcon || "💼"} ${escapeHtml(sj.contractType || "CDI")}</span>
+                  <span style="font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(37,99,235,0.1); color: #2563eb;">${sj.regionFlag || "🌍"} ${escapeHtml(sj.region || "Worldwide")}</span>
                   ${salaryBadge}
                 </div>
+
+                ${cleanDesc ? `<p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 0.5rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(cleanDesc)}</p>` : ""}
               </div>
-              <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-align: right; margin-top: 0.5rem;" data-i18n="sim_view_btn">
-                Consulter ↗
+
+              <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.25rem;">
+                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">${tagsHtml}</div>
+                <span style="font-size: 0.83rem; font-weight: 700; color: var(--primary); display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap;" data-i18n="sim_view_btn">
+                  Consulter ↗
+                </span>
               </div>
             </a>
             `;
