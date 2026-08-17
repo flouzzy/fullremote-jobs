@@ -1200,7 +1200,7 @@ export function renderHTML(jobs = [], meta = {}) {
       <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📬</div>
       <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.6rem; letter-spacing: -0.02em; color: var(--text);">Le Digest Quotidien du Full Remote</h2>
       <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.</p>
-      <form onsubmit="handleQuickNewsletter(event)" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+      <form id="quickNewsletterForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleQuickNewsletter(event); return false;" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
         <input type="email" id="quickEmail" required placeholder="Votre adresse email (ex: alex@gmail.com)" class="form-input" style="max-width: 360px; background: var(--bg-card);" />
         <button type="submit" id="quickEmailBtn" class="btn-apply" style="border: none; padding: 0.7rem 1.6rem; font-weight: 700; cursor: pointer;">
           🚀 S'inscrire gratuitement
@@ -1878,13 +1878,16 @@ export function renderHTML(jobs = [], meta = {}) {
 
     // Quick Newsletter Handler
     window.handleQuickNewsletter = async function(e) {
-      e.preventDefault();
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
       const emailInput = document.getElementById('quickEmail');
       const email = emailInput ? emailInput.value.trim() : '';
       const btn = document.getElementById('quickEmailBtn');
       const feedback = document.getElementById('quickFeedback');
 
-      if (!email) return;
+      if (!email) return false;
       if (btn) {
         btn.disabled = true;
         btn.textContent = 'Inscription...';
@@ -1903,7 +1906,7 @@ export function renderHTML(jobs = [], meta = {}) {
             keywords: ''
           })
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         if (feedback) feedback.style.display = 'block';
         if (res.ok && data.success) {
@@ -1914,7 +1917,10 @@ export function renderHTML(jobs = [], meta = {}) {
           }
           showToast('Inscription au digest quotidien confirmée ! 📬');
           if (emailInput) emailInput.value = '';
-          if (btn) btn.textContent = '✓ Inscrit';
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '✓ Inscrit';
+          }
         } else {
           if (feedback) {
             feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
@@ -1938,6 +1944,7 @@ export function renderHTML(jobs = [], meta = {}) {
           btn.textContent = "🚀 S'inscrire gratuitement";
         }
       }
+      return false;
     };
 
     // Initial render
