@@ -32,3 +32,7 @@
 - **Command Search Bar Sticky** : La barre de recherche unifiée reste ancrée (`position: sticky; top: 56px; z-index: 80;`).
 - **Bilinguisme (i18n)** : Détection auto (`navigator.language` / `localStorage`) + sélecteur manuel (`#langToggleBtn`) + attributs `data-i18n`.
 - **Schema.org JobPosting** : Lier explicitement `url` et `mainEntityOfPage` à `https://remote-jobs.edounze.com/jobs/:id` avec `jobLocationType: "TELECOMMUTE"` et `directApply: true`.
+
+## 6. Politique Anti-Spam & Fréquence Notifications
+- **Emails (Resend)** : **STRICT MAXIMUM 1 email par jour / par 24h** pour le digest d'annonces (`isAlertEligibleForEmail()`). Ne jamais envoyer plus d'un digest quotidien, même lors de rafraîchissements manuels ou d'exécutions répétées du scraper. Capé aux 10 meilleures opportunités.
+- **Web Push Navigateur** : Diffusion en temps réel autorisée dès la détection de nouvelles offres.

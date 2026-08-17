@@ -164,6 +164,34 @@ async function getOrFetchJobs(env) {
 }
 
 /**
+ * Vérifie si une alerte email est éligible pour un digest (STRICTEMENT MAX 1 EMAIL PAR 24H / PAR JOUR)
+ */
+function isAlertEligibleForEmail(alert) {
+  if (!alert.last_sent_at) return true;
+
+  const now = Date.now();
+  const lastSentTime = new Date(alert.last_sent_at).getTime();
+  if (isNaN(lastSentTime)) return true;
+
+  const hoursSinceLast = (now - lastSentTime) / (1000 * 60 * 60);
+
+  // Vérification de la même journée calendaire UTC (interdiction formelle d'envoyer 2 fois le même jour)
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const lastSentUtc = new Date(lastSentTime).toISOString().slice(0, 10);
+  if (todayUtc === lastSentUtc) {
+    return false; // Déjà envoyé aujourd'hui
+  }
+
+  if (alert.frequency === "weekly") {
+    // 6 jours minimum d'intervalle pour le digest hebdomadaire
+    return hoursSinceLast >= 144;
+  }
+
+  // Quotidien : minimum 20 heures d'intervalle entre deux digests
+  return hoursSinceLast >= 20;
+}
+
+/**
  * Traite et distribue les alertes emails et notifications web push
  */
 async function processNotifications(env, jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
@@ -176,16 +204,23 @@ async function processNotifications(env, jobs = [], siteUrl = "https://remote-jo
   let emailsSent = 0;
   let pushesSent = 0;
 
-  // 1. Alertes Emails personnalisées
+  // 1. Alertes Emails personnalisées (STRICT MAXIMUM 1 EMAIL PAR JOUR - 0 SPAM)
   try {
     const activeAlerts = await getActiveEmailAlerts(env.DB);
     for (const alert of activeAlerts) {
+      // Contrôle anti-spam strict : au maximum 1 email par jour
+      if (!isAlertEligibleForEmail(alert)) {
+        continue;
+      }
+
       const matchingJobs = jobs.filter((job) => matchJobToAlert(job, alert));
       if (matchingJobs.length > 0) {
-        const html = buildJobDigestEmailHtml({ jobs: matchingJobs, alert, siteUrl });
-        const subject = `🔔 ${matchingJobs.length} nouvelle${
-          matchingJobs.length > 1 ? "s" : ""
-        } offre${matchingJobs.length > 1 ? "s" : ""} 100% remote pour votre profil`;
+        // Limiter au top 10 des offres les plus pertinentes
+        const topJobs = matchingJobs.slice(0, 10);
+        const html = buildJobDigestEmailHtml({ jobs: topJobs, alert, siteUrl });
+        const subject = `🔔 ${topJobs.length} nouvelle${
+          topJobs.length > 1 ? "s" : ""
+        } offre${topJobs.length > 1 ? "s" : ""} 100% remote pour votre profil`;
 
         const sendRes = await sendResendEmail({
           apiKey: resendApiKey,
@@ -199,7 +234,7 @@ async function processNotifications(env, jobs = [], siteUrl = "https://remote-jo
           type: "email",
           recipient: alert.email,
           subject_or_title: subject,
-          items_count: matchingJobs.length,
+          items_count: topJobs.length,
           status: sendRes.success ? "sent" : "failed",
           error_message: sendRes.error,
         });
@@ -214,13 +249,13 @@ async function processNotifications(env, jobs = [], siteUrl = "https://remote-jo
     console.error("[NOTIF] Erreur processing alertes email :", e);
   }
 
-  // 2. Notifications Web Push
+  // 2. Notifications Web Push Navigateur (TEMPS RÉEL)
   try {
     const pushSubs = await getActivePushSubscriptions(env.DB);
     for (const sub of pushSubs) {
       const payload = {
         title: "Full Remote Jobs 🌍",
-        body: `✨ ${jobs.length} nouvelles offres 100% télétravail disponibles aujourd'hui !`,
+        body: `✨ ${jobs.length} opportunités 100% télétravail disponibles en direct !`,
         url: siteUrl,
       };
 
