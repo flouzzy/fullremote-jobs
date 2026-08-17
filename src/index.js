@@ -391,7 +391,6 @@ export default {
             success: true,
             message: "Alerte activée avec succès ! Un email de confirmation vous a été envoyé.",
             email_sent: emailRes.success,
-            details: emailRes,
           }),
           {
             headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
