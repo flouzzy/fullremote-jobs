@@ -1,13 +1,15 @@
 {
   "name": "fullremote-jobs",
   "version": "1.0.0",
-  "description": "Agrégateur intelligent de postes 100% full remote en français et anglais propulsé par Cloudflare Workers",
+  "description": "Agrégateur intelligent de postes 100% full remote en français et anglais propulsé par Cloudflare Workers & D1 SQL",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "node --check src/index.js"
+    "db:migrate:local": "wrangler d1 execute fullremote-jobs-db --local --file=./migrations/0001_init.sql",
+    "db:migrate:remote": "wrangler d1 execute fullremote-jobs-db --remote --file=./migrations/0001_init.sql",
+    "test": "node --check src/index.js && node --check src/scraper.js && node --check src/db.js && node --check src/ui.js && node --check src/fallback-data.js"
   },
   "devDependencies": {
     "wrangler": "^3.114.0"
