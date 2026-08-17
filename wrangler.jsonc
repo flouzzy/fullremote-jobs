@@ -5,12 +5,5 @@
   "compatibility_date": "2026-08-17",
   "triggers": {
     "crons": ["0 6 * * *"]
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "fullremote-jobs-db",
-      "database_id": "fullremote-jobs-db"
-    }
-  ]
+  }
 }
