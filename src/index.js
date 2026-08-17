@@ -740,31 +740,45 @@ export default {
 
     // 12. Déclencheur manuel de rafraîchissement & notifications : /api/refresh
     if (pathname === "/api/refresh") {
-      const freshJobs = await scrapeAllJobs();
-      cachedJobs = freshJobs;
-      lastIngestionTime = new Date().toISOString();
+      try {
+        const freshJobs = await scrapeAllJobs();
+        cachedJobs = freshJobs;
+        lastIngestionTime = new Date().toISOString();
 
-      let savedDb = 0;
-      if (env && env.DB) {
-        await initDb(env.DB);
-        savedDb = await saveJobsToDb(env.DB, freshJobs);
-      }
-
-      const notifResults = await processNotifications(env, freshJobs, siteUrl);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Scraping rafraîchi et notifications traitées avec succès.",
-          jobs_scraped: freshJobs.length,
-          jobs_saved_d1: savedDb,
-          notifications: notifResults,
-          updated_at: lastIngestionTime,
-        }),
-        {
-          headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+        let savedDb = 0;
+        if (env && env.DB) {
+          await initDb(env.DB);
+          savedDb = await saveJobsToDb(env.DB, freshJobs);
         }
-      );
+
+        const notifResults = await processNotifications(env, freshJobs, siteUrl);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Scraping rafraîchi et notifications traitées avec succès.",
+            jobs_scraped: freshJobs.length,
+            jobs_saved_d1: savedDb,
+            notifications: notifResults,
+            updated_at: lastIngestionTime,
+          }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+          }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: err.message,
+            stack: err.stack,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+          }
+        );
+      }
     }
 
     // 21. Route Racine (/) : Interface Web Responsive & Content Negotiation Markdown

@@ -250,7 +250,13 @@ export async function queryJobsFromDb(db, options = {}) {
       contractType: row.contract_type_label || "CDI / Full-time",
       contractTypeId: row.contract_type_id || "cdi_fulltime",
       contractIcon: row.contract_icon || "💼",
-      tags: JSON.parse(row.tags_json || "[]"),
+      tags: (() => {
+        try {
+          return JSON.parse(row.tags_json || "[]");
+        } catch (e) {
+          return [];
+        }
+      })(),
       job_type: row.job_type,
       location: row.location,
       region: row.region_label,
