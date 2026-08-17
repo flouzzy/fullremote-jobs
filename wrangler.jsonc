@@ -6,6 +6,12 @@
   "triggers": {
     "crons": ["0 6 * * *"]
   },
+  "routes": [
+    {
+      "pattern": "remote-jobs.edounze.com",
+      "custom_domain": true
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
