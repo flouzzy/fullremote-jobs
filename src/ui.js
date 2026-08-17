@@ -21,7 +21,7 @@ export function renderHTML(jobs = [], meta = {}) {
   <meta name="description" content="Annuaire des meilleures offres d'emploi 100% full remote (CDI, Freelance, CDD, Stage) en anglais et en français. Accès libre, direct et sans inscription." />
   <meta property="og:title" content="Full Remote Jobs — 100% Télétravail (CDI / Freelance / CDD)" />
   <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance, CDD ou Stage en France, Europe et Worldwide." />
-  <meta property="og:url" content="https://fullremote-jobs.edounze.com" />
+  <meta property="og:url" content="https://remote-jobs.edounze.com" />
   <meta property="og:type" content="website" />
   <link rel="alternate" type="application/rss+xml" title="Flux RSS FullRemote.Jobs" href="/rss" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1217,7 +1217,7 @@ export function renderHTML(jobs = [], meta = {}) {
         <strong>FullRemote.Jobs</strong> — Développé et maintenu par <a href="https://edounze.com" target="_blank" style="color:var(--primary); font-weight:600;">Charles EDOU NZE</a>.
       </div>
       <div class="footer-links">
-        <a href="https://fullremote-jobs.edounze.com">fullremote-jobs.edounze.com</a>
+        <a href="https://remote-jobs.edounze.com">remote-jobs.edounze.com</a>
         <a href="/simulateur-salaire-remote">Simulateur Salaire</a>
         <a href="/post-a-job">Publier une offre</a>
         <a href="/llms.txt">llms.txt</a>
@@ -1957,7 +1957,7 @@ export function renderHTML(jobs = [], meta = {}) {
 /**
  * Page de confirmation de désinscription
  */
-export function renderUnsubscribePage({ success, email, siteUrl = "https://fullremote-jobs.edounze.com" }) {
+export function renderUnsubscribePage({ success, email, siteUrl = "https://remote-jobs.edounze.com" }) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>

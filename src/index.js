@@ -159,7 +159,7 @@ async function getOrFetchJobs(env) {
 /**
  * Traite et distribue les alertes emails et notifications web push
  */
-async function processNotifications(env, jobs = [], siteUrl = "https://fullremote-jobs.edounze.com") {
+async function processNotifications(env, jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
   if (!jobs || jobs.length === 0 || !env || !env.DB) {
     return { emails_sent: 0, pushes_sent: 0 };
   }
@@ -253,7 +253,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const siteUrl = `${url.protocol}//${url.host}`;
+    const siteUrl = (env && env.SITE_URL) || (url.host.includes("edounze.com") ? `${url.protocol}//${url.host}` : "https://remote-jobs.edounze.com");
 
     // Headers standards de sécurité et CORS
     const corsHeaders = {
@@ -834,7 +834,7 @@ export default {
         }
 
         // Traitement et envoi des alertes emails & web push
-        const siteUrl = "https://fullremote-jobs.edounze.com";
+        const siteUrl = (env && env.SITE_URL) || "https://remote-jobs.edounze.com";
         const notifResults = await processNotifications(env, freshJobs, siteUrl);
 
         const durationMs = Date.now() - startTime;

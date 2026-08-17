@@ -15,7 +15,7 @@ function escapeHtml(str = "") {
  * Génère une page HTML dédiée pour une offre avec balises Schema.org JobPosting et OpenGraph
  */
 export function renderJobDetailPage(job, meta = {}) {
-  const siteUrl = meta.siteUrl || "https://fullremote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
   const canonicalUrl = `${siteUrl}/jobs/${encodeURIComponent(job.id)}`;
   const title = `${job.title} chez ${job.company} (100% Full Remote)`;
   const description = `${job.title} — ${job.company} recrute en 100% télétravail (${job.region}). Contrat : ${job.contractType || "CDI / Full-time"}.${job.salary ? ` Salaire : ${job.salary}.` : ""} Postulez directement sans inscription.`;
@@ -337,7 +337,7 @@ export function renderJobDetailPage(job, meta = {}) {
 /**
  * Génère le flux RSS 2.0 officiel
  */
-export function generateRssFeed(jobs = [], siteUrl = "https://fullremote-jobs.edounze.com") {
+export function generateRssFeed(jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
   const itemsXml = jobs
     .slice(0, 60)
     .map((j) => {
@@ -380,7 +380,7 @@ export function generateRssFeed(jobs = [], siteUrl = "https://fullremote-jobs.ed
 /**
  * Génère le sitemap XML
  */
-export function generateSitemap(jobs = [], siteUrl = "https://fullremote-jobs.edounze.com") {
+export function generateSitemap(jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
   const urlsXml = jobs
     .map(
       (j) => `

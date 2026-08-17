@@ -12,7 +12,7 @@ function escapeHtml(str = "") {
 }
 
 export function renderPostJobPage(meta = {}) {
-  const siteUrl = meta.siteUrl || "https://fullremote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
 
   return `<!DOCTYPE html>
 <html lang="fr" class="light">
