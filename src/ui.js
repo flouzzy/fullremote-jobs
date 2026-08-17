@@ -1103,8 +1103,8 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-footer">
-        <a id="modalSeoLink" href="#" target="_blank" class="btn-icon" title="Ouvrir la page dédiée" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
-          📄 Fiche SEO
+        <a id="modalSeoLink" href="#" target="_blank" class="btn-icon" title="Ouvrir la page détaillée de l'offre" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
+          📄 Fiche détaillée
         </a>
         <button id="modalCopyBtn" class="btn-icon" title="Copier le lien" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
           🔗 Copier le lien

@@ -109,7 +109,7 @@ Ce document contient l'intégralité des offres d'emploi 100% télétravail disp
     const detailsUrl = `${siteUrl}/jobs/${encodeURIComponent(job.id)}`;
     const applyUrl = job.url || detailsUrl;
 
-    md += `| ${region} | ${contract} | **${title}** | ${company} | ${salary} | [Fiche SEO](${detailsUrl}) | [Postuler ↗](${applyUrl}) |\n`;
+    md += `| ${region} | ${contract} | **${title}** | ${company} | ${salary} | [Détails](${detailsUrl}) | [Postuler ↗](${applyUrl}) |\n`;
   }
 
   md += `\n---\n*Généré automatiquement par le moteur GEO de FullRemote.Jobs — Propulsé par Cloudflare Workers & D1.*\n`;
