@@ -18,7 +18,7 @@ export function renderHTML(jobs = [], meta = {}) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Full Remote Jobs — Les meilleurs emplois 100% Télétravail (FR / EN)</title>
-  <meta name="description" content="Agrégateur mondial d'offres d'emploi 100% full remote (CDI, Freelance, CDD, Stage) en anglais et en français. Scraping automatisé, accès libre et sans inscription." />
+  <meta name="description" content="Annuaire des meilleures offres d'emploi 100% full remote (CDI, Freelance, CDD, Stage) en anglais et en français. Accès libre, direct et sans inscription." />
   <meta property="og:title" content="Full Remote Jobs — 100% Télétravail (CDI / Freelance / CDD)" />
   <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance, CDD ou Stage en France, Europe et Worldwide." />
   <meta property="og:url" content="https://fullremote-jobs.edounze.com" />
@@ -161,7 +161,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
     /* Hero */
     .hero {
-      padding: 2.75rem 0 1.75rem;
+      padding: 2.75rem 0 2rem;
       text-align: center;
       border-bottom: 1px solid rgba(30, 41, 59, 0.6);
       background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.12) 0%, transparent 65%);
@@ -210,26 +210,7 @@ export function renderHTML(jobs = [], meta = {}) {
       font-size: 1.05rem;
       color: var(--text-muted);
       max-width: 720px;
-      margin: 0 auto 1.5rem;
-    }
-
-    .hero-sources-strip {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1.25rem;
-      flex-wrap: wrap;
-      font-size: 0.8125rem;
-      color: var(--text-dim);
-    }
-
-    .source-chip {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      font-family: var(--font-mono);
-      color: #94a3b8;
+      margin: 0 auto;
     }
 
     /* Controls Bar */
@@ -575,10 +556,12 @@ export function renderHTML(jobs = [], meta = {}) {
       color: var(--text-dim);
     }
 
-    .job-source-tag {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
+    .job-verified-tag {
+      font-size: 0.75rem;
       color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
 
     .job-actions {
@@ -807,20 +790,10 @@ export function renderHTML(jobs = [], meta = {}) {
     <div class="container">
       <div class="hero-badge">
         <span class="pulse-dot"></span>
-        <span id="heroBadgeCount">${totalCount} offres 100% full remote en ligne</span>
+        <span id="heroBadgeCount">${totalCount} offres 100% full remote disponibles</span>
       </div>
       <h1>L'annuaire mondial des jobs <span>100% Télétravail</span>.</h1>
-      <p>Scraping automatisé et en direct des meilleures opportunités sans restriction de localisation (CDI, Freelance, CDD, Stage). Zéro inscription requise.</p>
-      
-      <div class="hero-sources-strip">
-        <span>📡 Sources indexées en continu :</span>
-        <span class="source-chip">Remotive</span>
-        <span class="source-chip">Jobicy</span>
-        <span class="source-chip">RemoteOK</span>
-        <span class="source-chip">WeWorkRemotely</span>
-        <span class="source-chip">Arbeitnow</span>
-        <span class="source-chip">HackerNews</span>
-      </div>
+      <p>Le répertoire vérifié des meilleures opportunités de carrière sans restriction de localisation (CDI, Freelance, CDD, Stage). Accès direct et sans inscription.</p>
     </div>
   </section>
 
@@ -896,7 +869,7 @@ export function renderHTML(jobs = [], meta = {}) {
         Affichage de <strong id="visibleCount">${totalCount}</strong> offre(s) vérifiée(s)
       </div>
       <div style="font-size:0.8rem; color:var(--text-dim);">
-        Dernière synchronisation : <strong>${dateFormatted} UTC</strong>
+        Actualisé le : <strong>${dateFormatted} UTC</strong>
       </div>
     </div>
 
@@ -972,7 +945,6 @@ export function renderHTML(jobs = [], meta = {}) {
       <div class="footer-links">
         <a href="https://fullremote-jobs.edounze.com">fullremote-jobs.edounze.com</a>
         <a href="/api/jobs" target="_blank">Endpoint JSON</a>
-        <a href="/api/stats" target="_blank">Stats API</a>
         <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank">GitHub</a>
       </div>
     </div>
@@ -1094,7 +1066,7 @@ export function renderHTML(jobs = [], meta = {}) {
           <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
           \${job.salary ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\` : ''}
           <span class="badge badge-lang">\${job.language === 'fr' ? '🇫🇷 Français' : '🇬🇧 English'}</span>
-          <span class="badge" style="background:#1e293b; color:#94a3b8;">📡 \${escapeHtml(job.source)}</span>
+          <span class="badge badge-lang">100% Télétravail</span>
         </div>
         <p style="margin-bottom:1.25rem;">\${escapeHtml(job.description_snippet || 'Aucun aperçu disponible.')}</p>
         <div style="font-size:0.8rem; color:var(--text-dim);">Date de publication : \${new Date(job.published_at).toLocaleString('fr-FR')}</div>
@@ -1197,8 +1169,8 @@ export function renderHTML(jobs = [], meta = {}) {
             </div>
 
             <div class="job-card-footer">
-              <div class="job-source-tag">
-                \${timeAgo(job.published_at)} • via \${escapeHtml(job.source)}
+              <div class="job-verified-tag">
+                \${timeAgo(job.published_at)} • 100% Télétravail
               </div>
               <div class="job-actions">
                 <button class="btn-icon" title="Détails" onclick="openModal('\${escapeHtml(job.id)}')">
@@ -1343,9 +1315,9 @@ export function renderHTML(jobs = [], meta = {}) {
     };
 
     copyMdBtn.onclick = () => {
-      let md = '# Full Remote Jobs Catalog\\n\\n| Région | Contrat | Poste | Entreprise | Salaire | Source | Lien |\\n|---|---|---|---|---|---|---|\\n';
+      let md = '# Full Remote Jobs Catalog\\n\\n| Région | Contrat | Poste | Entreprise | Salaire | Lien |\\n|---|---|---|---|---|---|\\n';
       JOBS_DATA.forEach(j => {
-        md += \`| \${j.regionFlag || '🌍'} \${j.region} | \${j.contractIcon || '💼'} \${j.contractType || 'CDI'} | \${j.title} | \${j.company} | \${j.salary || '—'} | \${j.source} | [\${j.company}](\${j.url}) |\\n\`;
+        md += \`| \${j.regionFlag || '🌍'} \${j.region} | \${j.contractIcon || '💼'} \${j.contractType || 'CDI'} | \${j.title} | \${j.company} | \${j.salary || '—'} | [\${j.company}](\${j.url}) |\\n\`;
       });
       if (navigator.clipboard) {
         navigator.clipboard.writeText(md).then(() => showToast('Markdown complet copié !'));
