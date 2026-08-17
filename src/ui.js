@@ -1974,6 +1974,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
       const favTitle = currentLang === 'fr' ? "Sauvegarder l'offre" : "Save job";
       const detailsLabel = currentLang === 'fr' ? 'Détails ↗' : 'Details ↗';
+      const tagsHtml = (j.tags || []).slice(0, 3).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join('');
 
       return \`
         <div class="job-card" onclick="openJobModal('\${escapeAttr(j.id)}')">
