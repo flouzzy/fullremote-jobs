@@ -1374,24 +1374,15 @@ export function renderHTML(jobs = [], meta = {}) {
       };
     }
 
-    function cleanSnippet(text = '') {
+    function cleanSnippet(text) {
       if (!text) return '';
-      let clean = String(text);
-      for (let i = 0; i < 3; i++) {
-        clean = clean
-          .replace(/&lt;/gi, '<')
-          .replace(/&gt;/gi, '>')
-          .replace(/&quot;/gi, '"')
-          .replace(/&#39;/gi, "'")
-          .replace(/&#x2F;/gi, '/')
-          .replace(/&amp;/gi, '&')
-          .replace(/&nbsp;/gi, ' ');
+      try {
+        const div = document.createElement('div');
+        div.innerHTML = String(text);
+        return (div.textContent || div.innerText || '').replace(/\\s+/g, ' ').trim();
+      } catch (e) {
+        return String(text).replace(/<[^>]+>/g, ' ').trim();
       }
-      clean = clean
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<[^>]+>/g, ' ');
-      return clean.replace(/&[a-z0-9#]+;/gi, ' ').replace(/\\s+/g, ' ').trim();
     }
 
     function openJobModal(jobId) {
@@ -1402,10 +1393,11 @@ export function renderHTML(jobs = [], meta = {}) {
       document.getElementById('modalCompany').textContent = job.company;
       
       const avatar = document.getElementById('modalAvatar');
+      const initial = (job.company || 'C')[0].toUpperCase();
       if (job.company_logo) {
-        avatar.innerHTML = \`<img src="\${escapeAttr(job.company_logo)}" alt="\${escapeAttr(job.company)}" onerror="this.parentElement.textContent='\${escapeHtml((job.company||'C')[0])}'" />\`;
+        avatar.innerHTML = \`<img src="\${escapeAttr(job.company_logo)}" alt="\${escapeAttr(job.company)}" onerror="this.parentElement.textContent='\${escapeAttr(initial)}'" />\`;
       } else {
-        avatar.textContent = (job.company || 'C')[0].toUpperCase();
+        avatar.textContent = initial;
       }
 
       const body = document.getElementById('modalBody');
@@ -1623,9 +1615,10 @@ export function renderHTML(jobs = [], meta = {}) {
 
     function renderJobCardHtml(j) {
       const isFav = favorites.has(j.id);
+      const initial = (j.company || 'C')[0].toUpperCase();
       const avatarHtml = j.company_logo
-        ? \`<img src="\${escapeAttr(j.company_logo)}" alt="\${escapeAttr(j.company)}" loading="lazy" onerror="this.parentElement.textContent='\${escapeHtml((j.company||'C')[0])}'" />\`
-        : escapeHtml((j.company || 'C')[0].toUpperCase());
+        ? \`<img src="\${escapeAttr(j.company_logo)}" alt="\${escapeAttr(j.company)}" loading="lazy" onerror="this.parentElement.textContent='\${escapeAttr(initial)}'" />\`
+        : escapeHtml(initial);
 
       const salaryTag = j.salary
         ? \`<span class="tag-badge tag-salary">💰 \${escapeHtml(j.salary)}</span>\`
