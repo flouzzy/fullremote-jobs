@@ -172,7 +172,7 @@ async function processNotifications(env, jobs = [], siteUrl = "https://remote-jo
   }
 
   const resendApiKey = env.RESEND_API_KEY;
-  const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <onboarding@resend.dev>";
+  const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
   let emailsSent = 0;
   let pushesSent = 0;
 
@@ -605,7 +605,7 @@ export default {
         }
 
         const resendApiKey = env.RESEND_API_KEY;
-        const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <onboarding@resend.dev>";
+        const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
         const welcomeHtml = buildWelcomeEmailHtml({ alert: savedAlert, siteUrl });
 
         const emailRes = await sendResendEmail({

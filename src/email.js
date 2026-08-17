@@ -10,7 +10,7 @@ export const DEFAULT_SITE_URL = "https://remote-jobs.edounze.com";
  */
 export async function sendResendEmail({
   apiKey,
-  from = "FullRemote Jobs <onboarding@resend.dev>",
+  from = "FullRemote Jobs <alerts@hey.edounze.com>",
   to,
   subject,
   html,
