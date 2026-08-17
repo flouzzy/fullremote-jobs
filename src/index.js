@@ -699,7 +699,7 @@ export default {
       const job = jobs.find((j) => j.id === jobId);
 
       if (job) {
-        const html = renderJobDetailPage(job, { siteUrl });
+        const html = renderJobDetailPage(job, { siteUrl, allJobs: jobs });
         return new Response(html, {
           headers: {
             "Content-Type": "text/html; charset=utf-8",

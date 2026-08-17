@@ -1018,17 +1018,9 @@ export function renderHTML(jobs = [], meta = {}) {
         </div>
       </div>
 
-      <!-- Quick Chips Suggestions -->
-      <div class="quick-chips-row">
+      <!-- Quick Chips Suggestions (Dynamiques) -->
+      <div class="quick-chips-row" id="quickChipsContainer">
         <span class="chips-label">💡 Populaire :</span>
-        <button class="quick-chip" onclick="applyQuickChip('React')">React</button>
-        <button class="quick-chip" onclick="applyQuickChip('Go')">Go / Golang</button>
-        <button class="quick-chip" onclick="applyQuickChip('Python')">Python</button>
-        <button class="quick-chip" onclick="applyQuickChip('DevOps')">DevOps</button>
-        <button class="quick-chip" onclick="applyQuickChip('AI')">IA & LLM</button>
-        <button class="quick-chip" onclick="applyQuickChip('Stripe')">Stripe</button>
-        <button class="quick-chip" onclick="applyQuickChip('CDI')">💼 CDI</button>
-        <button class="quick-chip" onclick="applyQuickChip('Freelance')">⚡ Freelance</button>
       </div>
     </section>
 
@@ -1455,6 +1447,47 @@ export function renderHTML(jobs = [], meta = {}) {
         renderActiveView();
       };
     }
+
+    // Dynamic Quick Chips Calculation from real dataset
+    function renderDynamicQuickChips() {
+      const container = document.getElementById('quickChipsContainer');
+      if (!container) return;
+
+      const techKeywords = [
+        'React', 'Go', 'Python', 'DevOps', 'TypeScript', 'Node', 'AWS', 'Kubernetes',
+        'Rust', 'Java', 'Next.js', 'Vue', 'PostgreSQL', 'Docker', 'AI', 'Fullstack',
+        'Backend', 'Frontend', 'Product', 'Data', 'Stripe', 'Lead'
+      ];
+
+      const counts = {};
+      for (const kw of techKeywords) {
+        counts[kw] = 0;
+      }
+
+      for (const job of JOBS_DATA) {
+        const text = ((job.title || "") + " " + (job.company || "") + " " + (job.tags || []).join(" ")).toLowerCase();
+        for (const kw of techKeywords) {
+          if (text.includes(kw.toLowerCase())) {
+            counts[kw]++;
+          }
+        }
+      }
+
+      const topKeywords = Object.entries(counts)
+        .filter(([_, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 7);
+
+      let html = '<span class="chips-label">💡 Populaire :</span>';
+      for (const [kw, count] of topKeywords) {
+        html += \`<button class="quick-chip" onclick="applyQuickChip('\${escapeAttr(kw)}')">\${escapeHtml(kw)} <span style="font-size:0.7rem; opacity:0.75;">(\${count})</span></button>\`;
+      }
+      html += \`<button class="quick-chip" onclick="applyQuickChip('CDI')">💼 CDI</button>\`;
+      html += \`<button class="quick-chip" onclick="applyQuickChip('Freelance')">⚡ Freelance</button>\`;
+
+      container.innerHTML = html;
+    }
+    renderDynamicQuickChips();
 
     // Quick Chip Click Handler
     window.applyQuickChip = function(query) {

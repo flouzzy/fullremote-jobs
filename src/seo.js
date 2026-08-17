@@ -24,8 +24,9 @@ export function renderJobDetailPage(job, meta = {}) {
   const description = `${job.title} — ${job.company} recrute en 100% télétravail (${job.region}). Contrat : ${job.contractType || "CDI / Full-time"}.${job.salary ? ` Salaire : ${job.salary}.` : ""} Postulez directement sans inscription.`;
 
   // Construction du JSON-LD pour Google For Jobs
+  const pubTime = job.published_at ? new Date(job.published_at).getTime() : Date.now();
   const validThroughDate = new Date(
-    new Date(job.published_at).getTime() + 45 * 24 * 60 * 60 * 1000
+    (isNaN(pubTime) ? Date.now() : pubTime) + 45 * 24 * 60 * 60 * 1000
   ).toISOString();
 
   const employmentTypeMap = {
@@ -287,7 +288,7 @@ export function renderJobDetailPage(job, meta = {}) {
         </div>
         <div>
           <div class="meta-item-label">Date de parution</div>
-          <div class="meta-item-val">${new Date(job.published_at).toLocaleDateString("fr-FR")}</div>
+          <div class="meta-item-val">${job.published_at ? new Date(job.published_at).toLocaleDateString("fr-FR") : "Récent"}</div>
         </div>
       </div>
 
@@ -307,6 +308,77 @@ export function renderJobDetailPage(job, meta = {}) {
         </button>
       </div>
     </article>
+
+    <!-- Section Offres Similaires 100% Télétravail -->
+    ${(() => {
+      const allJobs = meta.allJobs || [];
+      const similarJobs = allJobs
+        .filter((j) => j.id !== job.id)
+        .map((j) => {
+          let score = 0;
+          if (j.categoryId && job.categoryId && j.categoryId === job.categoryId) score += 4;
+          if (j.contractTypeId && job.contractTypeId && j.contractTypeId === job.contractTypeId) score += 2;
+          if (j.regionId && job.regionId && (j.regionId === job.regionId || j.regionId === "worldwide")) score += 1;
+          const currentTags = new Set((job.tags || []).map((t) => t.toLowerCase()));
+          for (const t of (j.tags || [])) {
+            if (currentTags.has(t.toLowerCase())) score += 2;
+          }
+          return { job: j, score };
+        })
+        .sort((a, b) => b.score - a.score || new Date(b.job.published_at) - new Date(a.job.published_at))
+        .slice(0, 4)
+        .map((item) => item.job);
+
+      if (similarJobs.length === 0) return "";
+
+      return `
+      <section style="margin-top: 3rem; padding-top: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em;">
+            💼 Offres similaires 100% Télétravail
+          </h3>
+          <a href="/" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
+            Voir tout l'annuaire →
+          </a>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+          ${similarJobs.map((sj) => {
+            const sjDetailsUrl = `${siteUrl}/jobs/${encodeURIComponent(sj.id)}`;
+            const sjInitial = (sj.company || "C").charAt(0).toUpperCase();
+            const sjAvatar = sj.company_logo
+              ? `<img src="${escapeHtml(sj.company_logo)}" alt="${escapeHtml(sj.company)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.textContent='${sjInitial}'" />`
+              : sjInitial;
+            const salaryBadge = sj.salary
+              ? `<span style="font-size:0.72rem; font-weight:700; color:var(--emerald); background:var(--emerald-bg); padding:2px 6px; border-radius:4px; border:1px solid rgba(16,185,129,0.25);">💰 ${escapeHtml(sj.salary)}</span>`
+              : "";
+            return `
+            <a href="${sjDetailsUrl}" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='translateY(0)';">
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--meta-bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; color: var(--primary); flex-shrink: 0; overflow: hidden;">
+                    ${sjAvatar}
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(sj.company)}</div>
+                    <div style="font-size: 0.9rem; font-weight: 700; color: var(--text); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(sj.title)}</div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem;">
+                  <span style="font-size: 0.72rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(99,102,241,0.1); color: #6366f1;">${sj.contractIcon || "💼"} ${escapeHtml(sj.contractType || "CDI")}</span>
+                  <span style="font-size: 0.72rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(37,99,235,0.1); color: #2563eb;">${sj.regionFlag || "🌍"} ${escapeHtml(sj.region || "Worldwide")}</span>
+                  ${salaryBadge}
+                </div>
+              </div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-align: right; margin-top: 0.5rem;">
+                Consulter ↗
+              </div>
+            </a>
+            `;
+          }).join("")}
+        </div>
+      </section>
+      `;
+    })()}
   </main>
   <script>
     const themeToggleBtn = document.getElementById('themeToggleBtn');
