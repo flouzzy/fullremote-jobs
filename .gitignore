@@ -1,5 +1,35 @@
+# Dependencies
 node_modules/
+package-lock.json
+
+# Cloudflare & Wrangler local state
 .wrangler/
+.cloudflare/
 dist/
-.DS_Store
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+*.pem
+*.key
+*.cert
+*.crt
+credentials*.json
+service-account*.json
+
+# Databases & local caches
+*.db
+*.sqlite
+*.sqlite3
 *.log
+
+# Operating system & IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.tmp
+*.temp
