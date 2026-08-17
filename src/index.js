@@ -914,7 +914,7 @@ export default {
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=300, s-maxage=1800",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           ...corsHeaders,
         },
       });
