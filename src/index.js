@@ -43,6 +43,7 @@ import {
   handleMcpRequest,
 } from "./geo.js";
 import { renderPostJobPage } from "./b2b.js";
+import { renderSalaryCalculatorPage } from "./calculator.js";
 
 // Cache mémoire local en runtime Worker
 let cachedJobs = null;
@@ -342,6 +343,18 @@ export default {
     // 8. Route Recruteurs : /post-a-job (B2B 49€)
     if (pathname === "/post-a-job") {
       const html = renderPostJobPage({ siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 9. Route Simulateur de Salaire & Télétravail International
+    if (pathname === "/simulateur-salaire-remote" || pathname === "/salary-calculator") {
+      const html = renderSalaryCalculatorPage({ siteUrl });
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",

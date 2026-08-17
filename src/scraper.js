@@ -724,16 +724,255 @@ async function scrapeHackerNews() {
 }
 
 /**
+ * Source 7 : Himalayas API (Emplois full remote mondiaux vérifiés)
+ */
+export async function scrapeHimalayas() {
+  try {
+    const res = await fetch("https://himalayas.app/jobs/api?limit=50", {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) {
+      console.warn(`Source Himalayas HTTP ${res.status}`);
+      return [];
+    }
+
+    const data = await res.json();
+    if (!data || !Array.isArray(data.jobs)) return [];
+
+    return data.jobs
+      .filter((j) => isStrictlyRemote(j.title, j.description || j.excerpt))
+      .map((j) => {
+        const title = j.title || "Poste Remote";
+        const company = j.companyName || "Entreprise";
+        const tags = Array.isArray(j.categories) ? j.categories.map((c) => c.replace(/-/g, " ")) : [];
+        const locationStr = Array.isArray(j.locationRestrictions) ? j.locationRestrictions.join(", ") : "Worldwide";
+        const category = categorizeJob(title, tags.join(" "), tags);
+        const region = detectRegion(locationStr, title, tags);
+        const contract = detectContractType(title, j.employmentType || "", j.description || j.excerpt || "", tags);
+        const lang = detectLanguage(title, j.description || j.excerpt);
+
+        let rawSalary = "";
+        if (j.minSalary && j.maxSalary) {
+          rawSalary = `${j.minSalary.toLocaleString("en-US")} - ${j.maxSalary.toLocaleString("en-US")} $ / an`;
+        } else if (j.minSalary) {
+          rawSalary = `À partir de ${j.minSalary.toLocaleString("en-US")} $ / an`;
+        }
+        const salaryObj = parseSalaryDetails(rawSalary);
+
+        const id = `himalayas-${(j.companySlug || "co")}-${title}`
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .slice(0, 80);
+
+        return {
+          id,
+          title,
+          company,
+          company_logo: j.companyLogo || "",
+          url: j.applicationLink || j.guid || "https://himalayas.app",
+          category: category.label,
+          categoryId: category.id,
+          categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
+          job_type: contract.label,
+          location: locationStr,
+          region: region.label,
+          regionId: region.id,
+          regionFlag: region.flag,
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
+          published_at: j.pubDate ? new Date(j.pubDate * 1000).toISOString() : new Date().toISOString(),
+          description_snippet: stripHtml(j.excerpt || j.description || "").slice(0, 280) + "...",
+          source: "Himalayas",
+          language: lang,
+          is_verified: 1,
+        };
+      });
+  } catch (err) {
+    console.warn("Source Himalayas erreur:", err.message);
+    return [];
+  }
+}
+
+/**
+ * Source 8 : NoDesk RSS (Sélection d'offres télétravail international)
+ */
+export async function scrapeNoDesk() {
+  try {
+    const res = await fetch("https://nodesk.co/remote-jobs/index.xml", {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) {
+      console.warn(`Source NoDesk HTTP ${res.status}`);
+      return [];
+    }
+
+    const xml = await res.text();
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+    const matches = [...xml.matchAll(itemRegex)];
+    const jobs = [];
+
+    for (const match of matches.slice(0, 30)) {
+      const item = match[1];
+      const titleMatch = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/);
+      const linkMatch = item.match(/<link>(.*?)<\/link>/);
+      const pubDateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
+      const descMatch = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/);
+
+      const fullTitle = titleMatch ? titleMatch[1] : "";
+      const url = linkMatch ? linkMatch[1] : "";
+      const pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
+      const desc = descMatch ? stripHtml(descMatch[1]) : "";
+
+      let title = fullTitle;
+      let company = "Entreprise Remote";
+      if (fullTitle.includes(" at ")) {
+        const parts = fullTitle.split(" at ");
+        title = parts[0].trim();
+        company = parts[1].trim();
+      }
+
+      if (!isStrictlyRemote(title, desc)) continue;
+
+      const category = categorizeJob(title, "", []);
+      const region = detectRegion("Worldwide", title, []);
+      const contract = detectContractType(title, "", desc, []);
+      const salaryObj = parseSalaryDetails(desc);
+      const lang = detectLanguage(title, desc);
+
+      const id = `nodesk-${company}-${title}`
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .slice(0, 80);
+
+      jobs.push({
+        id,
+        title,
+        company,
+        company_logo: "",
+        url,
+        category: category.label,
+        categoryId: category.id,
+        categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
+        job_type: contract.label,
+        location: "Worldwide",
+        region: region.label,
+        regionId: region.id,
+        regionFlag: region.flag,
+        salary: salaryObj.raw,
+        salary_min_eur: salaryObj.min_eur,
+        salary_max_eur: salaryObj.max_eur,
+        salary_min_usd: salaryObj.min_usd,
+        salary_max_usd: salaryObj.max_usd,
+        currency: salaryObj.currency,
+        published_at: pubDate,
+        description_snippet: desc.slice(0, 280) + "...",
+        source: "NoDesk",
+        language: lang,
+        is_verified: 1,
+      });
+    }
+
+    return jobs;
+  } catch (err) {
+    console.warn("Source NoDesk erreur:", err.message);
+    return [];
+  }
+}
+
+/**
+ * Source 9 : Jobicy France Remote (Offres 100% télétravail éligibles France)
+ */
+export async function scrapeJobicyFrance() {
+  try {
+    const res = await fetch("https://jobicy.com/api/v2/remote-jobs?count=40&geo=france", {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data || !Array.isArray(data.jobs)) return [];
+
+    return data.jobs
+      .filter((j) => isStrictlyRemote(j.jobTitle, j.jobDescription))
+      .map((j) => {
+        const title = j.jobTitle || "Poste Remote";
+        const company = j.companyName || "Entreprise";
+        const tags = Array.isArray(j.jobCategories) ? j.jobCategories : [];
+        const category = categorizeJob(title, j.jobCategory || "", tags);
+        const region = detectRegion("France", title, tags);
+        const contract = detectContractType(title, j.jobType || "", j.jobDescription || "", tags);
+        const salaryObj = parseSalaryDetails(j.annualSalaryMin ? `${j.annualSalaryMin} - ${j.annualSalaryMax} EUR` : "");
+        const lang = detectLanguage(title, j.jobDescription);
+
+        const id = `jobicy-fr-${j.id || Math.random().toString(36).substring(2, 8)}`;
+
+        return {
+          id,
+          title,
+          company,
+          company_logo: j.companyLogo || "",
+          url: j.url || "https://jobicy.com",
+          category: category.label,
+          categoryId: category.id,
+          categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
+          job_type: contract.label,
+          location: "France & Francophonie",
+          region: "France & Francophonie",
+          regionId: "france",
+          regionFlag: "🇫🇷",
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
+          published_at: j.pubDate ? new Date(j.pubDate).toISOString() : new Date().toISOString(),
+          description_snippet: stripHtml(j.jobExcerpt || j.jobDescription || "").slice(0, 280) + "...",
+          source: "JobicyFR",
+          language: lang,
+          is_verified: 1,
+        };
+      });
+  } catch (err) {
+    console.warn("Source JobicyFR erreur:", err.message);
+    return [];
+  }
+}
+
+/**
  * Pipeline d'agrégation globale avec purge des offres obsolètes (> 35 jours)
  */
 export async function scrapeAllJobs() {
   const tasks = [
     scrapeRemotive(),
     scrapeJobicy(),
+    scrapeJobicyFrance(),
     scrapeArbeitnow(),
     scrapeRemoteOk(),
     scrapeWeWorkRemotely(),
     scrapeHackerNews(),
+    scrapeHimalayas(),
+    scrapeNoDesk(),
   ];
 
   const results = await Promise.allSettled(tasks);

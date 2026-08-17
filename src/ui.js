@@ -910,6 +910,9 @@ export function renderHTML(jobs = [], meta = {}) {
         <a href="/post-a-job" class="nav-btn" style="background:var(--primary); color:white; font-weight:600; border:none;" title="Recruteurs : Publier une offre">
           <span>💼</span> <span class="hide-mobile">Publier (49€)</span>
         </a>
+        <a href="/simulateur-salaire-remote" class="nav-btn" title="Simulateur Salaire Télétravail International">
+          <span>💶</span> <span class="hide-mobile">Simulateur</span>
+        </a>
         <button id="navAlertBtn" class="nav-btn nav-btn-alert" title="Créer une alerte personnalisée" onclick="openAlertModal()">
           <span>🔔</span> <span class="hide-mobile">Alertes</span>
         </button>
@@ -1181,6 +1184,22 @@ export function renderHTML(jobs = [], meta = {}) {
     </div>
   </div>
 
+  <!-- Newsletter Capture Section -->
+  <section style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3.5rem 0; margin-top: 3.5rem;">
+    <div class="container" style="max-width: 680px; text-align: center;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📬</div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.6rem; letter-spacing: -0.02em; color: var(--text);">Le Digest Quotidien du Full Remote</h2>
+      <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.</p>
+      <form onsubmit="handleQuickNewsletter(event)" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+        <input type="email" id="quickEmail" required placeholder="Votre adresse email (ex: alex@gmail.com)" class="form-input" style="max-width: 360px; background: var(--bg-card);" />
+        <button type="submit" id="quickEmailBtn" class="btn-apply" style="border: none; padding: 0.7rem 1.6rem; font-weight: 700; cursor: pointer;">
+          🚀 S'inscrire gratuitement
+        </button>
+      </form>
+      <div id="quickFeedback" style="display: none; margin-top: 0.85rem; font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto;"></div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer>
     <div class="container footer-inner">
@@ -1189,6 +1208,9 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
       <div class="footer-links">
         <a href="https://fullremote-jobs.edounze.com">fullremote-jobs.edounze.com</a>
+        <a href="/simulateur-salaire-remote">Simulateur Salaire</a>
+        <a href="/post-a-job">Publier une offre</a>
+        <a href="/llms.txt">llms.txt</a>
         <a href="/rss" target="_blank">Flux RSS</a>
         <a href="/sitemap.xml" target="_blank">Sitemap</a>
         <a href="/api/jobs" target="_blank">API JSON</a>
@@ -1780,6 +1802,70 @@ export function renderHTML(jobs = [], meta = {}) {
         console.error('Erreur Web Push :', err);
         showToast("Erreur activation notifications : " + err.message);
         if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
+      }
+    };
+
+    // Quick Newsletter Handler
+    window.handleQuickNewsletter = async function(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('quickEmail');
+      const email = emailInput ? emailInput.value.trim() : '';
+      const btn = document.getElementById('quickEmailBtn');
+      const feedback = document.getElementById('quickFeedback');
+
+      if (!email) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Inscription...';
+      }
+
+      try {
+        const res = await fetch('/api/alerts/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            region_id: 'all',
+            category_id: 'all',
+            contract_type_id: 'all',
+            frequency: 'daily',
+            keywords: ''
+          })
+        });
+        const data = await res.json();
+
+        if (feedback) feedback.style.display = 'block';
+        if (res.ok && data.success) {
+          if (feedback) {
+            feedback.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+            feedback.style.color = '#10b981';
+            feedback.textContent = '✓ Félicitations ! Vous recevrez le digest chaque matin à 08h00.';
+          }
+          showToast('Inscription au digest quotidien confirmée ! 📬');
+          if (emailInput) emailInput.value = '';
+          if (btn) btn.textContent = '✓ Inscrit';
+        } else {
+          if (feedback) {
+            feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
+            feedback.style.color = '#e11d48';
+            feedback.textContent = '✕ ' + (data.error || "Erreur lors de l'inscription.");
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🚀 S'inscrire gratuitement";
+          }
+        }
+      } catch (err) {
+        if (feedback) {
+          feedback.style.display = 'block';
+          feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
+          feedback.style.color = '#e11d48';
+          feedback.textContent = '✕ Erreur de connexion : ' + err.message;
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "🚀 S'inscrire gratuitement";
+        }
       }
     };
 
