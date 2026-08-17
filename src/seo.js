@@ -2,6 +2,8 @@
  * FullRemote-Jobs - SEO, Schema.org Google Jobs & RSS Feed Generator
  */
 
+import { stripHtml } from "./scraper.js";
+
 function escapeHtml(str = "") {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -17,6 +19,7 @@ function escapeHtml(str = "") {
 export function renderJobDetailPage(job, meta = {}) {
   const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
   const canonicalUrl = `${siteUrl}/jobs/${encodeURIComponent(job.id)}`;
+  const cleanSnippet = stripHtml(job.description_snippet || "");
   const title = `${job.title} chez ${job.company} (100% Full Remote)`;
   const description = `${job.title} — ${job.company} recrute en 100% télétravail (${job.region}). Contrat : ${job.contractType || "CDI / Full-time"}.${job.salary ? ` Salaire : ${job.salary}.` : ""} Postulez directement sans inscription.`;
 
@@ -290,8 +293,8 @@ export function renderJobDetailPage(job, meta = {}) {
 
       <div style="margin-bottom: 2.5rem;">
         <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text);">Aperçu du poste</h2>
-        <p style="font-size: 1rem; color: #cbd5e1; line-height: 1.7;">
-          ${escapeHtml(job.description_snippet || "Aucune description détaillée disponible.")}
+        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.7;">
+          ${escapeHtml(cleanSnippet || "Aucune description détaillée disponible.")}
         </p>
       </div>
 

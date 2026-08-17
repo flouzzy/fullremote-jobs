@@ -10,17 +10,28 @@ const USER_AGENT = "FullRemoteJobsBot/1.0 (+https://fullremote-jobs.edounze.com)
  */
 export function stripHtml(html = "") {
   if (!html) return "";
-  return html
+  let clean = String(html);
+  // 1. Décodage préventif des entités HTML (flux RSS encodant &lt;p&gt;)
+  for (let i = 0; i < 3; i++) {
+    clean = clean
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&#x2F;/gi, "/")
+      .replace(/&amp;/gi, "&")
+      .replace(/&nbsp;/gi, " ");
+  }
+
+  // 2. Suppression stricte des balises scripts, styles et HTML
+  clean = clean
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&#x2F;/gi, "/")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
+    .replace(/<[^>]+>/g, " ");
+
+  // 3. Nettoyage des entités résiduelles et espaces multiples
+  return clean
+    .replace(/&[a-z0-9#]+;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

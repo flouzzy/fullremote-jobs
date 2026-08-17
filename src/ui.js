@@ -1374,6 +1374,26 @@ export function renderHTML(jobs = [], meta = {}) {
       };
     }
 
+    function cleanSnippet(text = '') {
+      if (!text) return '';
+      let clean = String(text);
+      for (let i = 0; i < 3; i++) {
+        clean = clean
+          .replace(/&lt;/gi, '<')
+          .replace(/&gt;/gi, '>')
+          .replace(/&quot;/gi, '"')
+          .replace(/&#39;/gi, "'")
+          .replace(/&#x2F;/gi, '/')
+          .replace(/&amp;/gi, '&')
+          .replace(/&nbsp;/gi, ' ');
+      }
+      clean = clean
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<[^>]+>/g, ' ');
+      return clean.replace(/&[a-z0-9#]+;/gi, ' ').replace(/\\s+/g, ' ').trim();
+    }
+
     function openJobModal(jobId) {
       const job = JOBS_DATA.find(j => j.id === jobId);
       if (!job) return;
@@ -1392,6 +1412,8 @@ export function renderHTML(jobs = [], meta = {}) {
       const salaryHtml = job.salary ? \`<div class="tag-badge tag-salary" style="display:inline-block; margin-bottom:0.75rem;">💰 \${escapeHtml(job.salary)}</div>\` : '';
       const tagsHtml = (job.tags || []).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join(' ');
 
+      const cleanDesc = cleanSnippet(job.description_snippet);
+
       body.innerHTML = \`
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
           <span class="tag-badge tag-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI')}</span>
@@ -1399,7 +1421,7 @@ export function renderHTML(jobs = [], meta = {}) {
           \${salaryHtml}
         </div>
         <div style="font-size:0.92rem; line-height:1.6; color:var(--text); margin-bottom:1.25rem;">
-          \${job.description_snippet ? escapeHtml(job.description_snippet) : "Consultez l'offre complète sur le site de l'employeur."}
+          \${cleanDesc ? escapeHtml(cleanDesc) : "Consultez l'offre complète sur le site de l'employeur."}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
           \${tagsHtml}
@@ -1634,7 +1656,7 @@ export function renderHTML(jobs = [], meta = {}) {
               \${salaryTag}
             </div>
 
-            \${j.description_snippet ? \`<div style="font-size:0.83rem; color:var(--text-muted); line-height:1.45; margin-bottom:0.75rem; max-height:40px; overflow:hidden;">\${escapeHtml(j.description_snippet)}</div>\` : ''}
+            \${j.description_snippet ? \`<div style="font-size:0.83rem; color:var(--text-muted); line-height:1.45; margin-bottom:0.75rem; max-height:40px; overflow:hidden;">\${escapeHtml(cleanSnippet(j.description_snippet))}</div>\` : ''}
           </div>
 
           <div class="job-card-footer">
