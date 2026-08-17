@@ -118,13 +118,40 @@ GET https://fullremote-jobs.edounze.com/rss
 ```http
 GET https://fullremote-jobs.edounze.com/jobs/:id
 ```
-*Intègre les balises `schema.org/JobPosting` et OpenGraph pour une indexation directe dans Google For Jobs.*
+### 4. Alertes Email Personnalisées & Notifications Web Push
+- **Inscription Alerte Email** :
+  ```http
+  POST https://fullremote-jobs.edounze.com/api/alerts/subscribe
+  Content-Type: application/json
+
+  {
+    "email": "candidat@exemple.com",
+    "region_id": "france",
+    "category_id": "tech",
+    "contract_type_id": "cdi_fulltime",
+    "keywords": "golang, react",
+    "frequency": "daily"
+  }
+  ```
+- **Désinscription Alerte (1-clic)** :
+  ```http
+  GET https://fullremote-jobs.edounze.com/api/alerts/unsubscribe?token=<TOKEN>
+  ```
+- **Souscription Web Push (Navigateur)** :
+  ```http
+  POST https://fullremote-jobs.edounze.com/api/notifications/subscribe
+  Content-Type: application/json
+  ```
+- **Clé Publique VAPID Web Push** :
+  ```http
+  GET https://fullremote-jobs.edounze.com/api/notifications/vapid-public-key
+  ```
 
 ---
 
 ## 🗄️ Base de données Cloudflare D1
 
-Le projet supporte nativement **Cloudflare D1** pour stocker et indexer des milliers d'offres dans une base SQLite serverless distribuée.
+Le projet supporte nativement **Cloudflare D1** pour stocker et indexer les offres, les abonnements push et les alertes email dans une base SQLite serverless distribuée.
 
 ```bash
 # 1. Créer la base de données D1 sur Cloudflare (une seule fois)

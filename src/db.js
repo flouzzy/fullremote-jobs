@@ -44,6 +44,51 @@ export async function initDb(db) {
       CREATE INDEX IF NOT EXISTS idx_jobs_contract ON jobs(contract_type_id);
       CREATE INDEX IF NOT EXISTS idx_jobs_language ON jobs(language);
       CREATE INDEX IF NOT EXISTS idx_jobs_published ON jobs(published_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_jobs_active ON jobs(is_active);
+
+      CREATE TABLE IF NOT EXISTS email_alerts (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        region_id TEXT DEFAULT 'all',
+        category_id TEXT DEFAULT 'all',
+        contract_type_id TEXT DEFAULT 'all',
+        keywords TEXT DEFAULT '',
+        frequency TEXT DEFAULT 'daily',
+        is_active INTEGER DEFAULT 1,
+        unsubscribe_token TEXT NOT NULL UNIQUE,
+        last_sent_at TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_alerts_email ON email_alerts(email);
+      CREATE INDEX IF NOT EXISTS idx_alerts_active ON email_alerts(is_active);
+      CREATE INDEX IF NOT EXISTS idx_alerts_token ON email_alerts(unsubscribe_token);
+
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id TEXT PRIMARY KEY,
+        endpoint TEXT NOT NULL UNIQUE,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        region_id TEXT DEFAULT 'all',
+        category_id TEXT DEFAULT 'all',
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_push_active ON push_subscriptions(is_active);
+      CREATE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint);
+
+      CREATE TABLE IF NOT EXISTS notification_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        subject_or_title TEXT,
+        items_count INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'sent',
+        error_message TEXT,
+        sent_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_notif_logs_type ON notification_logs(type);
+      CREATE INDEX IF NOT EXISTS idx_notif_logs_sent ON notification_logs(sent_at DESC);
     `);
   } catch (e) {
     console.warn("DB init notice:", e.message);
@@ -267,3 +312,212 @@ export async function getDbStats(db) {
     return null;
   }
 }
+
+/**
+ * Enregistre ou met à jour une alerte email
+ */
+export async function saveEmailAlert(db, data = {}) {
+  if (!db || !data.email) return null;
+
+  const id = data.id || `alert_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  const token = data.unsubscribe_token || `unsub_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+
+  try {
+    await db
+      .prepare(
+        `INSERT INTO email_alerts (
+          id, email, region_id, category_id, contract_type_id, keywords, frequency, is_active, unsubscribe_token
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          region_id = excluded.region_id,
+          category_id = excluded.category_id,
+          contract_type_id = excluded.contract_type_id,
+          keywords = excluded.keywords,
+          frequency = excluded.frequency,
+          is_active = 1`
+      )
+      .bind(
+        id,
+        data.email.toLowerCase().trim(),
+        data.region_id || "all",
+        data.category_id || "all",
+        data.contract_type_id || "all",
+        (data.keywords || "").trim(),
+        data.frequency || "daily",
+        token
+      )
+      .run();
+
+    return {
+      id,
+      email: data.email.toLowerCase().trim(),
+      region_id: data.region_id || "all",
+      category_id: data.category_id || "all",
+      contract_type_id: data.contract_type_id || "all",
+      keywords: (data.keywords || "").trim(),
+      frequency: data.frequency || "daily",
+      unsubscribe_token: token,
+    };
+  } catch (err) {
+    console.error("Erreur saveEmailAlert D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère une alerte par son token de désinscription
+ */
+export async function getEmailAlertByToken(db, token) {
+  if (!db || !token) return null;
+  try {
+    return await db
+      .prepare("SELECT * FROM email_alerts WHERE unsubscribe_token = ? LIMIT 1")
+      .bind(token)
+      .first();
+  } catch (err) {
+    console.error("Erreur getEmailAlertByToken D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Désactive une alerte email (désinscription)
+ */
+export async function unsubscribeEmailAlert(db, token) {
+  if (!db || !token) return false;
+  try {
+    const res = await db
+      .prepare("UPDATE email_alerts SET is_active = 0 WHERE unsubscribe_token = ?")
+      .bind(token)
+      .run();
+    return res.meta && res.meta.changes > 0;
+  } catch (err) {
+    console.error("Erreur unsubscribeEmailAlert D1 :", err);
+    return false;
+  }
+}
+
+/**
+ * Récupère toutes les alertes emails actives
+ */
+export async function getActiveEmailAlerts(db) {
+  if (!db) return [];
+  try {
+    const res = await db
+      .prepare("SELECT * FROM email_alerts WHERE is_active = 1 ORDER BY created_at DESC")
+      .all();
+    return res.results || [];
+  } catch (err) {
+    console.error("Erreur getActiveEmailAlerts D1 :", err);
+    return [];
+  }
+}
+
+/**
+ * Met à jour la date du dernier envoi pour une alerte
+ */
+export async function updateAlertLastSent(db, alertId) {
+  if (!db || !alertId) return;
+  try {
+    await db
+      .prepare("UPDATE email_alerts SET last_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
+      .bind(alertId)
+      .run();
+  } catch (err) {
+    console.error("Erreur updateAlertLastSent D1 :", err);
+  }
+}
+
+/**
+ * Enregistre un abonnement Web Push navigateur
+ */
+export async function savePushSubscription(db, subData = {}) {
+  if (!db || !subData.endpoint || !subData.p256dh || !subData.auth) return null;
+
+  const id = `push_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+  try {
+    await db
+      .prepare(
+        `INSERT INTO push_subscriptions (
+          id, endpoint, p256dh, auth, region_id, category_id, is_active, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+        ON CONFLICT(endpoint) DO UPDATE SET
+          p256dh = excluded.p256dh,
+          auth = excluded.auth,
+          region_id = excluded.region_id,
+          category_id = excluded.category_id,
+          is_active = 1,
+          updated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(
+        id,
+        subData.endpoint,
+        subData.p256dh,
+        subData.auth,
+        subData.region_id || "all",
+        subData.category_id || "all"
+      )
+      .run();
+
+    return { id, endpoint: subData.endpoint };
+  } catch (err) {
+    console.error("Erreur savePushSubscription D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère tous les abonnements Web Push actifs
+ */
+export async function getActivePushSubscriptions(db) {
+  if (!db) return [];
+  try {
+    const res = await db
+      .prepare("SELECT * FROM push_subscriptions WHERE is_active = 1 ORDER BY created_at DESC")
+      .all();
+    return res.results || [];
+  } catch (err) {
+    console.error("Erreur getActivePushSubscriptions D1 :", err);
+    return [];
+  }
+}
+
+/**
+ * Supprime ou désactive un abonnement Web Push expiré
+ */
+export async function deletePushSubscription(db, endpoint) {
+  if (!db || !endpoint) return;
+  try {
+    await db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").bind(endpoint).run();
+  } catch (err) {
+    console.error("Erreur deletePushSubscription D1 :", err);
+  }
+}
+
+/**
+ * Enregistre un log d'envoi de notification
+ */
+export async function logNotification(db, logData = {}) {
+  if (!db) return;
+  try {
+    await db
+      .prepare(
+        `INSERT INTO notification_logs (
+          type, recipient, subject_or_title, items_count, status, error_message
+        ) VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .bind(
+        logData.type || "email",
+        logData.recipient || "",
+        logData.subject_or_title || "",
+        logData.items_count || 0,
+        logData.status || "sent",
+        logData.error_message || null
+      )
+      .run();
+  } catch (err) {
+    console.error("Erreur logNotification D1 :", err);
+  }
+}
+

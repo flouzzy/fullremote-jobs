@@ -6,13 +6,98 @@
 
 import { scrapeAllJobs } from "./scraper.js";
 import { FALLBACK_JOBS } from "./fallback-data.js";
-import { renderHTML } from "./ui.js";
-import { initDb, saveJobsToDb, queryJobsFromDb, getDbStats } from "./db.js";
+import { renderHTML, renderUnsubscribePage } from "./ui.js";
+import {
+  initDb,
+  saveJobsToDb,
+  queryJobsFromDb,
+  getDbStats,
+  saveEmailAlert,
+  getEmailAlertByToken,
+  unsubscribeEmailAlert,
+  getActiveEmailAlerts,
+  updateAlertLastSent,
+  savePushSubscription,
+  getActivePushSubscriptions,
+  deletePushSubscription,
+  logNotification,
+} from "./db.js";
+import {
+  sendResendEmail,
+  buildWelcomeEmailHtml,
+  buildJobDigestEmailHtml,
+  matchJobToAlert,
+} from "./email.js";
+import {
+  DEFAULT_VAPID_PUBLIC_KEY,
+  DEFAULT_VAPID_PRIVATE_KEY,
+  sendWebPushNotification,
+} from "./push.js";
 import { renderJobDetailPage, generateRssFeed, generateSitemap } from "./seo.js";
 
 // Cache mémoire local en runtime Worker
 let cachedJobs = null;
 let lastIngestionTime = null;
+
+// Service Worker script served dynamically
+const SERVICE_WORKER_CODE = `/**
+ * FullRemote-Jobs - Service Worker pour Notifications Web Push
+ */
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("push", (event) => {
+  let data = {
+    title: "Full Remote Jobs 🌍",
+    body: "✨ De nouvelles offres 100% télétravail viennent d'être publiées !",
+    url: "https://fullremote-jobs.edounze.com",
+  };
+
+  if (event.data) {
+    try {
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
+    } catch (e) {
+      const text = event.data.text();
+      if (text) data.body = text;
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>",
+    badge: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>",
+    vibrate: [100, 50, 100],
+    data: { url: data.url || "/" },
+    actions: [{ action: "explore", title: "Voir les offres ↗" }],
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes("fullremote-jobs.edounze.com") && "focus" in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+`;
 
 /**
  * Récupère les données en privilégiant Cloudflare D1, puis le cache mémoire, puis le scraping live
@@ -61,6 +146,96 @@ async function getOrFetchJobs(env) {
   return { jobs: cachedJobs, updated_at: lastIngestionTime, source: "fallback" };
 }
 
+/**
+ * Traite et distribue les alertes emails et notifications web push
+ */
+async function processNotifications(env, jobs = [], siteUrl = "https://fullremote-jobs.edounze.com") {
+  if (!jobs || jobs.length === 0 || !env || !env.DB) {
+    return { emails_sent: 0, pushes_sent: 0 };
+  }
+
+  const resendApiKey = env.RESEND_API_KEY;
+  const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <onboarding@resend.dev>";
+  let emailsSent = 0;
+  let pushesSent = 0;
+
+  // 1. Alertes Emails personnalisées
+  try {
+    const activeAlerts = await getActiveEmailAlerts(env.DB);
+    for (const alert of activeAlerts) {
+      const matchingJobs = jobs.filter((job) => matchJobToAlert(job, alert));
+      if (matchingJobs.length > 0) {
+        const html = buildJobDigestEmailHtml({ jobs: matchingJobs, alert, siteUrl });
+        const subject = `🔔 ${matchingJobs.length} nouvelle${
+          matchingJobs.length > 1 ? "s" : ""
+        } offre${matchingJobs.length > 1 ? "s" : ""} 100% remote pour votre profil`;
+
+        const sendRes = await sendResendEmail({
+          apiKey: resendApiKey,
+          from: fromEmail,
+          to: alert.email,
+          subject,
+          html,
+        });
+
+        await logNotification(env.DB, {
+          type: "email",
+          recipient: alert.email,
+          subject_or_title: subject,
+          items_count: matchingJobs.length,
+          status: sendRes.success ? "sent" : "failed",
+          error_message: sendRes.error,
+        });
+
+        if (sendRes.success) {
+          emailsSent++;
+          await updateAlertLastSent(env.DB, alert.id);
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[NOTIF] Erreur processing alertes email :", e);
+  }
+
+  // 2. Notifications Web Push
+  try {
+    const pushSubs = await getActivePushSubscriptions(env.DB);
+    for (const sub of pushSubs) {
+      const payload = {
+        title: "Full Remote Jobs 🌍",
+        body: `✨ ${jobs.length} nouvelles offres 100% télétravail disponibles aujourd'hui !`,
+        url: siteUrl,
+      };
+
+      const pushRes = await sendWebPushNotification({
+        subscription: { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        payload,
+        vapidPublicKey: env.VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY,
+        vapidPrivateKey: env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY,
+      });
+
+      if (pushRes.expired) {
+        await deletePushSubscription(env.DB, sub.endpoint);
+      }
+
+      await logNotification(env.DB, {
+        type: "push",
+        recipient: sub.endpoint,
+        subject_or_title: payload.title,
+        items_count: jobs.length,
+        status: pushRes.success ? "sent" : "failed",
+        error_message: pushRes.error,
+      });
+
+      if (pushRes.success) pushesSent++;
+    }
+  } catch (e) {
+    console.error("[NOTIF] Erreur processing web push :", e);
+  }
+
+  return { emails_sent: emailsSent, pushes_sent: pushesSent };
+}
+
 export default {
   /**
    * Point d'entrée HTTP (Requêtes web, SEO, RSS & API)
@@ -73,8 +248,8 @@ export default {
     // Headers standards de sécurité et CORS
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Methods": "GET, POST, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     };
 
     if (request.method === "OPTIONS") {
@@ -88,7 +263,170 @@ export default {
       });
     }
 
-    // 2. Route Flux RSS 2.0 : /rss ou /feed
+    // 2. Route Service Worker : /sw.js
+    if (pathname === "/sw.js") {
+      return new Response(SERVICE_WORKER_CODE, {
+        headers: {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Service-Worker-Allowed": "/",
+          "Cache-Control": "public, max-age=3600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // 3. Route Clé Publique VAPID : /api/notifications/vapid-public-key
+    if (pathname === "/api/notifications/vapid-public-key") {
+      return new Response(
+        JSON.stringify({
+          publicKey: env.VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY,
+        }),
+        {
+          headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+        }
+      );
+    }
+
+    // 4. Inscription Web Push : POST /api/notifications/subscribe
+    if (pathname === "/api/notifications/subscribe" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        if (!body.endpoint || !body.p256dh || !body.auth) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Données de souscription push incomplètes." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        if (env && env.DB) {
+          await initDb(env.DB);
+          await savePushSubscription(env.DB, body);
+        }
+
+        // Notification de bienvenue instantanée
+        sendWebPushNotification({
+          subscription: body,
+          payload: {
+            title: "Notifications activées ! 🔔",
+            body: "Vous recevrez une alerte chaque matin dès la publication des nouvelles offres 100% remote.",
+            url: siteUrl,
+          },
+          vapidPublicKey: env.VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY,
+          vapidPrivateKey: env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY,
+        }).catch(console.error);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Abonnement aux notifications activé avec succès.",
+          }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+          }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // 5. Inscription Alerte Email : POST /api/alerts/subscribe
+    if (pathname === "/api/alerts/subscribe" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const email = (body.email || "").trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!email || !emailRegex.test(email)) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Adresse email invalide." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        let savedAlert = null;
+        if (env && env.DB) {
+          await initDb(env.DB);
+          savedAlert = await saveEmailAlert(env.DB, body);
+        } else {
+          savedAlert = {
+            id: `alert_mock_${Date.now()}`,
+            email,
+            region_id: body.region_id || "all",
+            category_id: body.category_id || "all",
+            contract_type_id: body.contract_type_id || "all",
+            keywords: body.keywords || "",
+            frequency: body.frequency || "daily",
+            unsubscribe_token: `unsub_${Date.now()}`,
+          };
+        }
+
+        const resendApiKey = env.RESEND_API_KEY;
+        const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <onboarding@resend.dev>";
+        const welcomeHtml = buildWelcomeEmailHtml({ alert: savedAlert, siteUrl });
+
+        const emailRes = await sendResendEmail({
+          apiKey: resendApiKey,
+          from: fromEmail,
+          to: email,
+          subject: "🎉 Votre alerte quotidienne FullRemote Jobs est activée !",
+          html: welcomeHtml,
+        });
+
+        if (env && env.DB) {
+          await logNotification(env.DB, {
+            type: "email",
+            recipient: email,
+            subject_or_title: "Confirmation d'activation alerte",
+            items_count: 0,
+            status: emailRes.success ? "sent" : "failed",
+            error_message: emailRes.error,
+          });
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Alerte activée avec succès ! Un email de confirmation vous a été envoyé.",
+            email_sent: emailRes.success,
+            details: emailRes,
+          }),
+          {
+            headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+          }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // 6. Désinscription Alerte Email : GET /api/alerts/unsubscribe
+    if (pathname === "/api/alerts/unsubscribe") {
+      const token = url.searchParams.get("token");
+      let success = false;
+      let email = "";
+
+      if (token && env && env.DB) {
+        await initDb(env.DB);
+        const alert = await getEmailAlertByToken(env.DB, token);
+        if (alert) {
+          email = alert.email;
+          success = await unsubscribeEmailAlert(env.DB, token);
+        }
+      }
+
+      const html = renderUnsubscribePage({ success, email, siteUrl });
+      return new Response(html, {
+        headers: { "Content-Type": "text/html; charset=utf-8", ...corsHeaders },
+      });
+    }
+
+    // 7. Route Flux RSS 2.0 : /rss ou /feed
     if (pathname === "/rss" || pathname === "/feed" || pathname === "/feed.xml") {
       const { jobs } = await getOrFetchJobs(env);
       const xml = generateRssFeed(jobs, siteUrl);
@@ -101,7 +439,7 @@ export default {
       });
     }
 
-    // 3. Route Sitemap XML : /sitemap.xml
+    // 8. Route Sitemap XML : /sitemap.xml
     if (pathname === "/sitemap.xml") {
       const { jobs } = await getOrFetchJobs(env);
       const xml = generateSitemap(jobs, siteUrl);
@@ -114,7 +452,7 @@ export default {
       });
     }
 
-    // 4. Route SEO fiche dédiée : /jobs/:id
+    // 9. Route SEO fiche dédiée : /jobs/:id
     if (pathname.startsWith("/jobs/")) {
       const jobId = decodeURIComponent(pathname.replace("/jobs/", "")).trim();
       const { jobs } = await getOrFetchJobs(env);
@@ -130,11 +468,10 @@ export default {
           },
         });
       }
-      // Redirection si l'offre n'existe plus
       return Response.redirect(new URL("/", request.url).toString(), 302);
     }
 
-    // 5. Route API : /api/jobs
+    // 10. Route API : /api/jobs
     if (pathname === "/api/jobs") {
       const regionParam = url.searchParams.get("region") || "all";
       const contractParam = url.searchParams.get("contract") || "all";
@@ -148,50 +485,70 @@ export default {
 
       const dataset = await getOrFetchJobs(env);
       const updatedAt = dataset.updated_at;
-      let filtered = [...dataset.jobs];
+      let filtered = dataset.jobs;
 
-      if (regionParam !== "all") filtered = filtered.filter((j) => j.regionId === regionParam);
-      if (contractParam !== "all") filtered = filtered.filter((j) => (j.contractTypeId || "cdi_fulltime") === contractParam);
-      if (langParam !== "all") filtered = filtered.filter((j) => j.language === langParam);
-      if (catParam !== "all") filtered = filtered.filter((j) => j.categoryId === catParam);
-      if (minSalaryParam > 0) {
-        filtered = filtered.filter((j) => {
-          const maxS = Math.max(j.salary_max_eur || 0, j.salary_max_usd || 0, j.salary_min_eur || 0, j.salary_min_usd || 0);
-          return maxS >= minSalaryParam;
-        });
-      }
-      if (qParam) {
+      if (regionParam !== "all") {
         filtered = filtered.filter(
           (j) =>
-            j.title.toLowerCase().includes(qParam) ||
-            j.company.toLowerCase().includes(qParam) ||
-            (j.contractType && j.contractType.toLowerCase().includes(qParam)) ||
-            (j.tags && j.tags.some((t) => t.toLowerCase().includes(qParam)))
+            (j.regionId && j.regionId.toLowerCase() === regionParam.toLowerCase()) ||
+            (j.regionId && j.regionId.toLowerCase() === "worldwide")
         );
       }
 
-      const totalUnfiltered = dataset.jobs.length;
-      const paginatedJobs = filtered.slice(offset, offset + limit);
+      if (contractParam !== "all") {
+        filtered = filtered.filter(
+          (j) =>
+            j.contractTypeId &&
+            j.contractTypeId.toLowerCase() === contractParam.toLowerCase()
+        );
+      }
+
+      if (catParam !== "all") {
+        filtered = filtered.filter(
+          (j) =>
+            j.categoryId &&
+            j.categoryId.toLowerCase() === catParam.toLowerCase()
+        );
+      }
+
+      if (langParam !== "all") {
+        filtered = filtered.filter(
+          (j) =>
+            j.language &&
+            j.language.toLowerCase() === langParam.toLowerCase()
+        );
+      }
+
+      if (minSalaryParam > 0) {
+        filtered = filtered.filter((j) => {
+          const maxVal = Math.max(j.salary_min || 0, j.salary_max || 0);
+          return maxVal >= minSalaryParam;
+        });
+      }
+
+      if (qParam) {
+        filtered = filtered.filter((j) => {
+          const textCorpus = `${j.title} ${j.company} ${j.description_snippet || ""} ${JSON.stringify(
+            j.tags || []
+          )}`.toLowerCase();
+          return textCorpus.includes(qParam);
+        });
+      }
+
+      const totalResults = filtered.length;
+      const paginated = filtered.slice(offset, offset + limit);
 
       return new Response(
         JSON.stringify(
           {
             success: true,
-            page: page,
-            limit: limit,
-            count: paginatedJobs.length,
-            total_matching: filtered.length,
-            total_unfiltered: totalUnfiltered,
+            total: totalResults,
+            page,
+            limit,
+            total_pages: Math.ceil(totalResults / limit),
             updated_at: updatedAt,
-            filters: {
-              region: regionParam,
-              contract: contractParam,
-              language: langParam,
-              category: catParam,
-              min_salary: minSalaryParam > 0 ? minSalaryParam : null,
-              search: qParam || null,
-            },
-            jobs: paginatedJobs,
+            source: dataset.source,
+            jobs: paginated,
           },
           null,
           2
@@ -206,7 +563,7 @@ export default {
       );
     }
 
-    // 6. Route API Stats : /api/stats
+    // 11. Route API Stats : /api/stats
     if (pathname === "/api/stats") {
       let stats = null;
       if (env && env.DB) {
@@ -252,7 +609,7 @@ export default {
       );
     }
 
-    // 7. Déclencheur manuel de rafraîchissement : /api/refresh
+    // 12. Déclencheur manuel de rafraîchissement & notifications : /api/refresh
     if (pathname === "/api/refresh") {
       const freshJobs = await scrapeAllJobs();
       cachedJobs = freshJobs;
@@ -264,12 +621,15 @@ export default {
         savedDb = await saveJobsToDb(env.DB, freshJobs);
       }
 
+      const notifResults = await processNotifications(env, freshJobs, siteUrl);
+
       return new Response(
         JSON.stringify({
           success: true,
-          message: "Scraping rafraîchi avec succès.",
+          message: "Scraping rafraîchi et notifications traitées avec succès.",
           jobs_scraped: freshJobs.length,
           jobs_saved_d1: savedDb,
+          notifications: notifResults,
           updated_at: lastIngestionTime,
         }),
         {
@@ -278,7 +638,7 @@ export default {
       );
     }
 
-    // 8. Route Racine (/) : Interface Web Responsive
+    // 13. Route Racine (/) : Interface Web Responsive
     if (pathname === "/" || pathname === "/index.html") {
       const { jobs, updated_at } = await getOrFetchJobs(env);
       const html = renderHTML(jobs, { updated_at });
@@ -316,9 +676,13 @@ export default {
           savedDb = await saveJobsToDb(env.DB, freshJobs);
         }
 
+        // Traitement et envoi des alertes emails & web push
+        const siteUrl = "https://fullremote-jobs.edounze.com";
+        const notifResults = await processNotifications(env, freshJobs, siteUrl);
+
         const durationMs = Date.now() - startTime;
         console.log(
-          `[CRON] ✅ Succès : ${freshJobs.length} offres scrapées (${savedDb} dans D1) en ${durationMs}ms.`
+          `[CRON] ✅ Succès : ${freshJobs.length} offres scrapées (${savedDb} dans D1), ${notifResults.emails_sent} emails & ${notifResults.pushes_sent} push envoyés en ${durationMs}ms.`
         );
       }
     } catch (error) {

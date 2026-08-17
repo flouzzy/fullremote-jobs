@@ -150,6 +150,17 @@ export function renderHTML(jobs = [], meta = {}) {
       color: #f43f5e;
     }
 
+    .nav-btn-alert {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.25);
+    }
+
+    .nav-btn-alert:hover {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
     .nav-btn-primary {
       background: var(--primary);
       color: white;
@@ -212,6 +223,87 @@ export function renderHTML(jobs = [], meta = {}) {
       color: var(--text-muted);
       max-width: 720px;
       margin: 0 auto;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero-alert {
+      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .btn-hero-alert:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-hero-push {
+      background: var(--bg-card);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .btn-hero-push:hover {
+      background: var(--bg-card-hover);
+      border-color: #475569;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      text-align: left;
+    }
+
+    .form-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: #090d16;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
 
     /* Controls Bar */
@@ -781,6 +873,9 @@ export function renderHTML(jobs = [], meta = {}) {
       </a>
 
       <nav class="nav-links">
+        <button id="navAlertBtn" class="nav-btn nav-btn-alert" title="Créer une alerte personnalisée" onclick="openAlertModal()">
+          <span>🔔</span> <span class="hide-mobile">Alertes</span>
+        </button>
         <button id="navFavBtn" class="nav-btn nav-btn-fav" title="Voir mes favoris">
           <span>❤️</span> <span class="hide-mobile">Favoris</span> (<span id="favCount">0</span>)
         </button>
@@ -806,6 +901,15 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
       <h1>L'annuaire mondial des jobs <span>100% Télétravail</span>.</h1>
       <p>Le répertoire vérifié des meilleures opportunités de carrière sans restriction de localisation (CDI, Freelance, CDD, Stage). Accès direct et sans inscription.</p>
+
+      <div class="hero-cta-group">
+        <button id="heroAlertBtn" class="btn-hero-alert" onclick="openAlertModal()">
+          <span>✉️</span> Créer une alerte personnalisée
+        </button>
+        <button id="heroPushBtn" class="btn-hero-push" onclick="subscribeToWebPush()">
+          <span id="pushIcon">🔔</span> <span id="pushBtnLabel">Activer les notifications Web</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -956,6 +1060,84 @@ export function renderHTML(jobs = [], meta = {}) {
           Postuler directement ↗
         </a>
       </div>
+    </div>
+  </div>
+
+  <!-- Email Alerts Modal -->
+  <div id="alertModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <span style="font-size:1.5rem;">🔔</span>
+          <div>
+            <h3 style="font-size:1.1rem; font-weight:700; color:var(--text);">Créer une alerte personnalisée</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Recevez par email les nouveaux postes selon vos critères.</p>
+          </div>
+        </div>
+        <button id="alertModalCloseBtn" class="btn-icon" style="font-size:1.1rem;">✕</button>
+      </div>
+      <form id="alertForm" class="modal-body" style="display:flex; flex-direction:column; gap:1rem;">
+        <div class="form-group">
+          <label class="form-label" for="alertEmail">Votre adresse Email <span style="color:var(--rose);">*</span></label>
+          <input type="email" id="alertEmail" class="form-input" required placeholder="candidat@exemple.com" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label class="form-label" for="alertRegion">Région géographique</label>
+            <select id="alertRegion" class="form-select">
+              <option value="all">🌍 Toutes les régions</option>
+              <option value="worldwide">🌍 Worldwide (Sans restriction)</option>
+              <option value="france">🇫🇷 France & Francophonie</option>
+              <option value="europe">🇪🇺 Europe & UK</option>
+              <option value="americas">🇺🇸 Amériques (USA/CA/LATAM)</option>
+              <option value="apac_mea">🌏 Asie, Pacifique & MEA</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="alertCategory">Métier / Domaine</label>
+            <select id="alertCategory" class="form-select">
+              <option value="all">💼 Tous les métiers</option>
+              <option value="tech">💻 Tech & Dev</option>
+              <option value="devops">☁️ DevOps & Cloud</option>
+              <option value="data_ai">🧠 Data & IA</option>
+              <option value="design">🎨 Design & UX</option>
+              <option value="product">🚀 Product</option>
+              <option value="marketing_sales">📈 Marketing & Sales</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label class="form-label" for="alertContract">Type de contrat</label>
+            <select id="alertContract" class="form-select">
+              <option value="all">📋 Tous les contrats</option>
+              <option value="cdi_fulltime">💼 CDI / Full-time</option>
+              <option value="freelance_contract">⚡ Freelance</option>
+              <option value="cdd_parttime">⏳ CDD / Part-time</option>
+              <option value="internship">🎓 Stage</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="alertFrequency">Fréquence</label>
+            <select id="alertFrequency" class="form-select">
+              <option value="daily">🌅 Chaque matin (08h00)</option>
+              <option value="weekly">📅 Hebdomadaire (Lundi)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="alertKeywords">Mots-clés optionnels</label>
+          <input type="text" id="alertKeywords" class="form-input" placeholder="ex: react, golang, rust, staff..." />
+          <span style="font-size:0.75rem; color:var(--text-dim);">Séparez les mots par des virgules ou des espaces.</span>
+        </div>
+        <div id="alertFeedback" style="display:none; font-size:0.85rem; padding:0.6rem 0.8rem; border-radius:6px;"></div>
+        <button type="submit" id="alertSubmitBtn" class="btn-apply" style="justify-content:center; padding:0.75rem; font-size:0.9rem; font-weight:700; width:100%; border:none; cursor:pointer;">
+          🚀 Enregistrer mon alerte gratuite
+        </button>
+        <p style="font-size:0.75rem; color:var(--text-dim); text-align:center; margin:0;">
+          🔒 100% gratuit. Aucun mot de passe requis. Désinscription immédiate en 1 clic.
+        </p>
+      </form>
     </div>
   </div>
 
@@ -1369,9 +1551,221 @@ export function renderHTML(jobs = [], meta = {}) {
       }
     };
 
+    // Alert Modal Logic
+    const alertModal = document.getElementById('alertModal');
+    const alertModalCloseBtn = document.getElementById('alertModalCloseBtn');
+    const alertForm = document.getElementById('alertForm');
+    const alertFeedback = document.getElementById('alertFeedback');
+    const alertSubmitBtn = document.getElementById('alertSubmitBtn');
+
+    window.openAlertModal = function() {
+      if (currentRegion && currentRegion !== 'all') {
+        const opt = document.querySelector('#alertRegion option[value="' + currentRegion + '"]');
+        if (opt) opt.selected = true;
+      }
+      if (currentCategory && currentCategory !== 'all') {
+        const opt = document.querySelector('#alertCategory option[value="' + currentCategory + '"]');
+        if (opt) opt.selected = true;
+      }
+      if (currentContract && currentContract !== 'all') {
+        const opt = document.querySelector('#alertContract option[value="' + currentContract + '"]');
+        if (opt) opt.selected = true;
+      }
+      if (searchQuery) {
+        document.getElementById('alertKeywords').value = searchQuery;
+      }
+      alertFeedback.style.display = 'none';
+      alertModal.style.display = 'flex';
+      document.getElementById('alertEmail').focus();
+    };
+
+    window.closeAlertModal = function() {
+      alertModal.style.display = 'none';
+    };
+
+    if (alertModalCloseBtn) alertModalCloseBtn.onclick = closeAlertModal;
+    if (alertModal) {
+      alertModal.onclick = (e) => {
+        if (e.target === alertModal) closeAlertModal();
+      };
+    }
+
+    if (alertForm) {
+      alertForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('alertEmail').value.trim();
+        const region_id = document.getElementById('alertRegion').value;
+        const category_id = document.getElementById('alertCategory').value;
+        const contract_type_id = document.getElementById('alertContract').value;
+        const frequency = document.getElementById('alertFrequency').value;
+        const keywords = document.getElementById('alertKeywords').value.trim();
+
+        alertSubmitBtn.disabled = true;
+        alertSubmitBtn.textContent = 'Enregistrement en cours...';
+        alertFeedback.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/alerts/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, region_id, category_id, contract_type_id, frequency, keywords })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alertFeedback.style.display = 'block';
+            alertFeedback.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+            alertFeedback.style.color = '#34d399';
+            alertFeedback.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+            alertFeedback.textContent = '✓ ' + (data.message || 'Alerte activée ! Un email de confirmation vous a été envoyé.');
+            showToast('Alerte email activée avec succès ! ✉️');
+            setTimeout(() => {
+              closeAlertModal();
+              alertSubmitBtn.disabled = false;
+              alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
+            }, 2000);
+          } else {
+            alertFeedback.style.display = 'block';
+            alertFeedback.style.backgroundColor = 'rgba(244, 63, 94, 0.15)';
+            alertFeedback.style.color = '#fb7185';
+            alertFeedback.style.border = '1px solid rgba(244, 63, 94, 0.3)';
+            alertFeedback.textContent = '✕ ' + (data.error || 'Erreur lors de l\'enregistrement');
+            alertSubmitBtn.disabled = false;
+            alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
+          }
+        } catch (err) {
+          alertFeedback.style.display = 'block';
+          alertFeedback.style.backgroundColor = 'rgba(244, 63, 94, 0.15)';
+          alertFeedback.style.color = '#fb7185';
+          alertFeedback.style.border = '1px solid rgba(244, 63, 94, 0.3)';
+          alertFeedback.textContent = '✕ Impossible de joindre le serveur : ' + err.message;
+          alertSubmitBtn.disabled = false;
+          alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
+        }
+      };
+    }
+
+    // Web Push Subscriptions
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    window.subscribeToWebPush = async function() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showToast('Les notifications Web ne sont pas supportées par ce navigateur.');
+        return;
+      }
+
+      const pushBtn = document.getElementById('heroPushBtn');
+      const pushIcon = document.getElementById('pushIcon');
+      const pushLabel = document.getElementById('pushBtnLabel');
+
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          showToast('Autorisation des notifications refusée.');
+          return;
+        }
+
+        if (pushLabel) pushLabel.textContent = 'Activation...';
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+
+        const vapidRes = await fetch('/api/notifications/vapid-public-key');
+        const { publicKey } = await vapidRes.json();
+        if (!publicKey) throw new Error('Clé VAPID introuvable');
+
+        const convertedKey = urlBase64ToUint8Array(publicKey);
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedKey
+        });
+
+        const subJson = sub.toJSON();
+        const saveRes = await fetch('/api/notifications/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: sub.endpoint,
+            p256dh: subJson.keys?.p256dh,
+            auth: subJson.keys?.auth,
+            region_id: currentRegion,
+            category_id: currentCategory
+          })
+        });
+
+        if (saveRes.ok) {
+          if (pushIcon) pushIcon.textContent = '✓';
+          if (pushLabel) pushLabel.textContent = 'Notifications actives';
+          if (pushBtn) {
+            pushBtn.style.borderColor = 'var(--emerald)';
+            pushBtn.style.color = 'var(--emerald)';
+          }
+          showToast('🔔 Notifications Web activées avec succès !');
+        } else {
+          showToast('Erreur lors de l\'enregistrement des notifications.');
+          if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
+        }
+      } catch (err) {
+        console.error('Erreur Web Push :', err);
+        showToast('Erreur activation notifications : ' + err.message);
+        if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
+      }
+    };
+
     // Initial render
     renderJobs();
   </script>
 </body>
 </html>`;
 }
+
+/**
+ * Page de confirmation de désinscription
+ */
+export function renderUnsubscribePage({ success, email, siteUrl = "https://fullremote-jobs.edounze.com" }) {
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Désinscription — FullRemote Jobs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0; padding: 0; background: #090d16; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    }
+    .box {
+      background: #111726; border: 1px solid #1e293b; border-radius: 16px; padding: 40px 32px; max-width: 480px; width: 90%; text-align: center;
+    }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 700; margin: 0 0 12px 0; }
+    p { font-size: 15px; color: #94a3b8; line-height: 1.6; margin: 0 0 24px 0; }
+    .btn { display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; }
+    .btn:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon">${success ? "👋" : "⚠️"}</div>
+    <h1>${success ? "Désinscription confirmée" : "Lien invalide ou expiré"}</h1>
+    <p>${
+      success
+        ? `L'adresse <strong>${email || ""}</strong> ne recevra plus d'alertes automatiques. Vous pourrez vous réabonner à tout moment depuis le site.`
+        : "Ce lien de désinscription est introuvable ou a déjà été utilisé."
+    }</p>
+    <a href="${siteUrl}" class="btn">Retourner sur FullRemote.Jobs ↗</a>
+  </div>
+</body>
+</html>`;
+}
+
