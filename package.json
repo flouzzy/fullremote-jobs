@@ -1,0 +1,21 @@
+{
+  "name": "fullremote-jobs",
+  "version": "1.0.0",
+  "description": "Agrégateur intelligent de postes 100% full remote en français et anglais propulsé par Cloudflare Workers",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --check src/index.js"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.0"
+  },
+  "author": "Charles EDOU NZE <charles@edounze.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flouzzy/fullremote-jobs.git"
+  }
+}
