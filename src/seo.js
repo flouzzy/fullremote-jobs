@@ -41,6 +41,8 @@ export function renderJobDetailPage(job, meta = {}) {
     "@type": "JobPosting",
     title: job.title,
     description: job.description_snippet || title,
+    url: canonicalUrl,
+    mainEntityOfPage: canonicalUrl,
     identifier: {
       "@type": "PropertyValue",
       name: "FullRemoteJobs",
