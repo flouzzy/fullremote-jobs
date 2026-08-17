@@ -2,11 +2,14 @@
  * FullRemote-Jobs - Cloudflare D1 Database Helper
  */
 
+let isDbInitialized = false;
+
 /**
  * Initialise le schéma D1 si la table n'existe pas encore
  */
 export async function initDb(db) {
-  if (!db) return;
+  if (!db || isDbInitialized) return;
+  isDbInitialized = true;
   try {
     await db.exec(`
       CREATE TABLE IF NOT EXISTS jobs (
@@ -159,8 +162,8 @@ export async function saveJobsToDb(db, jobs = []) {
           job.region,
           job.regionFlag || "🌍",
           job.salary || "",
-          job.salary_min || 0,
-          job.salary_max || 0,
+          job.salary_min || job.salary_min_eur || 0,
+          job.salary_max || job.salary_max_eur || 0,
           job.currency || "",
           job.description_snippet || "",
           job.source,
