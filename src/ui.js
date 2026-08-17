@@ -1,5 +1,11 @@
 /**
- * FullRemote-Jobs - Interface Utilisateur Web Réactive & Moderne
+ * FullRemote-Jobs - Interface Utilisateur Web A-Level UI/UX
+ * Refonte complète inspirée des standards Linear / Airbnb :
+ * - Header 3-zones ultra-épuré (Sticky Glassmorphism)
+ * - Unified Command Search Bar avec sélecteurs intégrés
+ * - Pills de suggestions rapides
+ * - Infinite Scroll 60 FPS & Progressive Rendering
+ * - Double thème Light / Dark haute précision
  */
 
 export function renderHTML(jobs = [], meta = {}) {
@@ -17,16 +23,17 @@ export function renderHTML(jobs = [], meta = {}) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Full Remote Jobs — Les meilleurs emplois 100% Télétravail (FR / EN)</title>
-  <meta name="description" content="Annuaire des meilleures offres d'emploi 100% full remote (CDI, Freelance, CDD, Stage) en anglais et en français. Accès libre, direct et sans inscription." />
-  <meta property="og:title" content="Full Remote Jobs — 100% Télétravail (CDI / Freelance / CDD)" />
-  <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance, CDD ou Stage en France, Europe et Worldwide." />
+  <title>Full Remote Jobs — Les meilleurs postes 100% Télétravail (FR / EN)</title>
+  <meta name="description" content="L'annuaire mondial et agrégateur intelligent de postes vérifiés 100% télétravail (CDI, Freelance, CDD, Stage). Accès direct, libre et sans inscription." />
+  <meta property="og:title" content="Full Remote Jobs — 100% Télétravail vérifié (CDI / Freelance / CDD)" />
+  <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance ou CDD en France, Europe et Worldwide." />
   <meta property="og:url" content="https://remote-jobs.edounze.com" />
   <meta property="og:type" content="website" />
+  <link rel="canonical" href="https://remote-jobs.edounze.com" />
   <link rel="alternate" type="application/rss+xml" title="Flux RSS FullRemote.Jobs" href="/rss" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
   <style>
     :root, html.light {
@@ -34,32 +41,31 @@ export function renderHTML(jobs = [], meta = {}) {
       --bg-card: #ffffff;
       --bg-card-hover: #f1f5f9;
       --border: #e2e8f0;
-      --border-focus: #3b82f6;
+      --border-focus: #2563eb;
       --text: #0f172a;
       --text-muted: #64748b;
       --text-dim: #94a3b8;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --accent: #0284c7;
+      --primary-subtle: rgba(37, 99, 235, 0.08);
       --emerald: #10b981;
-      --emerald-bg: rgba(16, 185, 129, 0.1);
+      --emerald-subtle: rgba(16, 185, 129, 0.1);
       --amber: #f59e0b;
-      --amber-bg: rgba(245, 158, 11, 0.1);
+      --amber-subtle: rgba(245, 158, 11, 0.1);
       --rose: #e11d48;
+      --rose-subtle: rgba(225, 29, 72, 0.1);
       --radius: 12px;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
-      --header-bg: rgba(255, 255, 255, 0.92);
-      --controls-bg: rgba(248, 250, 252, 0.95);
-      --table-header-bg: #f1f5f9;
-      --tag-bg: #f1f5f9;
-      --tag-border: #e2e8f0;
+      --header-bg: rgba(255, 255, 255, 0.88);
+      --search-bg: #ffffff;
       --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       --footer-bg: #ffffff;
     }
 
     html.dark {
-      --bg: #090d16;
+      --bg: #0b0f19;
       --bg-card: #111726;
       --bg-card-hover: #172033;
       --border: #1e293b;
@@ -69,19 +75,18 @@ export function renderHTML(jobs = [], meta = {}) {
       --text-dim: #64748b;
       --primary: #3b82f6;
       --primary-hover: #2563eb;
-      --accent: #06b6d4;
+      --primary-subtle: rgba(59, 130, 246, 0.12);
       --emerald: #10b981;
-      --emerald-bg: rgba(16, 185, 129, 0.12);
+      --emerald-subtle: rgba(16, 185, 129, 0.14);
       --amber: #f59e0b;
-      --amber-bg: rgba(245, 158, 11, 0.12);
+      --amber-subtle: rgba(245, 158, 11, 0.14);
       --rose: #f43f5e;
-      --header-bg: rgba(9, 13, 22, 0.88);
-      --controls-bg: rgba(9, 13, 22, 0.95);
-      --table-header-bg: #0d1424;
-      --tag-bg: #0d1424;
-      --tag-border: #1e293b;
-      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      --footer-bg: #060910;
+      --rose-subtle: rgba(244, 63, 94, 0.14);
+      --header-bg: rgba(11, 15, 25, 0.88);
+      --search-bg: #111726;
+      --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      --card-hover-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      --footer-bg: #080b13;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -99,965 +104,978 @@ export function renderHTML(jobs = [], meta = {}) {
     }
 
     a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
 
     .container {
-      max-width: 1240px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 0 1.5rem;
       width: 100%;
     }
 
-    /* Header */
+    /* ══════════════════════════════════════════════════
+       1. HEADER (3-ZONES CLEAN ARCHITECTURE)
+    ══════════════════════════════════════════════════ */
     header {
-      border-bottom: 1px solid var(--border);
-      background: var(--header-bg);
-      backdrop-filter: blur(16px);
       position: sticky;
       top: 0;
-      z-index: 40;
+      z-index: 50;
+      background: var(--header-bg);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.2s ease;
     }
 
     .header-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 68px;
+      height: 60px;
+      gap: 1rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      font-weight: 700;
-      font-size: 1.2rem;
+      gap: 0.5rem;
+      font-weight: 800;
+      font-size: 1.15rem;
       letter-spacing: -0.02em;
     }
+    .brand-accent { color: var(--primary); }
 
-    .brand-logo { font-size: 1.5rem; line-height: 1; }
-
-    .brand-tag {
-      background: rgba(59, 130, 246, 0.12);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 2px 8px;
+    .live-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 9px;
       border-radius: 999px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      background: var(--emerald-subtle);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--emerald);
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    .nav-links {
+    .header-nav {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
+    }
+    .nav-link {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--bg-card-hover);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      background: var(--primary-subtle);
     }
 
-    .nav-btn {
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-fav-header {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      padding: 0.45rem 0.85rem;
-      border-radius: 8px;
       font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      border: 1px solid transparent;
-      transition: all 0.15s ease;
-      cursor: pointer;
-    }
-
-    .nav-btn:hover {
-      color: var(--text);
+      font-weight: 600;
+      padding: 0.45rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
       background: var(--bg-card);
-      border-color: var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-fav-header:hover {
+      color: var(--rose);
+      border-color: rgba(225, 29, 72, 0.3);
+      background: var(--rose-subtle);
+    }
+    .btn-fav-header.active {
+      color: var(--rose);
+      border-color: rgba(225, 29, 72, 0.4);
+      background: var(--rose-subtle);
     }
 
-    .nav-btn-fav {
-      background: rgba(244, 63, 94, 0.1);
-      color: #fb7185;
-      border-color: rgba(244, 63, 94, 0.2);
-    }
-
-    .nav-btn-fav:hover {
-      background: rgba(244, 63, 94, 0.2);
-      color: #f43f5e;
-    }
-
-    .nav-btn-alert {
-      background: rgba(59, 130, 246, 0.1);
-      color: #60a5fa;
-      border-color: rgba(59, 130, 246, 0.25);
-    }
-
-    .nav-btn-alert:hover {
-      background: rgba(59, 130, 246, 0.2);
-      color: #93c5fd;
-    }
-
-    .nav-btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .nav-btn-primary:hover {
-      background: var(--primary-hover);
-      color: white;
-    }
-
-    /* Hero */
-    .hero {
-      padding: 2.75rem 0 2rem;
-      text-align: center;
-      border-bottom: 1px solid rgba(30, 41, 59, 0.6);
-      background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.12) 0%, transparent 65%);
-    }
-
-    .hero-badge {
+    .btn-post-header {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 0.35rem 0.95rem;
-      border-radius: 999px;
-      font-size: 0.8125rem;
-      color: var(--accent);
-      margin-bottom: 1.15rem;
-      font-weight: 500;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.45rem 0.95rem;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #ffffff !important;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+    .btn-post-header:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
     }
 
-    .hero-badge .pulse-dot {
-      width: 8px;
-      height: 8px;
-      background-color: var(--emerald);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--emerald);
-    }
-
-    .hero h1 {
-      font-size: 2.4rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
-      margin-bottom: 0.85rem;
-      max-width: 840px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .hero h1 span {
-      background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero p {
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      max-width: 720px;
-      margin: 0 auto;
-    }
-
-    .hero-cta-group {
-      display: flex;
+    .btn-icon-header {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-      flex-wrap: wrap;
-    }
-
-    .btn-hero-alert {
-      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-      color: white;
-      font-weight: 600;
-      font-size: 0.9rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
-      transition: all 0.2s ease;
-    }
-
-    .btn-hero-alert:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
-    }
-
-    .btn-hero-push {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
       background: var(--bg-card);
       color: var(--text);
-      font-weight: 600;
-      font-size: 0.9rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
       cursor: pointer;
-      border: 1px solid var(--border);
-      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      transition: all 0.15s ease;
     }
-
-    .btn-hero-push:hover {
+    .btn-icon-header:hover {
       background: var(--bg-card-hover);
-      border-color: #475569;
+      border-color: var(--text-muted);
     }
 
-    .form-group {
+    /* Menu Dropdown "···" */
+    .dropdown-container {
+      position: relative;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 200px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+    }
+    .dropdown-menu.show { display: flex; }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+      border-radius: 6px;
+      transition: background 0.15s ease;
+    }
+    .dropdown-item:hover {
+      background: var(--bg-card-hover);
+      color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════════════
+       2. HERO SECTION
+    ══════════════════════════════════════════════════ */
+    .hero-section {
+      padding: 2.75rem 0 1.75rem;
+      text-align: center;
+    }
+    .hero-title {
+      font-size: 2.35rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+
+    /* ══════════════════════════════════════════════════
+       3. UNIFIED COMMAND SEARCH BAR (AIRBNB / LINEAR)
+    ══════════════════════════════════════════════════ */
+    .search-section {
+      margin-bottom: 2rem;
+    }
+
+    .master-search-card {
+      background: var(--search-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.5rem;
+      box-shadow: var(--card-shadow);
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      text-align: left;
+      gap: 0.5rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .master-search-card:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), var(--card-hover-shadow);
     }
 
-    .form-label {
-      font-size: 0.82rem;
-      font-weight: 600;
+    .search-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.35rem 0.75rem;
+    }
+    .search-icon-badge {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+    }
+    .main-search-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
+      outline: none;
+    }
+    .main-search-input::placeholder {
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .kbd-shortcut {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border);
       color: var(--text-muted);
     }
 
-    .form-input, .form-select {
-      width: 100%;
+    .search-clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .search-clear-btn:hover { color: var(--text); }
+
+    .search-filters-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .filter-select {
       background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.6rem 0.85rem;
-      border-radius: 8px;
-      font-size: 0.88rem;
       font-family: inherit;
+      font-size: 0.83rem;
+      font-weight: 600;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
       outline: none;
-      transition: border-color 0.15s ease;
+      cursor: pointer;
+      transition: all 0.15s ease;
     }
-
-    .form-input:focus, .form-select:focus {
+    .filter-select:focus, .filter-select:hover {
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
 
-    /* Controls Bar */
-    .controls-section {
-      padding: 1.5rem 0 1rem;
-      position: sticky;
-      top: 68px;
-      background: var(--controls-bg);
-      backdrop-filter: blur(12px);
-      z-index: 30;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .search-row {
+    /* Suggestions Rapides */
+    .quick-chips-row {
       display: flex;
-      gap: 0.75rem;
-      margin-bottom: 0.85rem;
       align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+      padding: 0 0.25rem;
     }
-
-    .search-wrapper {
-      position: relative;
-      flex: 1;
+    .chips-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-right: 0.25rem;
     }
-
-    .search-icon {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      font-size: 1.05rem;
-    }
-
-    .search-input {
-      width: 100%;
+    .quick-chip {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.7rem 2.5rem 0.7rem 2.65rem;
-      border-radius: var(--radius);
-      font-size: 0.92rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .search-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-
-    .search-clear {
-      position: absolute;
-      right: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--text-dim);
+      color: var(--text-muted);
       cursor: pointer;
-      font-size: 1.1rem;
+      transition: all 0.15s ease;
+    }
+    .quick-chip:hover {
+      background: var(--primary-subtle);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .quick-chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    /* ══════════════════════════════════════════════════
+       4. TOOLBAR & STATS
+    ══════════════════════════════════════════════════ */
+    .toolbar-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .results-count-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .count-number {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text);
+    }
+    .reset-all-btn {
+      font-size: 0.78rem;
+      color: var(--rose);
+      background: var(--rose-subtle);
+      border: 1px solid rgba(225, 29, 72, 0.25);
+      padding: 2px 8px;
+      border-radius: 6px;
+      cursor: pointer;
       display: none;
     }
 
-    .search-clear:hover { color: var(--text); }
-
-    .view-toggle-btns {
-      display: flex;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 3px;
-    }
-
-    .view-btn {
-      padding: 0.45rem 0.8rem;
-      border-radius: 8px;
-      border: none;
-      background: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.825rem;
-      font-weight: 500;
+    .view-controls {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      transition: all 0.15s ease;
+      gap: 0.6rem;
     }
 
-    .view-btn.active {
-      background: var(--primary);
-      color: white;
-    }
-
-    /* Filter Groups */
-    .filter-groups {
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-    }
-
-    .filter-pills {
-      display: flex;
-      gap: 0.45rem;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      scrollbar-width: none;
-    }
-
-    .filter-pills::-webkit-scrollbar { display: none; }
-
-    .pill {
+    .segmented-control {
+      display: inline-flex;
       background: var(--bg-card);
       border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+    }
+    .segment-btn {
+      border: none;
+      background: transparent;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
       color: var(--text-muted);
-      padding: 0.35rem 0.8rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      white-space: nowrap;
       cursor: pointer;
-      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
+      transition: all 0.15s ease;
     }
-
-    .pill:hover {
-      border-color: #334155;
-      color: var(--text);
+    .segment-btn.active {
       background: var(--bg-card-hover);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
-    .pill.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
+    .sort-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
     }
 
-    .pill.pill-contract.active {
-      background: #4f46e5;
-      border-color: #6366f1;
-      color: white;
-    }
-
-    .pill.pill-salary.active {
-      background: #059669;
-      border-color: #10b981;
-      color: white;
-    }
-
-    /* Main Content */
-    main {
-      flex: 1;
-      padding: 1.75rem 0 3.5rem;
-    }
-
-    .results-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.25rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .results-bar strong { color: var(--text); }
-
-    /* Job Grid */
+    /* ══════════════════════════════════════════════════
+       5. JOB CARDS GRID
+    ══════════════════════════════════════════════════ */
     .jobs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.1rem;
+      margin-bottom: 2rem;
     }
 
-    /* Job Card */
     .job-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.35rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
       position: relative;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
     }
-
     .job-card:hover {
       transform: translateY(-2px);
-      border-color: #334155;
-      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.4);
-      background: var(--bg-card-hover);
+      box-shadow: var(--card-hover-shadow);
+      border-color: rgba(37, 99, 235, 0.3);
     }
 
-    .job-card-top {
+    .job-card-header {
       display: flex;
-      gap: 0.9rem;
       align-items: flex-start;
+      gap: 0.85rem;
       margin-bottom: 0.75rem;
     }
 
     .company-avatar {
       width: 44px;
       height: 44px;
-      border-radius: 8px;
-      background: var(--tag-bg);
+      border-radius: 10px;
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 1.05rem;
-      color: var(--text-muted);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--primary);
       flex-shrink: 0;
       overflow: hidden;
-      border: 1px solid var(--border);
+    }
+    .company-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
-    .company-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-    .job-title-wrap { flex: 1; min-width: 0; }
-
-    .job-company {
-      font-size: 0.85rem;
+    .company-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .company-name {
+      font-size: 0.83rem;
       font-weight: 600;
       color: var(--text-muted);
+      margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .job-title {
-      font-size: 1.02rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--text);
       line-height: 1.35;
-      margin-top: 0.15rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      letter-spacing: -0.015em;
     }
 
-    .btn-fav {
-      background: none;
+    .btn-card-fav {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: transparent;
       border: none;
+      font-size: 1.1rem;
       color: var(--text-dim);
-      font-size: 1.25rem;
       cursor: pointer;
       transition: transform 0.15s ease, color 0.15s ease;
-      line-height: 1;
-      padding: 2px;
     }
-
-    .btn-fav:hover { transform: scale(1.15); color: #f43f5e; }
-    .btn-fav.faved { color: #f43f5e; }
-
-    .job-meta-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-bottom: 0.75rem;
+    .btn-card-fav:hover {
+      transform: scale(1.2);
+      color: var(--rose);
     }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.72rem;
-      padding: 2px 7px;
-      border-radius: 5px;
-      font-weight: 500;
-    }
-
-    .badge-contract {
-      background: rgba(99, 102, 241, 0.12);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      font-weight: 600;
-    }
-
-    .badge-region {
-      background: rgba(59, 130, 246, 0.1);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    .badge-category {
-      background: rgba(168, 85, 247, 0.1);
-      color: #d8b4fe;
-      border: 1px solid rgba(168, 85, 247, 0.2);
-    }
-
-    .badge-salary {
-      background: var(--emerald-bg);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      font-weight: 600;
-    }
-
-    .badge-lang {
-      background: rgba(148, 163, 184, 0.08);
-      color: #cbd5e1;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-    }
-
-    .job-snippet {
-      font-size: 0.835rem;
-      color: var(--text-dim);
-      line-height: 1.5;
-      margin-bottom: 0.9rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+    .btn-card-fav.active {
+      color: var(--rose);
     }
 
     .job-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-bottom: 1rem;
+      gap: 0.4rem;
+      margin: 0.75rem 0 0.9rem;
     }
-
-    .tag-item {
-      background: var(--tag-bg);
-      border: 1px solid var(--tag-border);
-      color: var(--text-muted);
-      font-size: 0.68rem;
+    .tag-badge {
+      font-size: 0.74rem;
+      font-weight: 600;
       padding: 2px 7px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      cursor: pointer;
-      transition: all 0.15s ease;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
     }
-
-    .tag-item:hover {
-      background: var(--bg-card-hover);
+    .tag-salary {
+      background: var(--emerald-subtle);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: var(--emerald);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+    .tag-contract {
+      background: var(--primary-subtle);
+      border-color: rgba(37, 99, 235, 0.25);
       color: var(--primary);
-      border-color: var(--primary);
     }
 
     .job-card-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 0.85rem;
+      padding-top: 0.75rem;
       border-top: 1px solid var(--border);
-      font-size: 0.76rem;
-      color: var(--text-dim);
-    }
-
-    .job-verified-tag {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    .job-actions {
-      display: flex;
-      gap: 0.4rem;
-    }
-
-    .btn-apply {
-      background: var(--primary);
-      color: white;
-      font-weight: 600;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
       font-size: 0.78rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      transition: background 0.15s ease;
+      color: var(--text-dim);
     }
 
-    .btn-apply:hover { background: var(--primary-hover); }
-
-    .btn-icon {
-      background: var(--tag-bg);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      width: 30px;
-      height: 30px;
+    .btn-apply-card {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      padding: 4px 10px;
       border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: var(--primary-subtle);
+      transition: all 0.15s ease;
+    }
+    .btn-apply-card:hover {
+      background: var(--primary);
+      color: #ffffff !important;
+    }
+
+    /* Infinite Scroll Sentinel */
+    .infinite-container {
+      text-align: center;
+      padding: 1.5rem 0 3rem;
+    }
+    .btn-load-more {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.15s ease;
-      font-size: 0.85rem;
     }
-
-    .btn-icon:hover {
+    .btn-load-more:hover {
       background: var(--bg-card-hover);
-      color: var(--text);
+      border-color: var(--primary);
     }
 
-    /* Markdown View */
+    /* Markdown Table View */
     .markdown-view-wrapper {
       display: none;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.75rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
       overflow-x: auto;
     }
-
-    .markdown-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-
     .markdown-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.84rem;
+      font-size: 0.85rem;
+    }
+    .markdown-table th, .markdown-table td {
+      padding: 0.65rem 0.85rem;
+      border-bottom: 1px solid var(--border);
       text-align: left;
     }
-
     .markdown-table th {
-      background: #0d1424;
+      background: var(--bg);
+      font-weight: 700;
       color: var(--text-muted);
-      padding: 0.65rem 0.9rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1.5rem;
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      font-weight: 600;
+      border-radius: var(--radius);
+      margin-bottom: 2rem;
     }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
 
-    .markdown-table td {
-      padding: 0.65rem 0.9rem;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    .markdown-table tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    /* Modal / Drawer */
+    /* ══════════════════════════════════════════════════
+       6. MODALS (DETAIL & ALERTES)
+    ══════════════════════════════════════════════════ */
     .modal-backdrop {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      z-index: 100;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      z-index: 100;
+      padding: 1rem;
     }
+    .modal-backdrop.open { display: flex; }
 
     .modal-dialog {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      max-width: 680px;
+      border-radius: 16px;
+      max-width: 620px;
       width: 100%;
-      max-height: 85vh;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     }
-
     .modal-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
     }
-
     .modal-body {
       padding: 1.5rem;
       overflow-y: auto;
-      flex: 1;
-      font-size: 0.9rem;
-      line-height: 1.6;
-      color: #cbd5e1;
     }
-
     .modal-footer {
       padding: 1rem 1.5rem;
       border-top: 1px solid var(--border);
       display: flex;
+      align-items: center;
       justify-content: flex-end;
       gap: 0.75rem;
     }
 
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--text-muted);
-    }
-
-    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
-
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 2.25rem 0;
-      margin-top: auto;
-      background: var(--footer-bg);
-      font-size: 0.825rem;
-      color: var(--text-muted);
-    }
-
-    .footer-inner {
+    /* Form Styles */
+    .form-group {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .form-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .form-input, .form-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════════════
+       7. FOOTER
+    ══════════════════════════════════════════════════ */
+    footer {
+      background: var(--footer-bg);
+      border-top: 1px solid var(--border);
+      padding: 3rem 0 2rem;
+      margin-top: auto;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .footer-col-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .footer-col-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+    }
+    .footer-col-links a:hover {
+      color: var(--primary);
+    }
+    .footer-bottom {
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-dim);
       flex-wrap: wrap;
       gap: 1rem;
     }
 
-    .footer-links { display: flex; gap: 1.25rem; }
-    .footer-links a:hover { color: var(--text); }
-
     /* Toast */
     .toast {
       position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: #1e293b;
-      color: white;
-      border: 1px solid #334155;
-      padding: 0.65rem 1.15rem;
-      border-radius: 8px;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: var(--bg);
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
       font-size: 0.85rem;
-      z-index: 120;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s ease;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
-      gap: 0.45rem;
+      gap: 0.5rem;
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.25s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .toast.show { transform: translateY(0); opacity: 1; }
-
-    @media (max-width: 768px) {
-      .hero h1 { font-size: 1.8rem; }
+    @media (max-width: 860px) {
+      .header-nav { display: none; }
+      .search-filters-row { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .hero-title { font-size: 1.85rem; }
+    }
+    @media (max-width: 540px) {
+      .search-filters-row { grid-template-columns: 1fr; }
       .jobs-grid { grid-template-columns: 1fr; }
-      .controls-section { top: 60px; }
-      .header-inner { height: 60px; }
+      .footer-grid { grid-template-columns: 1fr; }
       .hide-mobile { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- 1. HEADER (3-ZONES MINIMALIST) -->
   <header>
     <div class="container header-inner">
-      <a href="/" class="brand">
-        <span class="brand-logo">🌍</span>
-        <span class="brand-title">FullRemote<span style="color:var(--primary);">.Jobs</span></span>
-        <span class="brand-tag">100% Remote</span>
-      </a>
+      <!-- Left: Logo & Live Counter -->
+      <div class="header-left">
+        <a href="/" class="brand">
+          <span style="font-size:1.3rem;">🌍</span>
+          <span>FullRemote<span class="brand-accent">.Jobs</span></span>
+        </a>
+        <div class="live-count-badge" title="Nombre d'offres actives en direct">
+          <span class="live-dot"></span>
+          <span><span class="count-number" id="headerCount">${totalCount}</span> jobs</span>
+        </div>
+      </div>
 
-      <nav class="nav-links">
-        <a href="/post-a-job" class="nav-btn" style="background:var(--primary); color:white; font-weight:600; border:none;" title="Recruteurs : Publier une offre">
-          <span>💼</span> <span class="hide-mobile">Publier (49€)</span>
-        </a>
-        <a href="/simulateur-salaire-remote" class="nav-btn" title="Simulateur Salaire Télétravail International">
-          <span>💶</span> <span class="hide-mobile">Simulateur</span>
-        </a>
-        <button id="navAlertBtn" class="nav-btn nav-btn-alert" title="Créer une alerte personnalisée" onclick="openAlertModal()">
-          <span>🔔</span> <span class="hide-mobile">Alertes</span>
-        </button>
-        <button id="navFavBtn" class="nav-btn nav-btn-fav" title="Voir mes favoris">
+      <!-- Center: Clean Navigation Links -->
+      <nav class="header-nav">
+        <a href="/" class="nav-link active">Explorer</a>
+        <a href="/simulateur-salaire-remote" class="nav-link">💶 Simulateur</a>
+        <button class="nav-link" style="border:none; background:transparent; cursor:pointer;" onclick="openAlertModal()">🔔 Alertes</button>
+      </nav>
+
+      <!-- Right: Action CTA & Utilities -->
+      <div class="header-right">
+        <button id="favHeaderBtn" class="btn-fav-header" title="Afficher mes offres sauvegardées">
           <span>❤️</span> <span class="hide-mobile">Favoris</span> (<span id="favCount">0</span>)
         </button>
-        <a href="/rss" target="_blank" class="nav-btn" title="Flux RSS officiel">
-          <span>📡</span> <span class="hide-mobile">Flux RSS</span>
+
+        <a href="/post-a-job" class="btn-post-header">
+          <span>+</span> <span>Publier <span class="hide-mobile">(49€)</span></span>
         </a>
-        <a href="/api/jobs" target="_blank" class="nav-btn">
-          <span>⚡</span> <span class="hide-mobile">API</span>
-        </a>
-        <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank" class="nav-btn" title="Dépôt GitHub">
-          <span>★</span> GitHub
-        </a>
-        <button id="themeToggleBtn" class="nav-btn" title="Basculer le thème (Clair / Sombre)">
-          <span>🌙</span>
+
+        <button id="themeToggleBtn" class="btn-icon-header" title="Changer de thème">
+          🌙
         </button>
-      </nav>
+
+        <!-- Dropdown "···" for secondary developer resources -->
+        <div class="dropdown-container">
+          <button id="moreDropdownBtn" class="btn-icon-header" title="Plus d'outils (API, RSS, Docs)">
+            ···
+          </button>
+          <div id="moreDropdownMenu" class="dropdown-menu">
+            <a href="/simulateur-salaire-remote" class="dropdown-item">💶 Simulateur Salaire</a>
+            <a href="/llms.txt" class="dropdown-item">🤖 Index llms.txt</a>
+            <a href="/rss" target="_blank" class="dropdown-item">📡 Flux RSS 2.0</a>
+            <a href="/api/jobs" target="_blank" class="dropdown-item">⚡ API REST JSON</a>
+            <a href="/openapi.json" target="_blank" class="dropdown-item">📑 Schéma OpenAPI</a>
+            <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank" class="dropdown-item">★ GitHub Repo</a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-badge">
-        <span class="pulse-dot"></span>
-        <span id="heroBadgeCount">${totalCount} offres 100% full remote disponibles</span>
-      </div>
-      <h1>L'annuaire mondial des jobs <span>100% Télétravail</span>.</h1>
-      <p>Le répertoire vérifié des meilleures opportunités de carrière sans restriction de localisation (CDI, Freelance, CDD, Stage). Accès direct et sans inscription.</p>
+  <!-- 2. HERO SECTION -->
+  <main class="container">
+    <section class="hero-section">
+      <h1 class="hero-title">Trouvez votre prochain job <span class="brand-accent">100% télétravail</span>.</h1>
+      <p class="hero-subtitle">Le répertoire vérifié des meilleures opportunités sans restriction géographique (CDI, Freelance, CDD, Stage). Accès direct et sans intermédiaire.</p>
+    </section>
 
-      <div class="hero-cta-group">
-        <button id="heroAlertBtn" class="btn-hero-alert" onclick="openAlertModal()">
-          <span>✉️</span> Créer une alerte personnalisée
-        </button>
-        <button id="heroPushBtn" class="btn-hero-push" onclick="subscribeToWebPush()">
-          <span id="pushIcon">🔔</span> <span id="pushBtnLabel">Activer les notifications Web</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Controls Bar -->
-  <div class="controls-section">
-    <div class="container">
-      <!-- Search Input & View Mode -->
-      <div class="search-row">
-        <div class="search-wrapper">
-          <span class="search-icon">🔍</span>
+    <!-- 3. UNIFIED MASTER COMMAND SEARCH BAR -->
+    <section class="search-section">
+      <div class="master-search-card">
+        <div class="search-input-row">
+          <span class="search-icon-badge">🔍</span>
           <input
             type="text"
             id="searchInput"
-            class="search-input"
-            placeholder="Filtrer par titre, techno, entreprise (ex: Go, React, Python, Stripe, DevOps, Freelance, CDI...)"
+            class="main-search-input"
+            placeholder="Rechercher par titre, stack techno, entreprise (ex: Go, React, Python, Stripe, DevOps...)"
             autocomplete="off"
           />
-          <button id="searchClear" class="search-clear" title="Effacer">✕</button>
+          <span class="kbd-shortcut hide-mobile">/</span>
+          <button id="searchClear" class="search-clear-btn" title="Effacer">✕</button>
         </div>
 
-        <div class="view-toggle-btns">
-          <button id="viewCardsBtn" class="view-btn active" title="Vue Cartes">
+        <div class="search-filters-row">
+          <select id="regionSelect" class="filter-select">
+            <option value="all">🌍 Toutes les régions</option>
+            <option value="worldwide">🌍 Worldwide (Sans limite)</option>
+            <option value="france">🇫🇷 France & Francophonie</option>
+            <option value="europe">🇪🇺 Europe & UK</option>
+            <option value="americas">🇺🇸 Amériques (USA/CA/LATAM)</option>
+            <option value="apac_mea">🌏 Asie, Pacifique & MEA</option>
+          </select>
+
+          <select id="categorySelect" class="filter-select">
+            <option value="all">💼 Tous les métiers</option>
+            <option value="tech">💻 Tech & Dev</option>
+            <option value="devops">☁️ DevOps & Cloud</option>
+            <option value="data_ai">🧠 Data & IA</option>
+            <option value="design">🎨 Design & UX/UI</option>
+            <option value="product">🚀 Product</option>
+            <option value="marketing_sales">📈 Marketing & Sales</option>
+          </select>
+
+          <select id="contractSelect" class="filter-select">
+            <option value="all">📋 Tous les contrats</option>
+            <option value="cdi_fulltime">💼 CDI / Full-time</option>
+            <option value="freelance_contract">⚡ Freelance</option>
+            <option value="cdd_parttime">⏳ CDD / Part-time</option>
+            <option value="internship">🎓 Stage / Alternance</option>
+          </select>
+
+          <select id="salarySelect" class="filter-select">
+            <option value="0">💰 Tous les salaires</option>
+            <option value="50000">💰 > 50k € / $</option>
+            <option value="75000">💰 > 75k € / $</option>
+            <option value="100000">💰 > 100k € / $</option>
+            <option value="130000">💰 > 130k € / $</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Chips Suggestions -->
+      <div class="quick-chips-row">
+        <span class="chips-label">💡 Populaire :</span>
+        <button class="quick-chip" onclick="applyQuickChip('React')">React</button>
+        <button class="quick-chip" onclick="applyQuickChip('Go')">Go / Golang</button>
+        <button class="quick-chip" onclick="applyQuickChip('Python')">Python</button>
+        <button class="quick-chip" onclick="applyQuickChip('DevOps')">DevOps</button>
+        <button class="quick-chip" onclick="applyQuickChip('AI')">IA & LLM</button>
+        <button class="quick-chip" onclick="applyQuickChip('Stripe')">Stripe</button>
+        <button class="quick-chip" onclick="applyQuickChip('CDI')">💼 CDI</button>
+        <button class="quick-chip" onclick="applyQuickChip('Freelance')">⚡ Freelance</button>
+      </div>
+    </section>
+
+    <!-- 4. TOOLBAR SECTION -->
+    <section class="toolbar-section">
+      <div class="results-count-wrapper">
+        <span>Affichage de <span class="count-number" id="visibleCount">0</span> offre(s)</span>
+        <button id="resetAllFiltersBtn" class="reset-all-btn" onclick="resetAllFilters()">✕ Réinitialiser</button>
+      </div>
+
+      <div class="view-controls">
+        <div class="segmented-control">
+          <button id="viewCardsBtn" class="segment-btn active" title="Vue Cartes">
             <span>🗂️</span> <span class="hide-mobile">Cartes</span>
           </button>
-          <button id="viewMdBtn" class="view-btn" title="Vue Markdown">
+          <button id="viewMdBtn" class="segment-btn" title="Vue Markdown">
             <span>📋</span> <span class="hide-mobile">Markdown</span>
           </button>
         </div>
+
+        <select id="sortSelect" class="sort-select">
+          <option value="recent">⚡ Plus récentes</option>
+          <option value="salary_desc">💰 Salaire décroissant</option>
+          <option value="company">🏢 Entreprise (A-Z)</option>
+        </select>
       </div>
+    </section>
 
-      <!-- Filters Pills -->
-      <div class="filter-groups">
-        <!-- Regions -->
-        <div class="filter-pills" id="regionFilters">
-          <button class="pill active" data-region="all">🌍 Toutes les régions</button>
-          <button class="pill" data-region="worldwide">🌍 Worldwide</button>
-          <button class="pill" data-region="france">🇫🇷 France & Francophonie</button>
-          <button class="pill" data-region="europe">🇪🇺 Europe</button>
-          <button class="pill" data-region="americas">🇺🇸 Amériques</button>
-          <button class="pill" data-region="apac_mea">🌏 Asie & MEA</button>
-        </div>
-
-        <!-- Contract Types (CDI, Freelance, CDD, Stage) -->
-        <div class="filter-pills" id="contractFilters">
-          <button class="pill pill-contract active" data-contract="all">📋 Tous les contrats</button>
-          <button class="pill pill-contract" data-contract="cdi_fulltime">💼 CDI / Full-time</button>
-          <button class="pill pill-contract" data-contract="freelance_contract">⚡ Freelance / Contract</button>
-          <button class="pill pill-contract" data-contract="cdd_parttime">⏱️ CDD / Part-time</button>
-          <button class="pill pill-contract" data-contract="internship">🎓 Stage / Alternance</button>
-        </div>
-
-        <!-- Salary Thresholds (Normalisation € / $) -->
-        <div class="filter-pills" id="salaryFilters">
-          <button class="pill pill-salary active" data-min-salary="0">💰 Tous salaires</button>
-          <button class="pill pill-salary" data-min-salary="50000">💰 > 50k € / $</button>
-          <button class="pill pill-salary" data-min-salary="75000">💰 > 75k € / $</button>
-          <button class="pill pill-salary" data-min-salary="100000">💰 > 100k € / $</button>
-          <button class="pill pill-salary" data-min-salary="130000">💰 > 130k € / $</button>
-        </div>
-
-        <!-- Categories & Lang -->
-        <div class="filter-pills" id="categoryFilters">
-          <button class="pill active" data-cat="all">💼 Tous métiers</button>
-          <button class="pill" data-cat="tech">💻 Tech & Dev</button>
-          <button class="pill" data-cat="devops">☁️ DevOps & Cloud</button>
-          <button class="pill" data-cat="data_ai">🧠 Data & IA</button>
-          <button class="pill" data-cat="design">🎨 Design & UX</button>
-          <button class="pill" data-cat="product">🚀 Product</button>
-          <button class="pill" data-cat="marketing_sales">📈 Marketing & Sales</button>
-          <button class="pill" data-lang="fr">🇫🇷 Offres FR</button>
-          <button class="pill" data-lang="en">🇬🇧 Offres EN</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <main class="container">
-    <div class="results-bar">
-      <div>
-        Affichage de <strong id="visibleCount">${totalCount}</strong> offre(s) vérifiée(s)
-      </div>
-      <div style="font-size:0.8rem; color:var(--text-dim);">
-        Actualisé le : <strong>${dateFormatted} UTC</strong>
-      </div>
-    </div>
-
-    <!-- Cards Grid -->
+    <!-- 5. JOB CARDS GRID -->
     <div id="jobsGrid" class="jobs-grid"></div>
 
-    <!-- Infinite Scroll Sentinel & Load More Trigger -->
-    <div id="infiniteSentinel" style="text-align:center; padding:2.5rem 0 1rem; display:none;">
-      <button id="loadMoreBtn" class="nav-btn" style="padding:0.75rem 2rem; font-weight:600; border-radius:999px; font-size:0.9rem; margin:0 auto; display:inline-flex;" onclick="loadMoreJobs()">
-        <span>Charger plus d'offres</span> ⬇
+    <!-- Infinite Scroll Sentinel & Load More -->
+    <div class="infinite-container">
+      <div id="infiniteSentinel" style="height: 20px; margin-bottom: 10px;"></div>
+      <button id="loadMoreBtn" class="btn-load-more" onclick="loadMoreJobs()">
+        Charger plus d'offres ⬇
       </button>
-      <div id="allLoadedNotice" style="display:none; font-size:0.85rem; color:var(--text-dim); padding:0.5rem 0;">
-        🎉 Vous avez visualisé l'ensemble des <strong id="allLoadedCount" style="color:var(--text);">0</strong> offres filtrées.
+      <div id="allLoadedNotice" style="display:none; font-size:0.85rem; color:var(--text-dim); margin-top:0.75rem;">
+        🎉 Vous avez visualisé l'ensemble des offres.
       </div>
     </div>
 
     <!-- Markdown Table View -->
     <div id="markdownView" class="markdown-view-wrapper">
-      <div class="markdown-header">
-        <h2 style="font-size:1.1rem; font-weight:700;">Catalogue au format Markdown</h2>
-        <button id="copyMdBtn" class="btn-apply" style="cursor:pointer; border:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2 style="font-size:1.05rem; font-weight:700;">Catalogue au format Markdown (LLM & Agent friendly)</h2>
+        <button id="copyMdBtn" class="btn-post-header" style="border:none; cursor:pointer;">
           📋 Copier tout le Markdown
         </button>
       </div>
@@ -1080,14 +1098,15 @@ export function renderHTML(jobs = [], meta = {}) {
     <!-- Empty State -->
     <div id="emptyState" class="empty-state" style="display:none;">
       <div class="empty-state-icon">🔎</div>
-      <h3 style="color:var(--text); margin-bottom:0.5rem;">Aucune offre trouvée</h3>
-      <p>Essayez d'élargir vos critères ou de réinitialiser les filtres.</p>
-      <button id="resetFiltersBtn" class="pill active" style="margin-top:1rem; cursor:pointer;">
+      <h3 style="color:var(--text); margin-bottom:0.4rem; font-size:1.15rem; font-weight:700;">Aucune offre correspondante</h3>
+      <p style="color:var(--text-muted); font-size:0.9rem;">Essayez d'élargir vos filtres ou effectuez une recherche par mot-clé.</p>
+      <button onclick="resetAllFilters()" class="btn-load-more" style="margin-top:1rem;">
         Réinitialiser tous les filtres
       </button>
     </div>
   </main>
 
+  <!-- 6. MODALS -->
   <!-- Job Detail Modal -->
   <div id="jobModal" class="modal-backdrop">
     <div class="modal-dialog">
@@ -1095,21 +1114,21 @@ export function renderHTML(jobs = [], meta = {}) {
         <div style="display:flex; align-items:center; gap:0.75rem;">
           <div id="modalAvatar" class="company-avatar"></div>
           <div>
-            <div id="modalCompany" style="font-size:0.85rem; font-weight:600; color:var(--text-muted);"></div>
+            <div id="modalCompany" style="font-size:0.83rem; font-weight:600; color:var(--text-muted);"></div>
             <h3 id="modalTitle" style="font-size:1.05rem; font-weight:700; color:var(--text);"></h3>
           </div>
         </div>
-        <button id="modalCloseBtn" class="btn-icon" style="font-size:1.1rem;">✕</button>
+        <button id="modalCloseBtn" class="btn-icon-header" style="width:32px; height:32px; font-size:1rem;">✕</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-footer">
-        <a id="modalSeoLink" href="#" target="_blank" class="btn-icon" title="Ouvrir la page détaillée de l'offre" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
+        <a id="modalSeoLink" href="#" target="_blank" class="btn-fav-header" title="Ouvrir la page détaillée de l'offre">
           📄 Fiche détaillée
         </a>
-        <button id="modalCopyBtn" class="btn-icon" title="Copier le lien" style="width:auto; padding:0 0.75rem; gap:0.3rem;">
-          🔗 Copier le lien
+        <button id="modalCopyBtn" class="btn-fav-header" title="Copier le lien">
+          🔗 Copier lien
         </button>
-        <a id="modalApplyBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-apply">
+        <a id="modalApplyBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-post-header">
           Postuler directement ↗
         </a>
       </div>
@@ -1121,29 +1140,29 @@ export function renderHTML(jobs = [], meta = {}) {
     <div class="modal-dialog" style="max-width: 520px;">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:0.6rem;">
-          <span style="font-size:1.5rem;">🔔</span>
+          <span style="font-size:1.4rem;">🔔</span>
           <div>
-            <h3 style="font-size:1.1rem; font-weight:700; color:var(--text);">Créer une alerte personnalisée</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Recevez par email les nouveaux postes selon vos critères.</p>
+            <h3 style="font-size:1.05rem; font-weight:700; color:var(--text);">Créer une alerte personnalisée</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Recevez chaque matin à 08h00 les offres adaptées à vos critères.</p>
           </div>
         </div>
-        <button id="alertModalCloseBtn" class="btn-icon" style="font-size:1.1rem;">✕</button>
+        <button id="alertModalCloseBtn" class="btn-icon-header" style="width:32px; height:32px;">✕</button>
       </div>
-      <form id="alertForm" class="modal-body" style="display:flex; flex-direction:column; gap:1rem;">
+      <form id="alertForm" class="modal-body" action="javascript:void(0);" onsubmit="event.preventDefault(); handleAlertSubmit(event); return false;" style="display:flex; flex-direction:column; gap:1rem;">
         <div class="form-group">
           <label class="form-label" for="alertEmail">Votre adresse Email <span style="color:var(--rose);">*</span></label>
-          <input type="email" id="alertEmail" class="form-input" required placeholder="candidat@exemple.com" />
+          <input type="email" id="alertEmail" class="form-input" required placeholder="alex@exemple.com" />
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
           <div class="form-group">
-            <label class="form-label" for="alertRegion">Région géographique</label>
+            <label class="form-label" for="alertRegion">Région autorisée</label>
             <select id="alertRegion" class="form-select">
               <option value="all">🌍 Toutes les régions</option>
-              <option value="worldwide">🌍 Worldwide (Sans restriction)</option>
+              <option value="worldwide">🌍 Worldwide</option>
               <option value="france">🇫🇷 France & Francophonie</option>
               <option value="europe">🇪🇺 Europe & UK</option>
-              <option value="americas">🇺🇸 Amériques (USA/CA/LATAM)</option>
-              <option value="apac_mea">🌏 Asie, Pacifique & MEA</option>
+              <option value="americas">🇺🇸 Amériques</option>
+              <option value="apac_mea">🌏 Asie & MEA</option>
             </select>
           </div>
           <div class="form-group">
@@ -1180,99 +1199,113 @@ export function renderHTML(jobs = [], meta = {}) {
         </div>
         <div class="form-group">
           <label class="form-label" for="alertKeywords">Mots-clés optionnels</label>
-          <input type="text" id="alertKeywords" class="form-input" placeholder="ex: react, golang, rust, staff..." />
-          <span style="font-size:0.75rem; color:var(--text-dim);">Séparez les mots par des virgules ou des espaces.</span>
+          <input type="text" id="alertKeywords" class="form-input" placeholder="ex: react, golang, rust, devops..." />
         </div>
         <div id="alertFeedback" style="display:none; font-size:0.85rem; padding:0.6rem 0.8rem; border-radius:6px;"></div>
-        <button type="submit" id="alertSubmitBtn" class="btn-apply" style="justify-content:center; padding:0.75rem; font-size:0.9rem; font-weight:700; width:100%; border:none; cursor:pointer;">
+        <button type="submit" id="alertSubmitBtn" class="btn-post-header" style="justify-content:center; padding:0.75rem; font-size:0.9rem; border:none; cursor:pointer; width:100%;">
           🚀 Enregistrer mon alerte gratuite
         </button>
-        <p style="font-size:0.75rem; color:var(--text-dim); text-align:center; margin:0;">
-          🔒 100% gratuit. Aucun mot de passe requis. Désinscription immédiate en 1 clic.
-        </p>
       </form>
     </div>
   </div>
 
   <!-- Newsletter Capture Section -->
-  <section style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3.5rem 0; margin-top: 3.5rem;">
-    <div class="container" style="max-width: 680px; text-align: center;">
-      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📬</div>
-      <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.6rem; letter-spacing: -0.02em; color: var(--text);">Le Digest Quotidien du Full Remote</h2>
-      <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.</p>
+  <section style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(16, 185, 129, 0.06) 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3rem 0;">
+    <div class="container" style="max-width: 620px; text-align: center;">
+      <div style="font-size: 2rem; margin-bottom: 0.4rem;">📬</div>
+      <h2 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; color: var(--text);">Le Digest Quotidien du Full Remote</h2>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.55;">Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.</p>
       <form id="quickNewsletterForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleQuickNewsletter(event); return false;" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
-        <input type="email" id="quickEmail" required placeholder="Votre adresse email (ex: alex@gmail.com)" class="form-input" style="max-width: 360px; background: var(--bg-card);" />
-        <button type="submit" id="quickEmailBtn" class="btn-apply" style="border: none; padding: 0.7rem 1.6rem; font-weight: 700; cursor: pointer;">
-          🚀 S'inscrire gratuitement
+        <input type="email" id="quickEmail" required placeholder="Votre adresse email (ex: alex@gmail.com)" class="form-input" style="max-width: 340px; background: var(--bg-card);" />
+        <button type="submit" id="quickEmailBtn" class="btn-post-header" style="border: none; padding: 0.65rem 1.4rem; cursor: pointer;">
+          🚀 S'inscrire
         </button>
       </form>
-      <div id="quickFeedback" style="display: none; margin-top: 0.85rem; font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto;"></div>
+      <div id="quickFeedback" style="display: none; margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto;"></div>
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- 7. FOOTER -->
   <footer>
-    <div class="container footer-inner">
-      <div>
-        <strong>FullRemote.Jobs</strong> — Développé et maintenu par <a href="https://edounze.com" target="_blank" style="color:var(--primary); font-weight:600;">Charles EDOU NZE</a>.
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand" style="margin-bottom:0.75rem;">
+            <span>🌍</span>
+            <span>FullRemote<span class="brand-accent">.Jobs</span></span>
+          </div>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55; max-width:320px;">
+            L'annuaire mondial des carrières 100% télétravail. Développé et maintenu par <a href="https://edounze.com" target="_blank" style="color:var(--primary); font-weight:600;">Charles EDOU NZE</a>.
+          </p>
+        </div>
+        <div>
+          <div class="footer-col-title">Plateforme</div>
+          <div class="footer-col-links">
+            <a href="/">Explorer les offres</a>
+            <a href="/simulateur-salaire-remote">Simulateur Salaire</a>
+            <a href="/post-a-job">Publier une offre (49€)</a>
+            <a href="javascript:void(0);" onclick="openAlertModal()">Créer une alerte email</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">IA & Développeurs</div>
+          <div class="footer-col-links">
+            <a href="/llms.txt">Standard llms.txt</a>
+            <a href="/llms-full.txt">Catalogue Markdown</a>
+            <a href="/api/jobs">API REST JSON</a>
+            <a href="/openapi.json">Spécification OpenAPI</a>
+            <a href="/mcp">Serveur MCP</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Ressources</div>
+          <div class="footer-col-links">
+            <a href="/rss" target="_blank">Flux RSS 2.0</a>
+            <a href="/sitemap.xml" target="_blank">Sitemap XML</a>
+            <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank">Code Source GitHub</a>
+            <a href="https://remote-jobs.edounze.com">remote-jobs.edounze.com</a>
+          </div>
+        </div>
       </div>
-      <div class="footer-links">
-        <a href="https://remote-jobs.edounze.com">remote-jobs.edounze.com</a>
-        <a href="/simulateur-salaire-remote">Simulateur Salaire</a>
-        <a href="/post-a-job">Publier une offre</a>
-        <a href="/llms.txt">llms.txt</a>
-        <a href="/rss" target="_blank">Flux RSS</a>
-        <a href="/sitemap.xml" target="_blank">Sitemap</a>
-        <a href="/api/jobs" target="_blank">API JSON</a>
-        <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank">GitHub</a>
+
+      <div class="footer-bottom">
+        <div>© 2026 FullRemote.Jobs — Tous droits réservés.</div>
+        <div>Indexation continue • 9 sources mondiales agrégées</div>
       </div>
     </div>
   </footer>
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">
-    <span>✓</span> <span id="toastMsg">Action effectuée avec succès !</span>
+    <span>✓</span> <span id="toastMsg">Action effectuée</span>
   </div>
 
-  <!-- Client-side Logic -->
+  <!-- Client-side Logic (High Performance) -->
   <script>
     const JOBS_DATA = ${jobsJson};
     let currentRegion = 'all';
     let currentContract = 'all';
     let currentCategory = 'all';
-    let currentLang = 'all';
     let minSalary = 0;
     let onlyFavorites = false;
     let searchQuery = '';
+    let sortMode = 'recent';
 
     // Favorites in localStorage
     let favorites = new Set();
     try {
-      const saved = JSON.parse(localStorage.getItem('fr_favs') || '[]');
-      favorites = new Set(saved);
-    } catch(e) {}
+      const savedFavs = JSON.parse(localStorage.getItem('fr_favs') || '[]');
+      favorites = new Set(savedFavs);
+    } catch (e) {}
 
-    function updateFavCount() {
-      document.getElementById('favCount').textContent = favorites.size;
+    function updateFavCounters() {
+      const fc = document.getElementById('favCount');
+      if (fc) fc.textContent = favorites.size;
     }
-    updateFavCount();
-
-    const searchInput = document.getElementById('searchInput');
-    const searchClear = document.getElementById('searchClear');
-    const jobsGrid = document.getElementById('jobsGrid');
-    const markdownView = document.getElementById('markdownView');
-    const markdownTableBody = document.getElementById('markdownTableBody');
-    const visibleCount = document.getElementById('visibleCount');
-    const emptyState = document.getElementById('emptyState');
-    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-    const navFavBtn = document.getElementById('navFavBtn');
-    const viewCardsBtn = document.getElementById('viewCardsBtn');
-    const viewMdBtn = document.getElementById('viewMdBtn');
-    const toast = document.getElementById('toast');
-    const toastMsg = document.getElementById('toastMsg');
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    updateFavCounters();
 
     // Theme Management
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
     let currentTheme = localStorage.getItem('theme') || 'light';
     applyTheme(currentTheme);
 
@@ -1280,11 +1313,11 @@ export function renderHTML(jobs = [], meta = {}) {
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
         document.documentElement.classList.remove('light');
-        if (themeToggleBtn) themeToggleBtn.innerHTML = '<span>☀️</span>';
+        if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
       } else {
         document.documentElement.classList.add('light');
         document.documentElement.classList.remove('dark');
-        if (themeToggleBtn) themeToggleBtn.innerHTML = '<span>🌙</span>';
+        if (themeToggleBtn) themeToggleBtn.textContent = '🌙';
       }
       localStorage.setItem('theme', theme);
     }
@@ -1296,585 +1329,394 @@ export function renderHTML(jobs = [], meta = {}) {
       };
     }
 
-    // Modal elements
-    const jobModal = document.getElementById('jobModal');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const modalAvatar = document.getElementById('modalAvatar');
-    const modalCompany = document.getElementById('modalCompany');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBody = document.getElementById('modalBody');
-    const modalApplyBtn = document.getElementById('modalApplyBtn');
-    const modalCopyBtn = document.getElementById('modalCopyBtn');
-    const modalSeoLink = document.getElementById('modalSeoLink');
+    // Dropdown "···"
+    const moreDropdownBtn = document.getElementById('moreDropdownBtn');
+    const moreDropdownMenu = document.getElementById('moreDropdownMenu');
+    if (moreDropdownBtn && moreDropdownMenu) {
+      moreDropdownBtn.onclick = (e) => {
+        e.stopPropagation();
+        moreDropdownMenu.classList.toggle('show');
+      };
+      document.addEventListener('click', () => {
+        moreDropdownMenu.classList.remove('show');
+      });
+    }
 
+    // Toast
     function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      if (!toast || !toastMsg) return;
       toastMsg.textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    function timeAgo(dateString) {
-      if (!dateString) return '';
-      const now = new Date();
-      const past = new Date(dateString);
-      const diffHrs = Math.floor((now - past) / (1000 * 60 * 60));
-      if (diffHrs < 1) return "À l'instant";
-      if (diffHrs < 24) return \`Il y a \${diffHrs}h\`;
-      const diffDays = Math.floor(diffHrs / 24);
-      if (diffDays === 1) return "Hier";
-      return \`Il y a \${diffDays}j\`;
+    // Modal Alertes
+    window.openAlertModal = function() {
+      const m = document.getElementById('alertModal');
+      if (m) m.classList.add('open');
+    };
+    const alertModalCloseBtn = document.getElementById('alertModalCloseBtn');
+    if (alertModalCloseBtn) {
+      alertModalCloseBtn.onclick = () => document.getElementById('alertModal').classList.remove('open');
     }
 
-    function escapeHtml(str = '') {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    // Modal Job Details
+    const jobModal = document.getElementById('jobModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    if (modalCloseBtn) {
+      modalCloseBtn.onclick = () => jobModal.classList.remove('open');
+    }
+    if (jobModal) {
+      jobModal.onclick = (e) => {
+        if (e.target === jobModal) jobModal.classList.remove('open');
+      };
     }
 
-    function toggleFavorite(id) {
-      if (favorites.has(id)) {
-        favorites.delete(id);
-        showToast('Offre retirée des favoris');
-      } else {
-        favorites.add(id);
-        showToast('Offre ajoutée aux favoris ❤️');
-      }
-      try {
-        localStorage.setItem('fr_favs', JSON.stringify(Array.from(favorites)));
-      } catch(e) {}
-      updateFavCount();
-      renderJobs();
-    }
-    window.toggleFavorite = toggleFavorite;
-
-    function filterByTag(tag) {
-      searchInput.value = tag;
-      searchQuery = tag;
-      searchClear.style.display = 'block';
-      renderJobs();
-      window.scrollTo({ top: 300, behavior: 'smooth' });
-    }
-    window.filterByTag = filterByTag;
-
-    function openModal(jobId) {
+    function openJobModal(jobId) {
       const job = JOBS_DATA.find(j => j.id === jobId);
       if (!job) return;
 
-      const initial = (job.company || 'C').charAt(0).toUpperCase();
-      modalAvatar.innerHTML = job.company_logo
-        ? \`<img src="\${escapeHtml(job.company_logo)}" alt="\${escapeHtml(job.company)}" onerror="this.parentElement.innerHTML='\${initial}'">\`
-        : initial;
+      document.getElementById('modalTitle').textContent = job.title;
+      document.getElementById('modalCompany').textContent = job.company;
+      
+      const avatar = document.getElementById('modalAvatar');
+      if (job.company_logo) {
+        avatar.innerHTML = \`<img src="\${escapeAttr(job.company_logo)}" alt="\${escapeAttr(job.company)}" onerror="this.parentElement.textContent='\${escapeHtml((job.company||'C')[0])}'" />\`;
+      } else {
+        avatar.textContent = (job.company || 'C')[0].toUpperCase();
+      }
 
-      modalCompany.textContent = job.company;
-      modalTitle.textContent = job.title;
+      const body = document.getElementById('modalBody');
+      const salaryHtml = job.salary ? \`<div class="tag-badge tag-salary" style="display:inline-block; margin-bottom:0.75rem;">💰 \${escapeHtml(job.salary)}</div>\` : '';
+      const tagsHtml = (job.tags || []).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join(' ');
 
-      modalBody.innerHTML = \`
-        <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1rem;">
-          <span class="badge badge-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI / Full-time')}</span>
-          <span class="badge badge-region">\${job.regionFlag || '🌍'} \${escapeHtml(job.location || job.region)}</span>
-          <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
-          \${job.salary ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\` : ''}
-          <span class="badge badge-lang">\${job.language === 'fr' ? '🇫🇷 Français' : '🇬🇧 English'}</span>
-          <span class="badge badge-lang">100% Télétravail Garanti</span>
+      body.innerHTML = \`
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+          <span class="tag-badge tag-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI')}</span>
+          <span class="tag-badge">\${job.regionFlag || '🌍'} \${escapeHtml(job.region || 'Worldwide')}</span>
+          \${salaryHtml}
         </div>
-        <p style="margin-bottom:1.25rem;">\${escapeHtml(job.description_snippet || 'Aucun aperçu disponible.')}</p>
-        <div style="font-size:0.8rem; color:var(--text-dim);">Date de publication : \${new Date(job.published_at).toLocaleString('fr-FR')}</div>
+        <div style="font-size:0.92rem; line-height:1.6; color:var(--text); margin-bottom:1.25rem;">
+          \${job.description_snippet ? escapeHtml(job.description_snippet) : "Consultez l'offre complète sur le site de l'employeur."}
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
+          \${tagsHtml}
+        </div>
       \`;
 
-      modalApplyBtn.href = job.url;
-      modalSeoLink.href = \`/jobs/\${encodeURIComponent(job.id)}\`;
-      modalCopyBtn.onclick = () => {
-        const shareUrl = \`\${window.location.origin}/jobs/\${encodeURIComponent(job.id)}\`;
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(shareUrl).then(() => showToast('Lien de partage copié !'));
-        }
+      const detailsUrl = \`https://remote-jobs.edounze.com/jobs/\${encodeURIComponent(job.id)}\`;
+      document.getElementById('modalSeoLink').href = detailsUrl;
+      document.getElementById('modalApplyBtn').href = job.url || detailsUrl;
+
+      document.getElementById('modalCopyBtn').onclick = () => {
+        navigator.clipboard.writeText(detailsUrl).then(() => showToast('Lien copié dans le presse-papiers ! 🔗'));
       };
 
-      jobModal.style.display = 'flex';
+      jobModal.classList.add('open');
     }
-    window.openModal = openModal;
 
-    modalCloseBtn.onclick = () => jobModal.style.display = 'none';
-    jobModal.onclick = (e) => { if (e.target === jobModal) jobModal.style.display = 'none'; };
+    // Toggle Favorite
+    window.toggleFavorite = function(e, jobId) {
+      e.stopPropagation();
+      if (favorites.has(jobId)) {
+        favorites.delete(jobId);
+        showToast('Offre retirée des favoris');
+      } else {
+        favorites.add(jobId);
+        showToast('Offre ajoutée aux favoris ❤️');
+      }
+      localStorage.setItem('fr_favs', JSON.stringify(Array.from(favorites)));
+      updateFavCounters();
+      renderActiveView();
+    };
 
+    // Toggle Favorites Filter in Header
+    const favHeaderBtn = document.getElementById('favHeaderBtn');
+    if (favHeaderBtn) {
+      favHeaderBtn.onclick = () => {
+        onlyFavorites = !onlyFavorites;
+        favHeaderBtn.classList.toggle('active', onlyFavorites);
+        renderActiveView();
+      };
+    }
+
+    // Quick Chip Click Handler
+    window.applyQuickChip = function(query) {
+      const searchInput = document.getElementById('searchInput');
+      if (!searchInput) return;
+
+      if (query === 'CDI') {
+        document.getElementById('contractSelect').value = 'cdi_fulltime';
+        currentContract = 'cdi_fulltime';
+      } else if (query === 'Freelance') {
+        document.getElementById('contractSelect').value = 'freelance_contract';
+        currentContract = 'freelance_contract';
+      } else {
+        searchInput.value = query;
+        searchQuery = query.toLowerCase();
+      }
+      renderActiveView();
+    };
+
+    // Reset All Filters
+    window.resetAllFilters = function() {
+      searchQuery = '';
+      currentRegion = 'all';
+      currentCategory = 'all';
+      currentContract = 'all';
+      minSalary = 0;
+      onlyFavorites = false;
+
+      document.getElementById('searchInput').value = '';
+      document.getElementById('regionSelect').value = 'all';
+      document.getElementById('categorySelect').value = 'all';
+      document.getElementById('contractSelect').value = 'all';
+      document.getElementById('salarySelect').value = '0';
+      if (favHeaderBtn) favHeaderBtn.classList.remove('active');
+
+      renderActiveView();
+    };
+
+    // Filter Listeners
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        if (searchClear) searchClear.style.display = searchQuery ? 'block' : 'none';
+        renderActiveView();
+      });
+    }
+
+    if (searchClear) {
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        searchClear.style.display = 'none';
+        renderActiveView();
+      });
+    }
+
+    document.getElementById('regionSelect').addEventListener('change', (e) => {
+      currentRegion = e.target.value;
+      renderActiveView();
+    });
+    document.getElementById('categorySelect').addEventListener('change', (e) => {
+      currentCategory = e.target.value;
+      renderActiveView();
+    });
+    document.getElementById('contractSelect').addEventListener('change', (e) => {
+      currentContract = e.target.value;
+      renderActiveView();
+    });
+    document.getElementById('salarySelect').addEventListener('change', (e) => {
+      minSalary = parseInt(e.target.value, 10) || 0;
+      renderActiveView();
+    });
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+      sortMode = e.target.value;
+      renderActiveView();
+    });
+
+    // Keyboard shortcut (/)
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === '/' || (e.metaKey && e.key === 'k')) && document.activeElement !== searchInput) {
+        e.preventDefault();
+        if (searchInput) searchInput.focus();
+      }
+    });
+
+    // Filtering & Infinite Scroll Engine
     const PAGE_SIZE = 24;
-    let displayedCount = PAGE_SIZE;
-    let currentFilteredJobs = [];
+    let filteredJobs = [];
+    let currentRenderCount = 0;
 
-    function renderJobCardHtml(job) {
-      const isFaved = favorites.has(job.id);
-      const initial = (job.company || 'C').charAt(0).toUpperCase();
-      const avatarHtml = job.company_logo
-        ? \`<img src="\${escapeHtml(job.company_logo)}" alt="\${escapeHtml(job.company)}" onerror="this.parentElement.innerHTML='\${initial}'">\`
-        : initial;
+    function getFilteredJobs() {
+      return JOBS_DATA.filter(j => {
+        if (onlyFavorites && !favorites.has(j.id)) return false;
+        if (currentRegion !== 'all' && j.regionId !== currentRegion && j.regionId !== 'worldwide') return false;
+        if (currentCategory !== 'all' && j.categoryId !== currentCategory) return false;
+        if (currentContract !== 'all' && j.contractTypeId !== currentContract) return false;
+        if (minSalary > 0 && (j.salary_min || 0) < minSalary && (j.salary_max || 0) < minSalary) return false;
 
-      const contractBadge = \`<span class="badge badge-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI / Full-time')}</span>\`;
+        if (searchQuery) {
+          const text = \`\${j.title} \${j.company} \${j.description_snippet || ''} \${(j.tags || []).join(' ')}\`.toLowerCase();
+          if (!text.includes(searchQuery)) return false;
+        }
+        return true;
+      }).sort((a, b) => {
+        if (sortMode === 'salary_desc') return (b.salary_min || 0) - (a.salary_min || 0);
+        if (sortMode === 'company') return (a.company || '').localeCompare(b.company || '');
+        return new Date(b.published_at || 0) - new Date(a.published_at || 0);
+      });
+    }
 
-      const salaryBadge = job.salary
-        ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\`
+    function renderActiveView() {
+      filteredJobs = getFilteredJobs();
+      const visibleCount = document.getElementById('visibleCount');
+      if (visibleCount) visibleCount.textContent = filteredJobs.length;
+
+      const resetBtn = document.getElementById('resetAllFiltersBtn');
+      const hasActiveFilters = searchQuery || currentRegion !== 'all' || currentCategory !== 'all' || currentContract !== 'all' || minSalary > 0 || onlyFavorites;
+      if (resetBtn) resetBtn.style.display = hasActiveFilters ? 'inline-block' : 'none';
+
+      const emptyState = document.getElementById('emptyState');
+      const jobsGrid = document.getElementById('jobsGrid');
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      const allLoadedNotice = document.getElementById('allLoadedNotice');
+
+      if (filteredJobs.length === 0) {
+        if (jobsGrid) jobsGrid.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        if (allLoadedNotice) allLoadedNotice.style.display = 'none';
+        return;
+      }
+
+      if (emptyState) emptyState.style.display = 'none';
+
+      // Reset Progressive Render
+      currentRenderCount = Math.min(PAGE_SIZE, filteredJobs.length);
+      const initialChunk = filteredJobs.slice(0, currentRenderCount);
+      if (jobsGrid) {
+        jobsGrid.innerHTML = initialChunk.map(renderJobCardHtml).join('');
+      }
+
+      if (loadMoreBtn) {
+        if (currentRenderCount >= filteredJobs.length) {
+          loadMoreBtn.style.display = 'none';
+          if (allLoadedNotice) allLoadedNotice.style.display = 'block';
+        } else {
+          loadMoreBtn.style.display = 'inline-block';
+          loadMoreBtn.textContent = \`Charger plus d'offres (\${currentRenderCount} / \${filteredJobs.length}) ⬇\`;
+          if (allLoadedNotice) allLoadedNotice.style.display = 'none';
+        }
+      }
+
+      renderMarkdownTable(filteredJobs);
+    }
+
+    function renderJobCardHtml(j) {
+      const isFav = favorites.has(j.id);
+      const avatarHtml = j.company_logo
+        ? \`<img src="\${escapeAttr(j.company_logo)}" alt="\${escapeAttr(j.company)}" loading="lazy" onerror="this.parentElement.textContent='\${escapeHtml((j.company||'C')[0])}'" />\`
+        : escapeHtml((j.company || 'C')[0].toUpperCase());
+
+      const salaryTag = j.salary
+        ? \`<span class="tag-badge tag-salary">💰 \${escapeHtml(j.salary)}</span>\`
         : '';
 
-      const langBadge = job.language === 'fr'
-        ? \`<span class="badge badge-lang">🇫🇷 FR</span>\`
-        : \`<span class="badge badge-lang">🇬🇧 EN</span>\`;
+      const contractTag = \`<span class="tag-badge tag-contract">\${j.contractIcon || '💼'} \${escapeHtml(j.contractType || 'CDI')}</span>\`;
+      const regionTag = \`<span class="tag-badge">\${j.regionFlag || '🌍'} \${escapeHtml(j.region || 'Worldwide')}</span>\`;
 
-      const tagsHtml = (job.tags || [])
-        .map(t => \`<span class="tag-item" onclick="filterByTag('\${escapeHtml(t)}')">\${escapeHtml(t)}</span>\`)
-        .join('');
+      const tagsHtml = (j.tags || []).slice(0, 3).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join('');
 
       return \`
-        <article class="job-card" id="\${escapeHtml(job.id)}">
+        <div class="job-card" onclick="openJobModal('\${escapeAttr(j.id)}')">
           <div>
-            <div class="job-card-top">
+            <button class="btn-card-fav \${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '\${escapeAttr(j.id)}')" title="Sauvegarder l'offre">
+              \${isFav ? '❤️' : '🤍'}
+            </button>
+            <div class="job-card-header">
               <div class="company-avatar">\${avatarHtml}</div>
-              <div class="job-title-wrap">
-                <div class="job-company">\${escapeHtml(job.company)}</div>
-                <h3 class="job-title" style="cursor:pointer;" onclick="openModal('\${escapeHtml(job.id)}')">\${escapeHtml(job.title)}</h3>
+              <div class="company-info">
+                <div class="company-name">\${escapeHtml(j.company)}</div>
+                <div class="job-title">\${escapeHtml(j.title)}</div>
               </div>
-              <button class="btn-fav \${isFaved ? 'faved' : ''}" onclick="toggleFavorite('\${escapeHtml(job.id)}')" title="\${isFaved ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
-                \${isFaved ? '❤️' : '🤍'}
-              </button>
             </div>
 
-            <div class="job-meta-badges">
-              \${contractBadge}
-              <span class="badge badge-region">\${job.regionFlag || '🌍'} \${escapeHtml(job.location || job.region)}</span>
-              <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
-              \${salaryBadge}
-              \${langBadge}
+            <div class="job-tags">
+              \${contractTag}
+              \${regionTag}
+              \${salaryTag}
             </div>
 
-            <p class="job-snippet">\${escapeHtml(job.description_snippet || '')}</p>
-
-            \${tagsHtml ? \`<div class="job-tags">\${tagsHtml}</div>\` : ''}
+            \${j.description_snippet ? \`<div style="font-size:0.83rem; color:var(--text-muted); line-height:1.45; margin-bottom:0.75rem; max-height:40px; overflow:hidden;">\${escapeHtml(j.description_snippet)}</div>\` : ''}
           </div>
 
           <div class="job-card-footer">
-            <div class="job-verified-tag">
-              \${timeAgo(job.published_at)} • 100% Télétravail
-            </div>
-            <div class="job-actions">
-              <button class="btn-icon" title="Détails" onclick="openModal('\${escapeHtml(job.id)}')">
-                👁️
-              </button>
-              <button class="btn-icon" title="Copier le lien" onclick="copyUrl('/jobs/\${encodeURIComponent(job.id)}')">
-                🔗
-              </button>
-              <a href="\${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply">
-                Postuler ↗
-              </a>
-            </div>
+            <div>\${tagsHtml}</div>
+            <span class="btn-apply-card">Détails ↗</span>
           </div>
-        </article>
+        </div>
       \`;
     }
 
-    function updateSentinel() {
-      const sentinel = document.getElementById('infiniteSentinel');
-      const loadBtn = document.getElementById('loadMoreBtn');
-      const allNotice = document.getElementById('allLoadedNotice');
-      const allCount = document.getElementById('allLoadedCount');
+    window.loadMoreJobs = function() {
+      if (currentRenderCount >= filteredJobs.length) return;
+      const nextCount = Math.min(currentRenderCount + PAGE_SIZE, filteredJobs.length);
+      const nextChunk = filteredJobs.slice(currentRenderCount, nextCount);
+      currentRenderCount = nextCount;
 
-      if (!sentinel) return;
-
-      if (currentFilteredJobs.length === 0) {
-        sentinel.style.display = 'none';
-        return;
+      const jobsGrid = document.getElementById('jobsGrid');
+      if (jobsGrid) {
+        jobsGrid.insertAdjacentHTML('beforeend', nextChunk.map(renderJobCardHtml).join(''));
       }
 
-      sentinel.style.display = 'block';
-
-      if (displayedCount < currentFilteredJobs.length) {
-        if (loadBtn) {
-          loadBtn.style.display = 'inline-flex';
-          loadBtn.innerHTML = \`<span>Charger plus d'offres (\${displayedCount} / \${currentFilteredJobs.length})</span> ⬇\`;
-        }
-        if (allNotice) allNotice.style.display = 'none';
-      } else {
-        if (loadBtn) loadBtn.style.display = 'none';
-        if (allNotice) {
-          allNotice.style.display = 'block';
-          if (allCount) allCount.textContent = currentFilteredJobs.length;
-        }
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      const allLoadedNotice = document.getElementById('allLoadedNotice');
+      if (currentRenderCount >= filteredJobs.length) {
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        if (allLoadedNotice) allLoadedNotice.style.display = 'block';
+      } else if (loadMoreBtn) {
+        loadMoreBtn.textContent = \`Charger plus d'offres (\${currentRenderCount} / \${filteredJobs.length}) ⬇\`;
       }
-    }
+    };
 
-    function loadMoreJobs() {
-      if (displayedCount >= currentFilteredJobs.length) return;
-      const nextBatch = currentFilteredJobs.slice(displayedCount, displayedCount + PAGE_SIZE);
-      displayedCount += PAGE_SIZE;
-      jobsGrid.insertAdjacentHTML('beforeend', nextBatch.map(renderJobCardHtml).join(''));
-      updateSentinel();
-    }
-    window.loadMoreJobs = loadMoreJobs;
-
-    // IntersectionObserver for seamless Infinite Scroll
-    let scrollObserver = null;
-    try {
-      scrollObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          loadMoreJobs();
-        }
-      }, { rootMargin: '300px' });
-      const sentinelEl = document.getElementById('infiniteSentinel');
-      if (sentinelEl) scrollObserver.observe(sentinelEl);
-    } catch(e) {}
-
-    function renderJobs() {
-      const q = searchQuery.toLowerCase().trim();
-
-      currentFilteredJobs = JOBS_DATA.filter(job => {
-        if (onlyFavorites && !favorites.has(job.id)) return false;
-        if (currentRegion !== 'all' && job.regionId !== currentRegion) return false;
-        if (currentContract !== 'all' && (job.contractTypeId || 'cdi_fulltime') !== currentContract) return false;
-        if (currentCategory !== 'all' && job.categoryId !== currentCategory) return false;
-        if (currentLang !== 'all' && job.language !== currentLang) return false;
-
-        // Salary Threshold Filter (EUR / USD)
-        if (minSalary > 0) {
-          const maxSalary = Math.max(job.salary_max_eur || 0, job.salary_max_usd || 0, job.salary_min_eur || 0, job.salary_min_usd || 0);
-          if (maxSalary < minSalary) return false;
-        }
-
-        if (q) {
-          const matchTitle = (job.title || '').toLowerCase().includes(q);
-          const matchCompany = (job.company || '').toLowerCase().includes(q);
-          const matchLocation = (job.location || '').toLowerCase().includes(q);
-          const matchContract = (job.contractType || '').toLowerCase().includes(q);
-          const matchTags = (job.tags || []).some(t => t.toLowerCase().includes(q));
-          if (!matchTitle && !matchCompany && !matchLocation && !matchContract && !matchTags) return false;
-        }
-        return true;
-      });
-
-      visibleCount.textContent = currentFilteredJobs.length;
-      displayedCount = PAGE_SIZE;
-
-      if (currentFilteredJobs.length === 0) {
-        jobsGrid.innerHTML = '';
-        markdownTableBody.innerHTML = '';
-        emptyState.style.display = 'block';
-        updateSentinel();
-        return;
+    // IntersectionObserver for Infinite Scroll
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && currentRenderCount < filteredJobs.length) {
+        loadMoreJobs();
       }
+    }, { rootMargin: '300px' });
 
-      emptyState.style.display = 'none';
+    const sentinel = document.getElementById('infiniteSentinel');
+    if (sentinel) observer.observe(sentinel);
 
-      // Render First Page of Cards (Fast 0.01s DOM render)
-      const firstBatch = currentFilteredJobs.slice(0, displayedCount);
-      jobsGrid.innerHTML = firstBatch.map(renderJobCardHtml).join('');
-      updateSentinel();
-
-      // Render Markdown Table
-      markdownTableBody.innerHTML = currentFilteredJobs.map(job => \`
+    // Markdown Table Renderer
+    function renderMarkdownTable(list) {
+      const tbody = document.getElementById('markdownTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = list.slice(0, 100).map(j => \`
         <tr>
-          <td>\${job.regionFlag || '🌍'} \${escapeHtml(job.region)}</td>
-          <td>\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI')}</td>
-          <td><strong>\${escapeHtml(job.title)}</strong></td>
-          <td>\${escapeHtml(job.company)}</td>
-          <td>\${escapeHtml(job.category)}</td>
-          <td>\${escapeHtml(job.salary || '—')}</td>
-          <td><a href="\${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); font-weight:600;">Postuler ↗</a></td>
+          <td>\${j.regionFlag || '🌍'} \${escapeHtml(j.region || '')}</td>
+          <td>\${escapeHtml(j.contractType || '')}</td>
+          <td><strong>\${escapeHtml(j.title)}</strong></td>
+          <td>\${escapeHtml(j.company)}</td>
+          <td>\${escapeHtml(j.category || '')}</td>
+          <td>\${escapeHtml(j.salary || '-')}</td>
+          <td><a href="\${escapeAttr(j.url)}" target="_blank" style="color:var(--primary); font-weight:600;">Postuler ↗</a></td>
         </tr>
       \`).join('');
     }
 
-    window.copyUrl = function(path) {
-      const fullUrl = window.location.origin + path;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(fullUrl).then(() => showToast('Lien de partage copié !'));
-      }
-    };
+    // View Switcher (Cards vs Markdown)
+    const viewCardsBtn = document.getElementById('viewCardsBtn');
+    const viewMdBtn = document.getElementById('viewMdBtn');
+    const jobsGrid = document.getElementById('jobsGrid');
+    const markdownView = document.getElementById('markdownView');
+    const infiniteContainer = document.querySelector('.infinite-container');
 
-    // Events
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      searchClear.style.display = searchQuery ? 'block' : 'none';
-      renderJobs();
-    });
+    if (viewCardsBtn && viewMdBtn) {
+      viewCardsBtn.onclick = () => {
+        viewCardsBtn.classList.add('active');
+        viewMdBtn.classList.remove('active');
+        if (jobsGrid) jobsGrid.style.display = 'grid';
+        if (markdownView) markdownView.style.display = 'none';
+        if (infiniteContainer) infiniteContainer.style.display = 'block';
+      };
 
-    searchClear.addEventListener('click', () => {
-      searchInput.value = '';
-      searchQuery = '';
-      searchClear.style.display = 'none';
-      renderJobs();
-      searchInput.focus();
-    });
-
-    // Region Pills
-    document.querySelectorAll('#regionFilters .pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#regionFilters .pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentRegion = btn.dataset.region;
-        renderJobs();
-      });
-    });
-
-    // Contract Pills
-    document.querySelectorAll('#contractFilters .pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#contractFilters .pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentContract = btn.dataset.contract;
-        renderJobs();
-      });
-    });
-
-    // Salary Pills
-    document.querySelectorAll('#salaryFilters .pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#salaryFilters .pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        minSalary = parseInt(btn.dataset.minSalary || '0', 10);
-        renderJobs();
-      });
-    });
-
-    // Category & Lang
-    document.querySelectorAll('#categoryFilters .pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.dataset.lang) {
-          if (btn.classList.contains('active')) {
-            btn.classList.remove('active');
-            currentLang = 'all';
-          } else {
-            document.querySelectorAll('#categoryFilters .pill[data-lang]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentLang = btn.dataset.lang;
-          }
-        } else if (btn.dataset.cat) {
-          document.querySelectorAll('#categoryFilters .pill[data-cat]').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentCategory = btn.dataset.cat;
-        }
-        renderJobs();
-      });
-    });
-
-    // Favorites Nav Button
-    navFavBtn.addEventListener('click', () => {
-      onlyFavorites = !onlyFavorites;
-      navFavBtn.classList.toggle('active', onlyFavorites);
-      if (onlyFavorites) showToast('Affichage des offres favorites');
-      renderJobs();
-    });
-
-    // Reset Filters
-    resetFiltersBtn.addEventListener('click', () => {
-      currentRegion = 'all';
-      currentContract = 'all';
-      currentCategory = 'all';
-      currentLang = 'all';
-      minSalary = 0;
-      onlyFavorites = false;
-      searchQuery = '';
-      searchInput.value = '';
-      searchClear.style.display = 'none';
-      navFavBtn.classList.remove('active');
-      document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
-      document.querySelector('#regionFilters .pill[data-region="all"]').classList.add('active');
-      document.querySelector('#contractFilters .pill[data-contract="all"]').classList.add('active');
-      document.querySelector('#salaryFilters .pill[data-min-salary="0"]').classList.add('active');
-      document.querySelector('#categoryFilters .pill[data-cat="all"]').classList.add('active');
-      renderJobs();
-    });
-
-    // View switcher
-    viewCardsBtn.onclick = () => {
-      viewCardsBtn.classList.add('active');
-      viewMdBtn.classList.remove('active');
-      jobsGrid.style.display = 'grid';
-      markdownView.style.display = 'none';
-    };
-
-    viewMdBtn.onclick = () => {
-      viewMdBtn.classList.add('active');
-      viewCardsBtn.classList.remove('active');
-      jobsGrid.style.display = 'none';
-      markdownView.style.display = 'block';
-    };
-
-    copyMdBtn.onclick = () => {
-      let md = '# Full Remote Jobs Catalog\\n\\n| Région | Contrat | Poste | Entreprise | Salaire | Lien |\\n|---|---|---|---|---|---|\\n';
-      JOBS_DATA.forEach(j => {
-        md += \`| \${j.regionFlag || '🌍'} \${j.region} | \${j.contractIcon || '💼'} \${j.contractType || 'CDI'} | \${j.title} | \${j.company} | \${j.salary || '—'} | [\${j.company}](\${j.url}) |\\n\`;
-      });
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(md).then(() => showToast('Markdown complet copié !'));
-      }
-    };
-
-    // Alert Modal Logic
-    const alertModal = document.getElementById('alertModal');
-    const alertModalCloseBtn = document.getElementById('alertModalCloseBtn');
-    const alertForm = document.getElementById('alertForm');
-    const alertFeedback = document.getElementById('alertFeedback');
-    const alertSubmitBtn = document.getElementById('alertSubmitBtn');
-
-    window.openAlertModal = function() {
-      if (currentRegion && currentRegion !== 'all') {
-        const opt = document.querySelector('#alertRegion option[value="' + currentRegion + '"]');
-        if (opt) opt.selected = true;
-      }
-      if (currentCategory && currentCategory !== 'all') {
-        const opt = document.querySelector('#alertCategory option[value="' + currentCategory + '"]');
-        if (opt) opt.selected = true;
-      }
-      if (currentContract && currentContract !== 'all') {
-        const opt = document.querySelector('#alertContract option[value="' + currentContract + '"]');
-        if (opt) opt.selected = true;
-      }
-      if (searchQuery) {
-        document.getElementById('alertKeywords').value = searchQuery;
-      }
-      alertFeedback.style.display = 'none';
-      alertModal.style.display = 'flex';
-      document.getElementById('alertEmail').focus();
-    };
-
-    window.closeAlertModal = function() {
-      alertModal.style.display = 'none';
-    };
-
-    if (alertModalCloseBtn) alertModalCloseBtn.onclick = closeAlertModal;
-    if (alertModal) {
-      alertModal.onclick = (e) => {
-        if (e.target === alertModal) closeAlertModal();
+      viewMdBtn.onclick = () => {
+        viewMdBtn.classList.add('active');
+        viewCardsBtn.classList.remove('active');
+        if (jobsGrid) jobsGrid.style.display = 'none';
+        if (markdownView) markdownView.style.display = 'block';
+        if (infiniteContainer) infiniteContainer.style.display = 'none';
       };
     }
-
-    if (alertForm) {
-      alertForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('alertEmail').value.trim();
-        const region_id = document.getElementById('alertRegion').value;
-        const category_id = document.getElementById('alertCategory').value;
-        const contract_type_id = document.getElementById('alertContract').value;
-        const frequency = document.getElementById('alertFrequency').value;
-        const keywords = document.getElementById('alertKeywords').value.trim();
-
-        alertSubmitBtn.disabled = true;
-        alertSubmitBtn.textContent = 'Enregistrement en cours...';
-        alertFeedback.style.display = 'none';
-
-        try {
-          const res = await fetch('/api/alerts/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, region_id, category_id, contract_type_id, frequency, keywords })
-          });
-          const data = await res.json();
-          if (res.ok && data.success) {
-            alertFeedback.style.display = 'block';
-            alertFeedback.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
-            alertFeedback.style.color = '#34d399';
-            alertFeedback.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-            alertFeedback.textContent = '✓ ' + (data.message || 'Alerte activée ! Un email de confirmation vous a été envoyé.');
-            showToast('Alerte email activée avec succès ! ✉️');
-            setTimeout(() => {
-              closeAlertModal();
-              alertSubmitBtn.disabled = false;
-              alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
-            }, 2000);
-          } else {
-            alertFeedback.style.display = 'block';
-            alertFeedback.style.backgroundColor = 'rgba(244, 63, 94, 0.15)';
-            alertFeedback.style.color = '#fb7185';
-            alertFeedback.style.border = '1px solid rgba(244, 63, 94, 0.3)';
-            alertFeedback.textContent = "✕ " + (data.error || "Erreur lors de l'enregistrement");
-            alertSubmitBtn.disabled = false;
-            alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
-          }
-        } catch (err) {
-          alertFeedback.style.display = 'block';
-          alertFeedback.style.backgroundColor = 'rgba(244, 63, 94, 0.15)';
-          alertFeedback.style.color = '#fb7185';
-          alertFeedback.style.border = '1px solid rgba(244, 63, 94, 0.3)';
-          alertFeedback.textContent = "✕ Impossible de joindre le serveur : " + err.message;
-          alertSubmitBtn.disabled = false;
-          alertSubmitBtn.textContent = '🚀 Enregistrer mon alerte gratuite';
-        }
-      };
-    }
-
-    // Web Push Subscriptions
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-      const rawData = window.atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-      }
-      return outputArray;
-    }
-
-    window.subscribeToWebPush = async function() {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        showToast('Les notifications Web ne sont pas supportées par ce navigateur.');
-        return;
-      }
-
-      const pushBtn = document.getElementById('heroPushBtn');
-      const pushIcon = document.getElementById('pushIcon');
-      const pushLabel = document.getElementById('pushBtnLabel');
-
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          showToast('Autorisation des notifications refusée.');
-          return;
-        }
-
-        if (pushLabel) pushLabel.textContent = 'Activation...';
-        const reg = await navigator.serviceWorker.register('/sw.js');
-        await navigator.serviceWorker.ready;
-
-        const vapidRes = await fetch('/api/notifications/vapid-public-key');
-        const { publicKey } = await vapidRes.json();
-        if (!publicKey) throw new Error('Clé VAPID introuvable');
-
-        const convertedKey = urlBase64ToUint8Array(publicKey);
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: convertedKey
-        });
-
-        const subJson = sub.toJSON();
-        const saveRes = await fetch('/api/notifications/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            endpoint: sub.endpoint,
-            p256dh: subJson.keys?.p256dh,
-            auth: subJson.keys?.auth,
-            region_id: currentRegion,
-            category_id: currentCategory
-          })
-        });
-
-        if (saveRes.ok) {
-          if (pushIcon) pushIcon.textContent = '✓';
-          if (pushLabel) pushLabel.textContent = 'Notifications actives';
-          if (pushBtn) {
-            pushBtn.style.borderColor = 'var(--emerald)';
-            pushBtn.style.color = 'var(--emerald)';
-          }
-          showToast('🔔 Notifications Web activées avec succès !');
-        } else {
-          showToast("Erreur lors de l'enregistrement des notifications.");
-          if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
-        }
-      } catch (err) {
-        console.error('Erreur Web Push :', err);
-        showToast("Erreur activation notifications : " + err.message);
-        if (pushLabel) pushLabel.textContent = 'Activer les notifications Web';
-      }
-    };
 
     // Quick Newsletter Handler
     window.handleQuickNewsletter = async function(e) {
@@ -1897,14 +1739,7 @@ export function renderHTML(jobs = [], meta = {}) {
         const res = await fetch('/api/alerts/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            region_id: 'all',
-            category_id: 'all',
-            contract_type_id: 'all',
-            frequency: 'daily',
-            keywords: ''
-          })
+          body: JSON.stringify({ email, region_id: 'all', category_id: 'all', contract_type_id: 'all', frequency: 'daily' })
         });
         const data = await res.json().catch(() => ({}));
 
@@ -1915,40 +1750,91 @@ export function renderHTML(jobs = [], meta = {}) {
             feedback.style.color = '#10b981';
             feedback.textContent = '✓ Félicitations ! Vous recevrez le digest chaque matin à 08h00.';
           }
-          showToast('Inscription au digest quotidien confirmée ! 📬');
+          showToast('Inscription au digest confirmée ! 📬');
           if (emailInput) emailInput.value = '';
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = '✓ Inscrit';
-          }
+          if (btn) { btn.disabled = false; btn.textContent = '✓ Inscrit'; }
         } else {
           if (feedback) {
             feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
             feedback.style.color = '#e11d48';
             feedback.textContent = '✕ ' + (data.error || "Erreur lors de l'inscription.");
           }
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = "🚀 S'inscrire gratuitement";
-          }
+          if (btn) { btn.disabled = false; btn.textContent = "🚀 S'inscrire"; }
         }
       } catch (err) {
         if (feedback) {
           feedback.style.display = 'block';
           feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
           feedback.style.color = '#e11d48';
-          feedback.textContent = '✕ Erreur de connexion : ' + err.message;
+          feedback.textContent = '✕ Erreur : ' + err.message;
         }
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = "🚀 S'inscrire gratuitement";
-        }
+        if (btn) { btn.disabled = false; btn.textContent = "🚀 S'inscrire"; }
       }
       return false;
     };
 
+    // Alert Modal Submit Handler
+    window.handleAlertSubmit = async function(e) {
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
+      const email = document.getElementById('alertEmail').value.trim();
+      const region_id = document.getElementById('alertRegion').value;
+      const category_id = document.getElementById('alertCategory').value;
+      const contract_type_id = document.getElementById('alertContract').value;
+      const frequency = document.getElementById('alertFrequency').value;
+      const keywords = document.getElementById('alertKeywords').value.trim();
+      const submitBtn = document.getElementById('alertSubmitBtn');
+      const feedback = document.getElementById('alertFeedback');
+
+      if (!email) return false;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enregistrement...';
+
+      try {
+        const res = await fetch('/api/alerts/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, region_id, category_id, contract_type_id, frequency, keywords })
+        });
+        const data = await res.json().catch(() => ({}));
+
+        feedback.style.display = 'block';
+        if (res.ok && data.success) {
+          feedback.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+          feedback.style.color = '#10b981';
+          feedback.textContent = '✓ Alerte configurée avec succès ! Un email de confirmation vous a été envoyé.';
+          submitBtn.textContent = '✓ Alerte active';
+          showToast('Alerte email activée ! 🔔');
+          setTimeout(() => document.getElementById('alertModal').classList.remove('open'), 1500);
+        } else {
+          feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
+          feedback.style.color = '#e11d48';
+          feedback.textContent = '✕ ' + (data.error || "Erreur lors de l'enregistrement.");
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 Enregistrer mon alerte';
+        }
+      } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
+        feedback.style.color = '#e11d48';
+        feedback.textContent = '✕ Erreur de connexion : ' + err.message;
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Enregistrer mon alerte';
+      }
+      return false;
+    };
+
+    function escapeHtml(str = '') {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    function escapeAttr(str = '') {
+      return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     // Initial render
-    renderJobs();
+    renderActiveView();
   </script>
 </body>
 </html>`;
@@ -1969,31 +1855,35 @@ export function renderUnsubscribePage({ success, email, siteUrl = "https://remot
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
     body {
-      margin: 0; padding: 0; background: #090d16; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif;
+      margin: 0; padding: 0; background: #0b0f19; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif;
       display: flex; align-items: center; justify-content: center; min-height: 100vh;
     }
     .box {
-      background: #111726; border: 1px solid #1e293b; border-radius: 16px; padding: 40px 32px; max-width: 480px; width: 90%; text-align: center;
+      background: #111726; border: 1px solid #1e293b; border-radius: 16px; padding: 40px 32px;
+      max-width: 480px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
     .icon { font-size: 48px; margin-bottom: 16px; }
-    h1 { font-size: 22px; font-weight: 700; margin: 0 0 12px 0; }
+    h1 { font-size: 22px; font-weight: 700; margin: 0 0 12px 0; color: #f8fafc; }
     p { font-size: 15px; color: #94a3b8; line-height: 1.6; margin: 0 0 24px 0; }
-    .btn { display: inline-block; background: #3b82f6; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; }
-    .btn:hover { background: #2563eb; }
+    .btn {
+      display: inline-block; background: #2563eb; color: #ffffff !important; font-weight: 600;
+      padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <div class="box">
     <div class="icon">${success ? "👋" : "⚠️"}</div>
     <h1>${success ? "Désinscription confirmée" : "Lien invalide ou expiré"}</h1>
-    <p>${
-      success
-        ? `L'adresse <strong>${email || ""}</strong> ne recevra plus d'alertes automatiques. Vous pourrez vous réabonner à tout moment depuis le site.`
-        : "Ce lien de désinscription est introuvable ou a déjà été utilisé."
-    }</p>
+    <p>
+      ${
+        success
+          ? `L'adresse <strong>${email}</strong> a bien été retirée de nos listes de diffusion. Vous ne recevrez plus aucune alerte quotidienne.`
+          : "Ce lien de désinscription est invalide ou cette adresse a déjà été retirée."
+      }
+    </p>
     <a href="${siteUrl}" class="btn">Retourner sur FullRemote.Jobs ↗</a>
   </div>
 </body>
 </html>`;
 }
-
