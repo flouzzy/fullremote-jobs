@@ -18,6 +18,9 @@ export async function initDb(db) {
         category TEXT NOT NULL,
         category_id TEXT NOT NULL,
         category_icon TEXT,
+        contract_type_id TEXT DEFAULT 'cdi_fulltime',
+        contract_type_label TEXT DEFAULT 'CDI / Full-time',
+        contract_icon TEXT DEFAULT '💼',
         tags_json TEXT DEFAULT '[]',
         job_type TEXT DEFAULT 'Full-time',
         location TEXT,
@@ -38,6 +41,7 @@ export async function initDb(db) {
       );
       CREATE INDEX IF NOT EXISTS idx_jobs_region ON jobs(region_id);
       CREATE INDEX IF NOT EXISTS idx_jobs_category ON jobs(category_id);
+      CREATE INDEX IF NOT EXISTS idx_jobs_contract ON jobs(contract_type_id);
       CREATE INDEX IF NOT EXISTS idx_jobs_language ON jobs(language);
       CREATE INDEX IF NOT EXISTS idx_jobs_published ON jobs(published_at DESC);
     `);
@@ -53,7 +57,7 @@ export async function saveJobsToDb(db, jobs = []) {
   if (!db || !jobs || jobs.length === 0) return 0;
 
   let savedCount = 0;
-  const BATCH_SIZE = 25; // D1 gère parfaitement les lots de 25-50 instructions
+  const BATCH_SIZE = 25;
 
   for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
     const chunk = jobs.slice(i, i + BATCH_SIZE);
@@ -62,10 +66,11 @@ export async function saveJobsToDb(db, jobs = []) {
         .prepare(
           `INSERT INTO jobs (
             id, title, company, company_logo, url, category, category_id, category_icon,
+            contract_type_id, contract_type_label, contract_icon,
             tags_json, job_type, location, region_id, region_label, region_flag,
             salary, salary_min, salary_max, currency, description_snippet,
             source, language, published_at, is_active, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
           ON CONFLICT(id) DO UPDATE SET
             title = excluded.title,
             company = excluded.company,
@@ -74,6 +79,9 @@ export async function saveJobsToDb(db, jobs = []) {
             category = excluded.category,
             category_id = excluded.category_id,
             category_icon = excluded.category_icon,
+            contract_type_id = excluded.contract_type_id,
+            contract_type_label = excluded.contract_type_label,
+            contract_icon = excluded.contract_icon,
             tags_json = excluded.tags_json,
             job_type = excluded.job_type,
             location = excluded.location,
@@ -96,6 +104,9 @@ export async function saveJobsToDb(db, jobs = []) {
           job.category,
           job.categoryId,
           job.categoryIcon || "💼",
+          job.contractTypeId || "cdi_fulltime",
+          job.contractType || "CDI / Full-time",
+          job.contractIcon || "💼",
           JSON.stringify(job.tags || []),
           job.job_type || "Full-time",
           job.location || "Worldwide",
@@ -133,6 +144,7 @@ export async function queryJobsFromDb(db, options = {}) {
   const {
     region = "all",
     category = "all",
+    contract = "all",
     language = "all",
     search = "",
     hasSalary = false,
@@ -151,6 +163,11 @@ export async function queryJobsFromDb(db, options = {}) {
   if (category && category !== "all") {
     query += " AND category_id = ?";
     params.push(category);
+  }
+
+  if (contract && contract !== "all") {
+    query += " AND contract_type_id = ?";
+    params.push(contract);
   }
 
   if (language && language !== "all") {
@@ -182,6 +199,9 @@ export async function queryJobsFromDb(db, options = {}) {
       category: row.category,
       categoryId: row.category_id,
       categoryIcon: row.category_icon,
+      contractType: row.contract_type_label || "CDI / Full-time",
+      contractTypeId: row.contract_type_id || "cdi_fulltime",
+      contractIcon: row.contract_icon || "💼",
       tags: JSON.parse(row.tags_json || "[]"),
       job_type: row.job_type,
       location: row.location,
@@ -213,6 +233,9 @@ export async function getDbStats(db) {
     const regionsRes = await db
       .prepare("SELECT region_id, COUNT(*) as count FROM jobs WHERE is_active = 1 GROUP BY region_id")
       .all();
+    const contractsRes = await db
+      .prepare("SELECT contract_type_id, COUNT(*) as count FROM jobs WHERE is_active = 1 GROUP BY contract_type_id")
+      .all();
     const sourcesRes = await db
       .prepare("SELECT source, COUNT(*) as count FROM jobs WHERE is_active = 1 GROUP BY source")
       .all();
@@ -223,6 +246,9 @@ export async function getDbStats(db) {
     const byRegion = {};
     for (const r of regionsRes.results || []) byRegion[r.region_id] = r.count;
 
+    const byContract = {};
+    for (const c of contractsRes.results || []) byContract[c.contract_type_id] = c.count;
+
     const bySource = {};
     for (const s of sourcesRes.results || []) bySource[s.source] = s.count;
 
@@ -232,6 +258,7 @@ export async function getDbStats(db) {
     return {
       total: totalRes ? totalRes.count : 0,
       by_region: byRegion,
+      by_contract: byContract,
       by_source: bySource,
       by_language: byLanguage,
     };

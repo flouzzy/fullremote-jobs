@@ -92,6 +92,55 @@ export function detectRegion(location = "", title = "", tags = []) {
 }
 
 /**
+ * Détection du type de contrat (CDI/Full-time, Freelance/Contract, CDD/Part-time, Stage/Internship)
+ */
+export function detectContractType(title = "", rawJobType = "", description = "", tags = []) {
+  const text = `${title} ${rawJobType} ${tags.join(" ")} ${description.slice(0, 600)}`.toLowerCase();
+
+  // 1. Stage / Alternance / Internship
+  if (/\b(stage|alternance|internship|intern|apprenticeship|trainee|student job|working student)\b/i.test(text)) {
+    return {
+      id: "internship",
+      label: "Stage / Alternance",
+      icon: "🎓",
+      badge: "Stage / Intern",
+    };
+  }
+
+  // 2. Freelance / Contract / B2B / Indépendant
+  if (
+    /\b(freelance|contract|contractor|contractuel|ind[eé]pendant|b2b|subcontract|hourly|per hour|\/hour|\/hr|mission|consultant|freelancing)\b/i.test(
+      text
+    )
+  ) {
+    return {
+      id: "freelance_contract",
+      label: "Freelance / Contract",
+      icon: "⚡",
+      badge: "Freelance / Contract",
+    };
+  }
+
+  // 3. CDD / Part-time / Temporary
+  if (/\b(cdd|part-time|part time|temps partiel|temporary|temp|dur[eé]e d[eé]termin[eé]e|int[eé]rim)\b/i.test(text)) {
+    return {
+      id: "cdd_parttime",
+      label: "CDD / Part-time",
+      icon: "⏱️",
+      badge: "CDD / Part-time",
+    };
+  }
+
+  // 4. CDI / Full-time (Défaut)
+  return {
+    id: "cdi_fulltime",
+    label: "CDI / Full-time",
+    icon: "💼",
+    badge: "CDI / Full-time",
+  };
+}
+
+/**
  * Détection de la langue de l'annonce
  */
 export function detectLanguage(title = "", description = "", tags = []) {
@@ -238,6 +287,7 @@ async function scrapeRemotive() {
       const region = detectRegion(j.candidate_required_location, j.title, j.tags || []);
       const lang = detectLanguage(j.title, j.description, j.tags || []);
       const category = categorizeJob(j.title, j.category, j.tags || []);
+      const contract = detectContractType(j.title, j.job_type, j.description, j.tags || []);
       return {
         id: `remotive-${j.id}`,
         title: j.title,
@@ -247,8 +297,11 @@ async function scrapeRemotive() {
         category: category.name,
         categoryId: category.id,
         categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
         tags: Array.isArray(j.tags) ? j.tags.slice(0, 6) : [],
-        job_type: j.job_type || "Full-time",
+        job_type: j.job_type || contract.label,
         location: j.candidate_required_location || "Worldwide",
         region: region.label,
         regionId: region.id,
@@ -276,9 +329,11 @@ async function scrapeJobicy() {
     const data = await res.json();
     return (data.jobs || []).map((j) => {
       const rawTags = Array.isArray(j.jobIndustry) ? j.jobIndustry : [j.jobIndustry].filter(Boolean);
+      const rawJobType = Array.isArray(j.jobType) ? j.jobType.join(", ") : (j.jobType || "");
       const region = detectRegion(j.jobGeo, j.jobTitle, rawTags);
       const lang = detectLanguage(j.jobTitle, j.jobExcerpt || j.jobDescription, rawTags);
       const category = categorizeJob(j.jobTitle, rawTags[0] || "", rawTags);
+      const contract = detectContractType(j.jobTitle, rawJobType, j.jobExcerpt || j.jobDescription, rawTags);
       return {
         id: `jobicy-${j.id}`,
         title: j.jobTitle,
@@ -288,8 +343,11 @@ async function scrapeJobicy() {
         category: category.name,
         categoryId: category.id,
         categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
         tags: rawTags.slice(0, 6),
-        job_type: Array.isArray(j.jobType) ? j.jobType.join(", ") : j.jobType || "Full-time",
+        job_type: rawJobType || contract.label,
         location: j.jobGeo || "Worldwide",
         region: region.label,
         regionId: region.id,
@@ -320,10 +378,12 @@ async function scrapeArbeitnow() {
       .slice(0, 40)
       .map((j) => {
         const rawTags = j.tags || [];
+        const rawJobType = (j.job_types && j.job_types[0]) || "";
         const loc = j.location ? `${j.location} (100% Remote)` : "Europe / Remote";
         const region = detectRegion(loc, j.title, rawTags);
         const lang = detectLanguage(j.title, j.description, rawTags);
         const category = categorizeJob(j.title, rawTags[0] || "", rawTags);
+        const contract = detectContractType(j.title, rawJobType, j.description, rawTags);
         return {
           id: `arbeitnow-${j.slug}`,
           title: j.title,
@@ -333,8 +393,11 @@ async function scrapeArbeitnow() {
           category: category.name,
           categoryId: category.id,
           categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
           tags: rawTags.slice(0, 6),
-          job_type: (j.job_types && j.job_types[0]) || "Full-time",
+          job_type: rawJobType || contract.label,
           location: loc,
           region: region.label,
           regionId: region.id,
@@ -360,13 +423,13 @@ async function scrapeRemoteOk() {
     const res = await fetchWithTimeout("https://remoteok.com/api");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    // Le premier élément de remoteok est souvent un message légal
     const jobsList = Array.isArray(data) ? data.filter((j) => j.id && j.position) : [];
     return jobsList.slice(0, 50).map((j) => {
       const rawTags = Array.isArray(j.tags) ? j.tags : [];
       const region = detectRegion(j.location || "Worldwide", j.position, rawTags);
       const lang = detectLanguage(j.position, j.description, rawTags);
       const category = categorizeJob(j.position, rawTags[0] || "", rawTags);
+      const contract = detectContractType(j.position, "", j.description, rawTags);
       
       let salaryText = "";
       if (j.salary_min && j.salary_max) {
@@ -384,8 +447,11 @@ async function scrapeRemoteOk() {
         category: category.name,
         categoryId: category.id,
         categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
         tags: rawTags.slice(0, 6),
-        job_type: "Full-time",
+        job_type: contract.label,
         location: j.location || "Worldwide",
         region: region.label,
         regionId: region.id,
@@ -407,7 +473,7 @@ async function scrapeRemoteOk() {
 }
 
 /**
- * 5. Collecteur We Work Remotely (Flux RSS multiples)
+ * 5. Collecteur We Work Remotely
  */
 async function scrapeWeWorkRemotely() {
   const feeds = [
@@ -433,6 +499,7 @@ async function scrapeWeWorkRemotely() {
     const region = detectRegion(item.region, item.title, []);
     const lang = detectLanguage(item.title, item.description, []);
     const category = categorizeJob(item.title, "", []);
+    const contract = detectContractType(item.title, "", item.description, []);
     const idHash = (item.title + item.company).replace(/[^a-zA-Z0-9]/g, "").toLowerCase().slice(0, 25);
     return {
       id: `wwr-${idHash}`,
@@ -443,8 +510,11 @@ async function scrapeWeWorkRemotely() {
       category: category.name,
       categoryId: category.id,
       categoryIcon: category.icon,
+      contractType: contract.label,
+      contractTypeId: contract.id,
+      contractIcon: contract.icon,
       tags: ["Remote", category.name],
-      job_type: "Full-time",
+      job_type: contract.label,
       location: item.region || "Worldwide",
       region: region.label,
       regionId: region.id,
@@ -459,7 +529,7 @@ async function scrapeWeWorkRemotely() {
 }
 
 /**
- * 6. Collecteur Hacker News "Who is Hiring" (Remote posts)
+ * 6. Collecteur Hacker News "Who is Hiring"
  */
 async function scrapeHackerNews() {
   try {
@@ -497,6 +567,7 @@ async function scrapeHackerNews() {
       const region = detectRegion(firstLine, title, []);
       const lang = detectLanguage(title, clean, []);
       const category = categorizeJob(title, "", []);
+      const contract = detectContractType(title, firstLine, clean, []);
 
       remotePosts.push({
         id: `hn-${c.id}`,
@@ -507,8 +578,11 @@ async function scrapeHackerNews() {
         category: category.name,
         categoryId: category.id,
         categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
         tags: ["HackerNews", "YC", "Direct Contact"],
-        job_type: "Full-time",
+        job_type: contract.label,
         location: "Worldwide / Remote",
         region: region.label,
         regionId: region.id,

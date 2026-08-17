@@ -1,4 +1,4 @@
--- Migration initiale : Création de la table des offres et de l'historique d'ingestion
+-- Migration initiale : Création de la table des offres avec types de contrats et logs
 CREATE TABLE IF NOT EXISTS jobs (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS jobs (
   category TEXT NOT NULL,
   category_id TEXT NOT NULL,
   category_icon TEXT,
+  contract_type_id TEXT DEFAULT 'cdi_fulltime',
+  contract_type_label TEXT DEFAULT 'CDI / Full-time',
+  contract_icon TEXT DEFAULT '💼',
   tags_json TEXT DEFAULT '[]',
   job_type TEXT DEFAULT 'Full-time',
   location TEXT,
@@ -30,6 +33,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 -- Index pour accélérer les requêtes de filtrage et de tri
 CREATE INDEX IF NOT EXISTS idx_jobs_region ON jobs(region_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_category ON jobs(category_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_contract ON jobs(contract_type_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_language ON jobs(language);
 CREATE INDEX IF NOT EXISTS idx_jobs_published ON jobs(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_jobs_active ON jobs(is_active);

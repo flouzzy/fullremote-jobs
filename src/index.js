@@ -90,6 +90,7 @@ export default {
     // 2. Route API : /api/jobs
     if (pathname === "/api/jobs") {
       const regionParam = url.searchParams.get("region") || "all";
+      const contractParam = url.searchParams.get("contract") || "all";
       const langParam = url.searchParams.get("lang") || "all";
       const catParam = url.searchParams.get("category") || "all";
       const qParam = (url.searchParams.get("q") || "").toLowerCase().trim();
@@ -107,6 +108,7 @@ export default {
           await initDb(env.DB);
           const dbJobs = await queryJobsFromDb(env.DB, {
             region: regionParam,
+            contract: contractParam,
             category: catParam,
             language: langParam,
             search: qParam,
@@ -130,6 +132,7 @@ export default {
         let filtered = [...dataset.jobs];
 
         if (regionParam !== "all") filtered = filtered.filter((j) => j.regionId === regionParam);
+        if (contractParam !== "all") filtered = filtered.filter((j) => (j.contractTypeId || "cdi_fulltime") === contractParam);
         if (langParam !== "all") filtered = filtered.filter((j) => j.language === langParam);
         if (catParam !== "all") filtered = filtered.filter((j) => j.categoryId === catParam);
         if (hasSalary) filtered = filtered.filter((j) => j.salary && j.salary.trim() !== "");
@@ -138,6 +141,7 @@ export default {
             (j) =>
               j.title.toLowerCase().includes(qParam) ||
               j.company.toLowerCase().includes(qParam) ||
+              (j.contractType && j.contractType.toLowerCase().includes(qParam)) ||
               (j.tags && j.tags.some((t) => t.toLowerCase().includes(qParam)))
           );
         }
@@ -157,6 +161,7 @@ export default {
             updated_at: updatedAt,
             filters: {
               region: regionParam,
+              contract: contractParam,
               language: langParam,
               category: catParam,
               search: qParam || null,
@@ -191,11 +196,14 @@ export default {
         stats = {
           total: dataset.jobs.length,
           by_region: {},
+          by_contract: {},
           by_source: {},
           by_language: { fr: 0, en: 0 },
         };
         for (const j of dataset.jobs) {
           stats.by_region[j.regionId] = (stats.by_region[j.regionId] || 0) + 1;
+          const cId = j.contractTypeId || "cdi_fulltime";
+          stats.by_contract[cId] = (stats.by_contract[cId] || 0) + 1;
           stats.by_source[j.source] = (stats.by_source[j.source] || 0) + 1;
           stats.by_language[j.language] = (stats.by_language[j.language] || 0) + 1;
         }

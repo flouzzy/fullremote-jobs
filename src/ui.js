@@ -18,9 +18,9 @@ export function renderHTML(jobs = [], meta = {}) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Full Remote Jobs — Les meilleurs emplois 100% Télétravail (FR / EN)</title>
-  <meta name="description" content="Agrégateur mondial d'offres d'emploi 100% full remote en anglais et en français. Scraping multi-sources automatisé, accès libre et sans inscription." />
-  <meta property="og:title" content="Full Remote Jobs — 100% Télétravail sans inscription" />
-  <meta property="og:description" content="Découvrez les meilleurs jobs en télétravail complet en France, Europe, Amériques et Monde entier." />
+  <meta name="description" content="Agrégateur mondial d'offres d'emploi 100% full remote (CDI, Freelance, CDD, Stage) en anglais et en français. Scraping automatisé, accès libre et sans inscription." />
+  <meta property="og:title" content="Full Remote Jobs — 100% Télétravail (CDI / Freelance / CDD)" />
+  <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance, CDD ou Stage en France, Europe et Worldwide." />
   <meta property="og:url" content="https://fullremote-jobs.edounze.com" />
   <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -42,6 +42,8 @@ export function renderHTML(jobs = [], meta = {}) {
       --accent: #06b6d4;
       --emerald: #10b981;
       --emerald-bg: rgba(16, 185, 129, 0.12);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.12);
       --rose: #f43f5e;
       --radius: 12px;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -193,7 +195,7 @@ export function renderHTML(jobs = [], meta = {}) {
       letter-spacing: -0.03em;
       line-height: 1.15;
       margin-bottom: 0.85rem;
-      max-width: 820px;
+      max-width: 840px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -207,7 +209,7 @@ export function renderHTML(jobs = [], meta = {}) {
     .hero p {
       font-size: 1.05rem;
       color: var(--text-muted);
-      max-width: 680px;
+      max-width: 720px;
       margin: 0 auto 1.5rem;
     }
 
@@ -215,7 +217,7 @@ export function renderHTML(jobs = [], meta = {}) {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1.25rem;
       flex-wrap: wrap;
       font-size: 0.8125rem;
       color: var(--text-dim);
@@ -244,7 +246,7 @@ export function renderHTML(jobs = [], meta = {}) {
     .search-row {
       display: flex;
       gap: 0.75rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
       align-items: center;
     }
 
@@ -327,7 +329,7 @@ export function renderHTML(jobs = [], meta = {}) {
     .filter-groups {
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.55rem;
     }
 
     .filter-pills {
@@ -344,9 +346,9 @@ export function renderHTML(jobs = [], meta = {}) {
       background: var(--bg-card);
       border: 1px solid var(--border);
       color: var(--text-muted);
-      padding: 0.4rem 0.85rem;
+      padding: 0.35rem 0.8rem;
       border-radius: 999px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
@@ -365,6 +367,12 @@ export function renderHTML(jobs = [], meta = {}) {
     .pill.active {
       background: var(--primary);
       border-color: var(--primary);
+      color: white;
+    }
+
+    .pill.pill-contract.active {
+      background: #4f46e5;
+      border-color: #6366f1;
       color: white;
     }
 
@@ -495,6 +503,13 @@ export function renderHTML(jobs = [], meta = {}) {
       padding: 2px 7px;
       border-radius: 5px;
       font-weight: 500;
+    }
+
+    .badge-contract {
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      font-weight: 600;
     }
 
     .badge-region {
@@ -795,7 +810,7 @@ export function renderHTML(jobs = [], meta = {}) {
         <span id="heroBadgeCount">${totalCount} offres 100% full remote en ligne</span>
       </div>
       <h1>L'annuaire mondial des jobs <span>100% Télétravail</span>.</h1>
-      <p>Scraping automatisé et en direct des meilleures opportunités sans restriction de localisation. Zéro inscription requise.</p>
+      <p>Scraping automatisé et en direct des meilleures opportunités sans restriction de localisation (CDI, Freelance, CDD, Stage). Zéro inscription requise.</p>
       
       <div class="hero-sources-strip">
         <span>📡 Sources indexées en continu :</span>
@@ -820,7 +835,7 @@ export function renderHTML(jobs = [], meta = {}) {
             type="text"
             id="searchInput"
             class="search-input"
-            placeholder="Filtrer par titre, techno, entreprise (ex: Go, React, Python, Stripe, DevOps, Lead, Senior...)"
+            placeholder="Filtrer par titre, techno, entreprise (ex: Go, React, Python, Stripe, DevOps, Freelance, CDI...)"
             autocomplete="off"
           />
           <button id="searchClear" class="search-clear" title="Effacer">✕</button>
@@ -846,6 +861,15 @@ export function renderHTML(jobs = [], meta = {}) {
           <button class="pill" data-region="europe">🇪🇺 Europe</button>
           <button class="pill" data-region="americas">🇺🇸 Amériques</button>
           <button class="pill" data-region="apac_mea">🌏 Asie & MEA</button>
+        </div>
+
+        <!-- Contract Types (CDI, Freelance, CDD, Stage) -->
+        <div class="filter-pills" id="contractFilters">
+          <button class="pill pill-contract active" data-contract="all">📋 Tous les contrats</button>
+          <button class="pill pill-contract" data-contract="cdi_fulltime">💼 CDI / Full-time</button>
+          <button class="pill pill-contract" data-contract="freelance_contract">⚡ Freelance / Contract</button>
+          <button class="pill pill-contract" data-contract="cdd_parttime">⏱️ CDD / Part-time</button>
+          <button class="pill pill-contract" data-contract="internship">🎓 Stage / Alternance</button>
         </div>
 
         <!-- Categories, Lang, Salary -->
@@ -891,11 +915,11 @@ export function renderHTML(jobs = [], meta = {}) {
         <thead>
           <tr>
             <th>Région</th>
+            <th>Type</th>
             <th>Poste</th>
             <th>Entreprise</th>
             <th>Catégorie</th>
             <th>Salaire</th>
-            <th>Source</th>
             <th>Lien</th>
           </tr>
         </thead>
@@ -963,6 +987,7 @@ export function renderHTML(jobs = [], meta = {}) {
   <script>
     const JOBS_DATA = ${jobsJson};
     let currentRegion = 'all';
+    let currentContract = 'all';
     let currentCategory = 'all';
     let currentLang = 'all';
     let onlySalary = false;
@@ -1064,6 +1089,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
       modalBody.innerHTML = \`
         <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1rem;">
+          <span class="badge badge-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI / Full-time')}</span>
           <span class="badge badge-region">\${job.regionFlag || '🌍'} \${escapeHtml(job.location || job.region)}</span>
           <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
           \${job.salary ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\` : ''}
@@ -1094,6 +1120,7 @@ export function renderHTML(jobs = [], meta = {}) {
       const filtered = JOBS_DATA.filter(job => {
         if (onlyFavorites && !favorites.has(job.id)) return false;
         if (currentRegion !== 'all' && job.regionId !== currentRegion) return false;
+        if (currentContract !== 'all' && (job.contractTypeId || 'cdi_fulltime') !== currentContract) return false;
         if (currentCategory !== 'all' && job.categoryId !== currentCategory) return false;
         if (currentLang !== 'all' && job.language !== currentLang) return false;
         if (onlySalary && (!job.salary || job.salary.trim() === '')) return false;
@@ -1102,8 +1129,9 @@ export function renderHTML(jobs = [], meta = {}) {
           const matchTitle = (job.title || '').toLowerCase().includes(q);
           const matchCompany = (job.company || '').toLowerCase().includes(q);
           const matchLocation = (job.location || '').toLowerCase().includes(q);
+          const matchContract = (job.contractType || '').toLowerCase().includes(q);
           const matchTags = (job.tags || []).some(t => t.toLowerCase().includes(q));
-          if (!matchTitle && !matchCompany && !matchLocation && !matchTags) return false;
+          if (!matchTitle && !matchCompany && !matchLocation && !matchContract && !matchTags) return false;
         }
         return true;
       });
@@ -1126,6 +1154,8 @@ export function renderHTML(jobs = [], meta = {}) {
         const avatarHtml = job.company_logo
           ? \`<img src="\${escapeHtml(job.company_logo)}" alt="\${escapeHtml(job.company)}" onerror="this.parentElement.innerHTML='\${initial}'">\`
           : initial;
+
+        const contractBadge = \`<span class="badge badge-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI / Full-time')}</span>\`;
 
         const salaryBadge = job.salary
           ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\`
@@ -1154,6 +1184,7 @@ export function renderHTML(jobs = [], meta = {}) {
               </div>
 
               <div class="job-meta-badges">
+                \${contractBadge}
                 <span class="badge badge-region">\${job.regionFlag || '🌍'} \${escapeHtml(job.location || job.region)}</span>
                 <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
                 \${salaryBadge}
@@ -1189,11 +1220,11 @@ export function renderHTML(jobs = [], meta = {}) {
       markdownTableBody.innerHTML = filtered.map(job => \`
         <tr>
           <td>\${job.regionFlag || '🌍'} \${escapeHtml(job.region)}</td>
+          <td>\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI')}</td>
           <td><strong>\${escapeHtml(job.title)}</strong></td>
           <td>\${escapeHtml(job.company)}</td>
           <td>\${escapeHtml(job.category)}</td>
           <td>\${escapeHtml(job.salary || '—')}</td>
-          <td>\${escapeHtml(job.source)}</td>
           <td><a href="\${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); font-weight:600;">Postuler ↗</a></td>
         </tr>
       \`).join('');
@@ -1226,6 +1257,16 @@ export function renderHTML(jobs = [], meta = {}) {
         document.querySelectorAll('#regionFilters .pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentRegion = btn.dataset.region;
+        renderJobs();
+      });
+    });
+
+    // Contract Pills
+    document.querySelectorAll('#contractFilters .pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#contractFilters .pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentContract = btn.dataset.contract;
         renderJobs();
       });
     });
@@ -1269,6 +1310,7 @@ export function renderHTML(jobs = [], meta = {}) {
     // Reset Filters
     resetFiltersBtn.addEventListener('click', () => {
       currentRegion = 'all';
+      currentContract = 'all';
       currentCategory = 'all';
       currentLang = 'all';
       onlySalary = false;
@@ -1280,6 +1322,7 @@ export function renderHTML(jobs = [], meta = {}) {
       navFavBtn.classList.remove('active');
       document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
       document.querySelector('#regionFilters .pill[data-region="all"]').classList.add('active');
+      document.querySelector('#contractFilters .pill[data-contract="all"]').classList.add('active');
       document.querySelector('#categoryFilters .pill[data-cat="all"]').classList.add('active');
       renderJobs();
     });
@@ -1300,9 +1343,9 @@ export function renderHTML(jobs = [], meta = {}) {
     };
 
     copyMdBtn.onclick = () => {
-      let md = '# Full Remote Jobs Catalog\\n\\n| Région | Poste | Entreprise | Salaire | Source | Lien |\\n|---|---|---|---|---|---|\\n';
+      let md = '# Full Remote Jobs Catalog\\n\\n| Région | Contrat | Poste | Entreprise | Salaire | Source | Lien |\\n|---|---|---|---|---|---|---|\\n';
       JOBS_DATA.forEach(j => {
-        md += \`| \${j.regionFlag || '🌍'} \${j.region} | \${j.title} | \${j.company} | \${j.salary || '—'} | \${j.source} | [\${j.company}](\${j.url}) |\\n\`;
+        md += \`| \${j.regionFlag || '🌍'} \${j.region} | \${j.contractIcon || '💼'} \${j.contractType || 'CDI'} | \${j.title} | \${j.company} | \${j.salary || '—'} | \${j.source} | [\${j.company}](\${j.url}) |\\n\`;
       });
       if (navigator.clipboard) {
         navigator.clipboard.writeText(md).then(() => showToast('Markdown complet copié !'));
