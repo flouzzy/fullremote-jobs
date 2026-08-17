@@ -1,5 +1,6 @@
 /**
  * FullRemote-Jobs - Page de Publication d'Offre Recruteurs (/post-a-job)
+ * Intégration Stripe Checkout 49 € pour la publication d'offres sponsorisées (30 jours)
  */
 
 function escapeHtml(str = "") {
@@ -19,19 +20,20 @@ export function renderPostJobPage(meta = {}) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Publier une offre d'emploi Full Remote — FullRemote.Jobs</title>
-  <meta name="description" content="Recrutez les meilleurs talents en 100% télétravail. Diffusion immédiate, mise en avant en tête de liste et inclusion dans le digest email quotidien." />
+  <title>Publier une offre d'emploi 100% Full Remote (49 €) — FullRemote.Jobs</title>
+  <meta name="description" content="Recrutez les meilleurs talents en 100% télétravail. Diffusion immédiate pendant 30 jours, mise en avant en tête de liste et inclusion dans la newsletter quotidienne." />
+  <link rel="canonical" href="${siteUrl}/post-a-job" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💼</text></svg>">
   <style>
-    :root {
+    :root, html.light {
       --bg: #f8fafc;
       --bg-card: #ffffff;
       --bg-card-hover: #f1f5f9;
       --border: #e2e8f0;
-      --border-focus: #3b82f6;
+      --border-focus: #2563eb;
       --text: #0f172a;
       --text-muted: #64748b;
       --text-dim: #94a3b8;
@@ -46,6 +48,8 @@ export function renderPostJobPage(meta = {}) {
       --radius: 12px;
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
     html.dark {
@@ -65,6 +69,8 @@ export function renderPostJobPage(meta = {}) {
       --amber: #f59e0b;
       --amber-bg: rgba(245, 158, 11, 0.12);
       --rose: #f43f5e;
+      --header-bg: rgba(9, 13, 22, 0.88);
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,7 +92,8 @@ export function renderPostJobPage(meta = {}) {
 
     header {
       border-bottom: 1px solid var(--border);
-      background: var(--bg-card);
+      background: var(--header-bg);
+      backdrop-filter: blur(16px);
       position: sticky;
       top: 0;
       z-index: 40;
@@ -124,22 +131,12 @@ export function renderPostJobPage(meta = {}) {
     }
     .nav-btn:hover { color: var(--text); background: var(--bg-card-hover); }
 
-    .theme-toggle-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.45rem 0.75rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-
     .hero-post {
       padding: 3rem 0 2rem;
       text-align: center;
     }
     .hero-post h1 {
-      font-size: 2.3rem;
+      font-size: 2.4rem;
       font-weight: 800;
       margin-bottom: 0.75rem;
       letter-spacing: -0.03em;
@@ -152,8 +149,8 @@ export function renderPostJobPage(meta = {}) {
     }
 
     .pricing-box {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%);
+      border: 1px solid rgba(37, 99, 235, 0.25);
       border-radius: 16px;
       padding: 1.75rem;
       margin-bottom: 2.5rem;
@@ -181,10 +178,11 @@ export function renderPostJobPage(meta = {}) {
       text-align: right;
     }
     .price-amount {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 800;
       color: var(--primary);
       line-height: 1;
+      font-family: var(--font-mono);
     }
     .price-desc {
       font-size: 0.8rem;
@@ -198,7 +196,7 @@ export function renderPostJobPage(meta = {}) {
       border-radius: var(--radius);
       padding: 2.25rem;
       margin-bottom: 3rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--card-shadow);
     }
 
     .form-section-title {
@@ -251,22 +249,54 @@ export function renderPostJobPage(meta = {}) {
       color: white;
       font-weight: 700;
       font-size: 1.05rem;
-      padding: 0.85rem 2rem;
-      border-radius: 999px;
+      padding: 0.95rem 1.75rem;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
       width: 100%;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     .btn-submit-post:hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
     }
+
+    .payment-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .banner-status {
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      display: none;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .banner-success {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #065f46;
+    }
+    html.dark .banner-success { color: #34d399; }
+    
+    .banner-canceled {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #92400e;
+    }
+    html.dark .banner-canceled { color: #fbbf24; }
 
     footer {
       border-top: 1px solid var(--border);
@@ -280,8 +310,8 @@ export function renderPostJobPage(meta = {}) {
 
     @media (max-width: 640px) {
       .form-grid-2 { grid-template-columns: 1fr; }
-      .pricing-box { flex-direction: column; text-align: center; }
-      .pricing-badge { text-align: center; }
+      .pricing-box { flex-direction: column; align-items: flex-start; }
+      .pricing-badge { text-align: left; }
     }
   </style>
 </head>
@@ -293,71 +323,92 @@ export function renderPostJobPage(meta = {}) {
         <span>FullRemote<span style="color:var(--primary);">.Jobs</span></span>
       </a>
       <div style="display:flex; align-items:center; gap:0.75rem;">
-        <a href="/" class="nav-btn">← Retour aux offres</a>
-        <button id="themeToggleBtn" class="theme-toggle-btn" title="Changer le thème">🌙</button>
+        <a href="/" class="nav-btn">← Annuaire des offres</a>
+        <a href="/simulateur-salaire-remote" class="nav-btn">💶 Simulateur</a>
+        <button id="themeToggleBtn" class="nav-btn" title="Changer de thème">🌙</button>
       </div>
     </div>
   </header>
 
   <main class="container">
     <section class="hero-post">
-      <h1>Diffusez votre offre en <span>100% Télétravail</span>.</h1>
-      <p>Touchez des milliers de développeurs, DevOps, Data Engineers et profils tech seniors recherchant activement un poste sans contrainte géographique.</p>
+      <h1>💼 Publier une offre <span>100% Full Remote</span></h1>
+      <p>Touchez directement des milliers de profils qualifiés (Tech, DevOps, Data, Product, Marketing) à la recherche exclusive de postes sans contrainte géographique.</p>
     </section>
+
+    <!-- Banner Status (Success / Canceled) -->
+    <div id="successBanner" class="banner-status banner-success">
+      <h3 style="font-weight:700; margin-bottom:0.25rem; font-size:1.05rem;">🎉 Paiement confirmé avec succès !</h3>
+      <p>Votre offre d'emploi a bien été enregistrée et est désormais mise en avant sur FullRemote.Jobs. Un email de confirmation et votre reçu Stripe vous ont été adressés.</p>
+      <a href="/" style="display:inline-block; margin-top:0.75rem; font-weight:700; color:var(--primary); text-decoration:underline;">Voir mon annonce sur l'annuaire →</a>
+    </div>
+
+    <div id="canceledBanner" class="banner-status banner-canceled">
+      <strong>⚠️ Paiement annulé.</strong> Votre formulaire a été conservé. Vous pouvez modifier vos informations ou relancer la validation lorsque vous êtes prêt.
+    </div>
 
     <div class="pricing-box">
       <div class="pricing-features">
-        <div class="pricing-feature-item"><span>✓</span> <strong>Mise en avant "⭐ Featured"</strong> pendant 30 jours en tête de liste</div>
-        <div class="pricing-feature-item"><span>✓</span> <strong>Diffusion prioritaire</strong> dans le Digest Email quotidien matinal</div>
-        <div class="pricing-feature-item"><span>✓</span> <strong>Alerte Web Push instantanée</strong> auprès des abonnés actifs</div>
-        <div class="pricing-feature-item"><span>✓</span> <strong>Fiche dédiée Google Jobs SEO</strong> & Schema.org JobPosting</div>
-        <div class="pricing-feature-item"><span>✓</span> <strong>Lien direct</strong> vers votre ATS / page de candidature (0 intermédiaire)</div>
+        <div class="pricing-feature-item">
+          <span>✓</span> <strong>Mise en avant sponsorisée pendant 30 jours</strong> en tête de liste
+        </div>
+        <div class="pricing-feature-item">
+          <span>✓</span> <strong>Inclusion dans la Newsletter Quotidienne</strong> envoyée chaque matin à 08h00
+        </div>
+        <div class="pricing-feature-item">
+          <span>✓</span> <strong>Indexation prioritaire pour les IA & LLMs</strong> (Perplexity, ChatGPT, Claude)
+        </div>
+        <div class="pricing-feature-item">
+          <span>✓</span> <strong>Bouton direct vers votre ATS / formulaire</strong> (sans commission)
+        </div>
       </div>
       <div class="pricing-badge">
         <div class="price-amount">49 €</div>
-        <div class="price-desc">Paiement unique • 30 jours de visibilité</div>
+        <div class="price-desc">Paiement unique • 30 jours de diffusion</div>
       </div>
     </div>
 
-    <form id="postJobForm" class="form-card" onsubmit="handlePostJob(event)">
+    <form class="form-card" id="postJobForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handlePostJob(event); return false;">
       <div class="form-section-title">1. Votre Entreprise</div>
+      
       <div class="form-grid-2">
         <div class="form-group">
           <label class="form-label" for="companyName">Nom de l'entreprise *</label>
-          <input type="text" id="companyName" class="form-input" required placeholder="ex: Acme Corp" />
+          <input type="text" id="companyName" class="form-input" required placeholder="ex: Stripe, Notion, Alan, Qonto..." />
         </div>
         <div class="form-group">
-          <label class="form-label" for="companyLogo">URL du Logo (optionnel)</label>
+          <label class="form-label" for="companyLogo">URL du Logo (carré ou SVG)</label>
           <input type="url" id="companyLogo" class="form-input" placeholder="https://votresite.com/logo.png" />
         </div>
       </div>
 
-      <div class="form-section-title">2. L'Offre d'Emploi</div>
+      <div class="form-section-title">2. L'Opportunité</div>
+
       <div class="form-group">
-        <label class="form-label" for="jobTitle">Intitulé du poste *</label>
-        <input type="text" id="jobTitle" class="form-input" required placeholder="ex: Senior Fullstack Engineer (TypeScript / Node / Go)" />
+        <label class="form-label" for="jobTitle">Intitulé précis du poste *</label>
+        <input type="text" id="jobTitle" class="form-input" required placeholder="ex: Senior Go Backend Engineer, Lead DevOps Kubernetes, Product Designer..." />
       </div>
 
       <div class="form-grid-2">
         <div class="form-group">
-          <label class="form-label" for="jobCategory">Catégorie / Métier *</label>
+          <label class="form-label" for="jobCategory">Domaine d'activité *</label>
           <select id="jobCategory" class="form-select" required>
             <option value="tech">💻 Tech & Développement</option>
             <option value="devops">☁️ DevOps & Cloud</option>
-            <option value="data_ai">🧠 Data & Intelligence Artificielle</option>
+            <option value="data_ai">🧠 Data & IA</option>
             <option value="design">🎨 Design & UX/UI</option>
             <option value="product">🚀 Product Management</option>
             <option value="marketing_sales">📈 Marketing & Sales</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="jobRegion">Région géographique admise *</label>
+          <label class="form-label" for="jobRegion">Zone géographique autorisée *</label>
           <select id="jobRegion" class="form-select" required>
             <option value="worldwide">🌍 Worldwide (Partout dans le monde)</option>
             <option value="france">🇫🇷 France & Francophonie</option>
             <option value="europe">🇪🇺 Europe & UK</option>
             <option value="americas">🇺🇸 Amériques (USA / Canada / LATAM)</option>
-            <option value="apac_mea">🌏 Asie, Pacifique & MEA</option>
+            <option value="apac_mea">🌏 Asie & MEA</option>
           </select>
         </div>
       </div>
@@ -374,7 +425,7 @@ export function renderPostJobPage(meta = {}) {
         </div>
         <div class="form-group">
           <label class="form-label" for="jobSalary">Salaire / Rémunération indicative</label>
-          <input type="text" id="jobSalary" class="form-input" placeholder="ex: 65 000 € - 85 000 € / an ou 550 € / jour" />
+          <input type="text" id="jobSalary" class="form-input" placeholder="ex: 65 000 € - 85 000 € / an ou 600 € / jour" />
         </div>
       </div>
 
@@ -392,24 +443,38 @@ export function renderPostJobPage(meta = {}) {
       <div class="form-group">
         <label class="form-label" for="billingEmail">Votre adresse Email professionnelle *</label>
         <input type="email" id="billingEmail" class="form-input" required placeholder="recrutement@acme.com" />
-        <span style="font-size:0.75rem; color:var(--text-muted);">Un lien de modification et le reçu de facturation vous seront envoyés à cette adresse.</span>
+        <span style="font-size:0.75rem; color:var(--text-muted);">Un lien de gestion et le reçu officiel Stripe vous seront envoyés à cette adresse.</span>
       </div>
 
       <div id="postFeedback" style="display:none; padding:1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem;"></div>
 
       <button type="submit" id="postSubmitBtn" class="btn-submit-post">
-        <span>🚀</span> Valider et publier mon offre (49 €)
+        <span>🔒</span> Passer au paiement sécurisé Stripe (49 €)
       </button>
+
+      <div class="payment-notice">
+        <span>🛡️</span> Paiement sécurisé chiffré par Stripe • Facture avec TVA téléchargeable immédiatement.
+      </div>
     </form>
   </main>
 
   <footer>
     <div class="container">
-      <strong>FullRemote.Jobs</strong> — Plateforme indépendante opérée par <a href="https://edounze.com" target="_blank" style="color:var(--primary);">Charles EDOU NZE</a>.
+      <strong>FullRemote.Jobs</strong> — Plateforme opérée par <a href="https://edounze.com" target="_blank" style="color:var(--primary);">Charles EDOU NZE</a>.
     </div>
   </footer>
 
   <script>
+    // URL Query Params Check (Success / Canceled)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      const sb = document.getElementById('successBanner');
+      if (sb) sb.style.display = 'block';
+    } else if (urlParams.get('canceled') === 'true') {
+      const cb = document.getElementById('canceledBanner');
+      if (cb) cb.style.display = 'block';
+    }
+
     // Theme Management
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     let currentTheme = localStorage.getItem('theme') || 'light';
@@ -436,7 +501,11 @@ export function renderPostJobPage(meta = {}) {
     }
 
     async function handlePostJob(e) {
-      e.preventDefault();
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
+
       const submitBtn = document.getElementById('postSubmitBtn');
       const feedback = document.getElementById('postFeedback');
 
@@ -454,30 +523,26 @@ export function renderPostJobPage(meta = {}) {
       };
 
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Création du brouillon en cours...';
+      submitBtn.innerHTML = '<span>⏳</span> Redirection vers Stripe Checkout...';
 
       try {
-        const res = await fetch('/api/jobs/draft', {
+        const res = await fetch('/api/checkout/create-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
-        feedback.style.display = 'block';
-        if (res.ok && data.success) {
-          feedback.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
-          feedback.style.color = '#10b981';
-          feedback.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-          feedback.innerHTML = '✓ <strong>Offre enregistrée !</strong> ' + (data.message || 'Votre annonce est prête pour la mise en ligne.');
-          submitBtn.textContent = '✓ Offre validée';
+        if (res.ok && data.success && data.checkout_url) {
+          window.location.href = data.checkout_url;
         } else {
+          feedback.style.display = 'block';
           feedback.style.backgroundColor = 'rgba(225, 29, 72, 0.15)';
           feedback.style.color = '#e11d48';
           feedback.style.border = '1px solid rgba(225, 29, 72, 0.3)';
-          feedback.textContent = '✕ ' + (data.error || 'Erreur lors de la validation.');
+          feedback.textContent = '✕ ' + (data.error || 'Erreur lors de la création de la session de paiement.');
           submitBtn.disabled = false;
-          submitBtn.textContent = '🚀 Valider et publier mon offre (49 €)';
+          submitBtn.innerHTML = '<span>🔒</span> Passer au paiement sécurisé Stripe (49 €)';
         }
       } catch (err) {
         feedback.style.display = 'block';
@@ -486,8 +551,9 @@ export function renderPostJobPage(meta = {}) {
         feedback.style.border = '1px solid rgba(225, 29, 72, 0.3)';
         feedback.textContent = '✕ Erreur de connexion : ' + err.message;
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Valider et publier mon offre (49 €)';
+        submitBtn.innerHTML = '<span>🔒</span> Passer au paiement sécurisé Stripe (49 €)';
       }
+      return false;
     }
   </script>
 </body>

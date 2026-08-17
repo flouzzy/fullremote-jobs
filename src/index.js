@@ -4,7 +4,14 @@
  * Repository: flouzzy/fullremote-jobs
  */
 
-import { scrapeAllJobs } from "./scraper.js";
+import {
+  scrapeAllJobs,
+  categorizeJob,
+  detectRegion,
+  detectContractType,
+  parseSalaryDetails,
+  detectLanguage,
+} from "./scraper.js";
 import { FALLBACK_JOBS } from "./fallback-data.js";
 import { renderHTML, renderUnsubscribePage } from "./ui.js";
 import {
@@ -364,30 +371,134 @@ export default {
       });
     }
 
-    // 9. API Enregistrement Brouillon Offre Recruteur : POST /api/jobs/draft
-    if (pathname === "/api/jobs/draft" && request.method === "POST") {
+    // 9. API Création de Session Stripe Checkout (49 €) : POST /api/checkout/create-session ou /api/jobs/draft
+    if ((pathname === "/api/checkout/create-session" || pathname === "/api/jobs/draft") && request.method === "POST") {
       try {
         const body = await request.json();
-        if (!body.title || !body.company || !body.url || !body.email) {
+        const {
+          title,
+          company,
+          company_logo,
+          url: applyUrl,
+          category,
+          region,
+          contract,
+          salary,
+          description,
+          email,
+        } = body;
+
+        if (!title || !company || !applyUrl || !email || !description) {
           return new Response(
             JSON.stringify({ success: false, error: "Veuillez renseigner tous les champs obligatoires (*)." }),
             { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
           );
         }
 
-        const draftId = `draft_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-        
+        const stripeKey = env.STRIPE_SECRET_KEY;
+        if (!stripeKey) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Configuration Stripe manquante sur le serveur." }),
+            { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        const canonicalUrl = (env.SITE_URL || (url.host.includes("edounze.com") ? `${url.protocol}//${url.host}` : "https://remote-jobs.edounze.com")).replace(/\/+$/, "");
+        const jobId = `b2b-${company.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`.slice(0, 80);
+
+        // Appel direct à l'API REST Stripe pour générer la session de paiement
+        const stripeParams = new URLSearchParams();
+        stripeParams.append("payment_method_types[]", "card");
+        stripeParams.append("mode", "payment");
+        stripeParams.append("line_items[0][price_data][currency]", "eur");
+        stripeParams.append("line_items[0][price_data][unit_amount]", "4900");
+        stripeParams.append("line_items[0][price_data][product_data][name]", "Publication Offre 100% Full Remote (30 jours)");
+        stripeParams.append("line_items[0][price_data][product_data][description]", `Mise en avant sur FullRemote.Jobs : ${company} — ${title}`);
+        stripeParams.append("line_items[0][quantity]", "1");
+        stripeParams.append("customer_email", email.toLowerCase().trim());
+        stripeParams.append("success_url", `${canonicalUrl}/post-a-job?success=true&session_id={CHECKOUT_SESSION_ID}&job_id=${encodeURIComponent(jobId)}`);
+        stripeParams.append("cancel_url", `${canonicalUrl}/post-a-job?canceled=true`);
+
+        stripeParams.append("metadata[job_id]", jobId);
+        stripeParams.append("metadata[title]", title.slice(0, 200));
+        stripeParams.append("metadata[company]", company.slice(0, 100));
+        stripeParams.append("metadata[email]", email.slice(0, 100));
+
+        const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${stripeKey}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: stripeParams.toString(),
+        });
+
+        const session = await stripeRes.json();
+        if (!stripeRes.ok) {
+          console.error("[STRIPE] Erreur création session :", session);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: session.error?.message || "Erreur lors de la communication avec Stripe.",
+            }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        // Sauvegarde de l'offre dans D1 SQL pour activation immédiate
+        if (env && env.DB) {
+          await initDb(env.DB);
+          const categoryObj = categorizeJob(title, category || "", []);
+          const regionObj = detectRegion(region || "worldwide", title, []);
+          const contractObj = detectContractType(title, contract || "cdi_fulltime", description, []);
+          const salaryObj = parseSalaryDetails(salary || "");
+
+          await saveJobsToDb(env.DB, [
+            {
+              id: jobId,
+              title,
+              company,
+              company_logo: company_logo || "",
+              url: applyUrl,
+              category: categoryObj.label,
+              categoryId: categoryObj.id,
+              categoryIcon: categoryObj.icon,
+              contractType: contractObj.label,
+              contractTypeId: contractObj.id,
+              contractIcon: contractObj.icon,
+              job_type: contractObj.label,
+              location: regionObj.label,
+              region: regionObj.label,
+              regionId: regionObj.id,
+              regionFlag: regionObj.flag,
+              salary: salaryObj.raw,
+              salary_min_eur: salaryObj.min_eur,
+              salary_max_eur: salaryObj.max_eur,
+              salary_min_usd: salaryObj.min_usd,
+              salary_max_usd: salaryObj.max_usd,
+              currency: salaryObj.currency,
+              published_at: new Date().toISOString(),
+              description_snippet: description.slice(0, 300),
+              source: "Direct_B2B",
+              language: detectLanguage(title, description),
+              is_verified: 1,
+            },
+          ]);
+        }
+
         return new Response(
           JSON.stringify({
             success: true,
-            message: "Votre offre a été enregistrée en brouillon. L'étape de paiement Stripe (49 €) est prête.",
-            draft_id: draftId,
+            checkout_url: session.url,
+            session_id: session.id,
+            job_id: jobId,
           }),
-          { headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
         );
-      } catch (e) {
+      } catch (err) {
+        console.error("[CHECKOUT] Exception create session :", err);
         return new Response(
-          JSON.stringify({ success: false, error: e.message }),
+          JSON.stringify({ success: false, error: err.message }),
           { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
         );
       }
