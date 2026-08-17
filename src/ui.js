@@ -324,7 +324,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
     .form-input, .form-select {
       width: 100%;
-      background: #090d16;
+      background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text);
       padding: 0.6rem 0.85rem;
@@ -337,7 +337,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
     .form-input:focus, .form-select:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
 
     /* Controls Bar */
@@ -345,7 +345,7 @@ export function renderHTML(jobs = [], meta = {}) {
       padding: 1.5rem 0 1rem;
       position: sticky;
       top: 68px;
-      background: rgba(9, 13, 22, 0.95);
+      background: var(--controls-bg);
       backdrop-filter: blur(12px);
       z-index: 30;
       border-bottom: 1px solid var(--border);
@@ -545,16 +545,16 @@ export function renderHTML(jobs = [], meta = {}) {
       width: 44px;
       height: 44px;
       border-radius: 8px;
-      background: #1e293b;
+      background: var(--tag-bg);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
       font-size: 1.05rem;
-      color: #94a3b8;
+      color: var(--text-muted);
       flex-shrink: 0;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
     }
 
     .company-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -664,11 +664,11 @@ export function renderHTML(jobs = [], meta = {}) {
     }
 
     .tag-item {
-      background: #0d1424;
-      border: 1px solid #1e293b;
-      color: #94a3b8;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      color: var(--text-muted);
       font-size: 0.68rem;
-      padding: 1px 6px;
+      padding: 2px 7px;
       border-radius: 4px;
       font-family: var(--font-mono);
       cursor: pointer;
@@ -676,9 +676,9 @@ export function renderHTML(jobs = [], meta = {}) {
     }
 
     .tag-item:hover {
-      background: #1e293b;
-      color: #60a5fa;
-      border-color: #3b82f6;
+      background: var(--bg-card-hover);
+      color: var(--primary);
+      border-color: var(--primary);
     }
 
     .job-card-footer {
@@ -686,14 +686,14 @@ export function renderHTML(jobs = [], meta = {}) {
       align-items: center;
       justify-content: space-between;
       padding-top: 0.85rem;
-      border-top: 1px solid rgba(30, 41, 59, 0.7);
+      border-top: 1px solid var(--border);
       font-size: 0.76rem;
       color: var(--text-dim);
     }
 
     .job-verified-tag {
       font-size: 0.75rem;
-      color: #64748b;
+      color: var(--text-dim);
       display: flex;
       align-items: center;
       gap: 0.3rem;
@@ -720,7 +720,7 @@ export function renderHTML(jobs = [], meta = {}) {
     .btn-apply:hover { background: var(--primary-hover); }
 
     .btn-icon {
-      background: rgba(255, 255, 255, 0.04);
+      background: var(--tag-bg);
       border: 1px solid var(--border);
       color: var(--text-muted);
       width: 30px;
@@ -735,7 +735,7 @@ export function renderHTML(jobs = [], meta = {}) {
     }
 
     .btn-icon:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--bg-card-hover);
       color: var(--text);
     }
 
@@ -847,9 +847,9 @@ export function renderHTML(jobs = [], meta = {}) {
       border-top: 1px solid var(--border);
       padding: 2.25rem 0;
       margin-top: auto;
-      background: #060910;
+      background: var(--footer-bg);
       font-size: 0.825rem;
-      color: var(--text-dim);
+      color: var(--text-muted);
     }
 
     .footer-inner {
@@ -1042,6 +1042,16 @@ export function renderHTML(jobs = [], meta = {}) {
 
     <!-- Cards Grid -->
     <div id="jobsGrid" class="jobs-grid"></div>
+
+    <!-- Infinite Scroll Sentinel & Load More Trigger -->
+    <div id="infiniteSentinel" style="text-align:center; padding:2.5rem 0 1rem; display:none;">
+      <button id="loadMoreBtn" class="nav-btn" style="padding:0.75rem 2rem; font-weight:600; border-radius:999px; font-size:0.9rem; margin:0 auto; display:inline-flex;" onclick="loadMoreJobs()">
+        <span>Charger plus d'offres</span> ⬇
+      </button>
+      <div id="allLoadedNotice" style="display:none; font-size:0.85rem; color:var(--text-dim); padding:0.5rem 0;">
+        🎉 Vous avez visualisé l'ensemble des <strong id="allLoadedCount" style="color:var(--text);">0</strong> offres filtrées.
+      </div>
+    </div>
 
     <!-- Markdown Table View -->
     <div id="markdownView" class="markdown-view-wrapper">
@@ -1390,10 +1400,133 @@ export function renderHTML(jobs = [], meta = {}) {
     modalCloseBtn.onclick = () => jobModal.style.display = 'none';
     jobModal.onclick = (e) => { if (e.target === jobModal) jobModal.style.display = 'none'; };
 
+    const PAGE_SIZE = 24;
+    let displayedCount = PAGE_SIZE;
+    let currentFilteredJobs = [];
+
+    function renderJobCardHtml(job) {
+      const isFaved = favorites.has(job.id);
+      const initial = (job.company || 'C').charAt(0).toUpperCase();
+      const avatarHtml = job.company_logo
+        ? \`<img src="\${escapeHtml(job.company_logo)}" alt="\${escapeHtml(job.company)}" onerror="this.parentElement.innerHTML='\${initial}'">\`
+        : initial;
+
+      const contractBadge = \`<span class="badge badge-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI / Full-time')}</span>\`;
+
+      const salaryBadge = job.salary
+        ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\`
+        : '';
+
+      const langBadge = job.language === 'fr'
+        ? \`<span class="badge badge-lang">🇫🇷 FR</span>\`
+        : \`<span class="badge badge-lang">🇬🇧 EN</span>\`;
+
+      const tagsHtml = (job.tags || [])
+        .map(t => \`<span class="tag-item" onclick="filterByTag('\${escapeHtml(t)}')">\${escapeHtml(t)}</span>\`)
+        .join('');
+
+      return \`
+        <article class="job-card" id="\${escapeHtml(job.id)}">
+          <div>
+            <div class="job-card-top">
+              <div class="company-avatar">\${avatarHtml}</div>
+              <div class="job-title-wrap">
+                <div class="job-company">\${escapeHtml(job.company)}</div>
+                <h3 class="job-title" style="cursor:pointer;" onclick="openModal('\${escapeHtml(job.id)}')">\${escapeHtml(job.title)}</h3>
+              </div>
+              <button class="btn-fav \${isFaved ? 'faved' : ''}" onclick="toggleFavorite('\${escapeHtml(job.id)}')" title="\${isFaved ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                \${isFaved ? '❤️' : '🤍'}
+              </button>
+            </div>
+
+            <div class="job-meta-badges">
+              \${contractBadge}
+              <span class="badge badge-region">\${job.regionFlag || '🌍'} \${escapeHtml(job.location || job.region)}</span>
+              <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
+              \${salaryBadge}
+              \${langBadge}
+            </div>
+
+            <p class="job-snippet">\${escapeHtml(job.description_snippet || '')}</p>
+
+            \${tagsHtml ? \`<div class="job-tags">\${tagsHtml}</div>\` : ''}
+          </div>
+
+          <div class="job-card-footer">
+            <div class="job-verified-tag">
+              \${timeAgo(job.published_at)} • 100% Télétravail
+            </div>
+            <div class="job-actions">
+              <button class="btn-icon" title="Détails" onclick="openModal('\${escapeHtml(job.id)}')">
+                👁️
+              </button>
+              <button class="btn-icon" title="Copier le lien" onclick="copyUrl('/jobs/\${encodeURIComponent(job.id)}')">
+                🔗
+              </button>
+              <a href="\${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply">
+                Postuler ↗
+              </a>
+            </div>
+          </div>
+        </article>
+      \`;
+    }
+
+    function updateSentinel() {
+      const sentinel = document.getElementById('infiniteSentinel');
+      const loadBtn = document.getElementById('loadMoreBtn');
+      const allNotice = document.getElementById('allLoadedNotice');
+      const allCount = document.getElementById('allLoadedCount');
+
+      if (!sentinel) return;
+
+      if (currentFilteredJobs.length === 0) {
+        sentinel.style.display = 'none';
+        return;
+      }
+
+      sentinel.style.display = 'block';
+
+      if (displayedCount < currentFilteredJobs.length) {
+        if (loadBtn) {
+          loadBtn.style.display = 'inline-flex';
+          loadBtn.innerHTML = \`<span>Charger plus d'offres (\${displayedCount} / \${currentFilteredJobs.length})</span> ⬇\`;
+        }
+        if (allNotice) allNotice.style.display = 'none';
+      } else {
+        if (loadBtn) loadBtn.style.display = 'none';
+        if (allNotice) {
+          allNotice.style.display = 'block';
+          if (allCount) allCount.textContent = currentFilteredJobs.length;
+        }
+      }
+    }
+
+    function loadMoreJobs() {
+      if (displayedCount >= currentFilteredJobs.length) return;
+      const nextBatch = currentFilteredJobs.slice(displayedCount, displayedCount + PAGE_SIZE);
+      displayedCount += PAGE_SIZE;
+      jobsGrid.insertAdjacentHTML('beforeend', nextBatch.map(renderJobCardHtml).join(''));
+      updateSentinel();
+    }
+    window.loadMoreJobs = loadMoreJobs;
+
+    // IntersectionObserver for seamless Infinite Scroll
+    let scrollObserver = null;
+    try {
+      scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreJobs();
+        }
+      }, { rootMargin: '300px' });
+      const sentinelEl = document.getElementById('infiniteSentinel');
+      if (sentinelEl) scrollObserver.observe(sentinelEl);
+    } catch(e) {}
+
     function renderJobs() {
       const q = searchQuery.toLowerCase().trim();
 
-      const filtered = JOBS_DATA.filter(job => {
+      currentFilteredJobs = JOBS_DATA.filter(job => {
         if (onlyFavorites && !favorites.has(job.id)) return false;
         if (currentRegion !== 'all' && job.regionId !== currentRegion) return false;
         if (currentContract !== 'all' && (job.contractTypeId || 'cdi_fulltime') !== currentContract) return false;
@@ -1417,88 +1550,26 @@ export function renderHTML(jobs = [], meta = {}) {
         return true;
       });
 
-      visibleCount.textContent = filtered.length;
+      visibleCount.textContent = currentFilteredJobs.length;
+      displayedCount = PAGE_SIZE;
 
-      if (filtered.length === 0) {
+      if (currentFilteredJobs.length === 0) {
         jobsGrid.innerHTML = '';
         markdownTableBody.innerHTML = '';
         emptyState.style.display = 'block';
+        updateSentinel();
         return;
       }
 
       emptyState.style.display = 'none';
 
-      // Render Cards
-      jobsGrid.innerHTML = filtered.map(job => {
-        const isFaved = favorites.has(job.id);
-        const initial = (job.company || 'C').charAt(0).toUpperCase();
-        const avatarHtml = job.company_logo
-          ? \`<img src="\${escapeHtml(job.company_logo)}" alt="\${escapeHtml(job.company)}" onerror="this.parentElement.innerHTML='\${initial}'">\`
-          : initial;
-
-        const contractBadge = \`<span class="badge badge-contract">\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI / Full-time')}</span>\`;
-
-        const salaryBadge = job.salary
-          ? \`<span class="badge badge-salary">💰 \${escapeHtml(job.salary)}</span>\`
-          : '';
-
-        const langBadge = job.language === 'fr'
-          ? \`<span class="badge badge-lang">🇫🇷 FR</span>\`
-          : \`<span class="badge badge-lang">🇬🇧 EN</span>\`;
-
-        const tagsHtml = (job.tags || [])
-          .map(t => \`<span class="tag-item" onclick="filterByTag('\${escapeHtml(t)}')">\${escapeHtml(t)}</span>\`)
-          .join('');
-
-        return \`
-          <article class="job-card" id="\${escapeHtml(job.id)}">
-            <div>
-              <div class="job-card-top">
-                <div class="company-avatar">\${avatarHtml}</div>
-                <div class="job-title-wrap">
-                  <div class="job-company">\${escapeHtml(job.company)}</div>
-                  <h3 class="job-title" style="cursor:pointer;" onclick="openModal('\${escapeHtml(job.id)}')">\${escapeHtml(job.title)}</h3>
-                </div>
-                <button class="btn-fav \${isFaved ? 'faved' : ''}" onclick="toggleFavorite('\${escapeHtml(job.id)}')" title="\${isFaved ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
-                  \${isFaved ? '❤️' : '🤍'}
-                </button>
-              </div>
-
-              <div class="job-meta-badges">
-                \${contractBadge}
-                <span class="badge badge-region">\${job.regionFlag || '🌍'} \${escapeHtml(job.location || job.region)}</span>
-                <span class="badge badge-category">\${job.categoryIcon || '💼'} \${escapeHtml(job.category)}</span>
-                \${salaryBadge}
-                \${langBadge}
-              </div>
-
-              <p class="job-snippet">\${escapeHtml(job.description_snippet || '')}</p>
-
-              \${tagsHtml ? \`<div class="job-tags">\${tagsHtml}</div>\` : ''}
-            </div>
-
-            <div class="job-card-footer">
-              <div class="job-verified-tag">
-                \${timeAgo(job.published_at)} • 100% Télétravail
-              </div>
-              <div class="job-actions">
-                <button class="btn-icon" title="Détails" onclick="openModal('\${escapeHtml(job.id)}')">
-                  👁️
-                </button>
-                <button class="btn-icon" title="Copier le lien" onclick="copyUrl('/jobs/\${encodeURIComponent(job.id)}')">
-                  🔗
-                </button>
-                <a href="\${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply">
-                  Postuler ↗
-                </a>
-              </div>
-            </div>
-          </article>
-        \`;
-      }).join('');
+      // Render First Page of Cards (Fast 0.01s DOM render)
+      const firstBatch = currentFilteredJobs.slice(0, displayedCount);
+      jobsGrid.innerHTML = firstBatch.map(renderJobCardHtml).join('');
+      updateSentinel();
 
       // Render Markdown Table
-      markdownTableBody.innerHTML = filtered.map(job => \`
+      markdownTableBody.innerHTML = currentFilteredJobs.map(job => \`
         <tr>
           <td>\${job.regionFlag || '🌍'} \${escapeHtml(job.region)}</td>
           <td>\${job.contractIcon || '💼'} \${escapeHtml(job.contractType || 'CDI')}</td>
