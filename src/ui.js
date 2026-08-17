@@ -920,20 +920,24 @@ export function renderHTML(jobs = [], meta = {}) {
 
       <!-- Center: Clean Navigation Links -->
       <nav class="header-nav">
-        <a href="/" class="nav-link active">Explorer</a>
-        <a href="/simulateur-salaire-remote" class="nav-link">💶 Simulateur</a>
-        <button class="nav-link" style="border:none; background:transparent; cursor:pointer;" onclick="openAlertModal()">🔔 Alertes</button>
+        <a href="/" class="nav-link active" data-i18n="nav_explore">Explorer</a>
+        <a href="/simulateur-salaire-remote" class="nav-link" data-i18n="nav_calc">💶 Simulateur</a>
+        <button class="nav-link" style="border:none; background:transparent; cursor:pointer;" onclick="openAlertModal()" data-i18n="nav_alerts">🔔 Alertes</button>
       </nav>
 
       <!-- Right: Action CTA & Utilities -->
       <div class="header-right">
         <button id="favHeaderBtn" class="btn-fav-header" title="Afficher mes offres sauvegardées">
-          <span>❤️</span> <span class="hide-mobile">Favoris</span> (<span id="favCount">0</span>)
+          <span>❤️</span> <span class="hide-mobile" data-i18n="nav_favs">Favoris</span> (<span id="favCount">0</span>)
         </button>
 
         <a href="/post-a-job" class="btn-post-header">
-          <span>+</span> <span>Publier <span class="hide-mobile">(49€)</span></span>
+          <span>+</span> <span data-i18n="nav_post">Publier</span> <span class="hide-mobile">(49€)</span>
         </a>
+
+        <button id="langToggleBtn" class="btn-icon-header" onclick="toggleLanguage()" title="Changer de langue / Switch Language" style="font-size:0.75rem; font-weight:700; padding:0 0.5rem; min-width:54px;">
+          🇬🇧 EN
+        </button>
 
         <button id="themeToggleBtn" class="btn-icon-header" title="Changer de thème">
           🌙
@@ -945,7 +949,7 @@ export function renderHTML(jobs = [], meta = {}) {
             ···
           </button>
           <div id="moreDropdownMenu" class="dropdown-menu">
-            <a href="/simulateur-salaire-remote" class="dropdown-item">💶 Simulateur Salaire</a>
+            <a href="/simulateur-salaire-remote" class="dropdown-item" data-i18n="nav_calc">💶 Simulateur Salaire</a>
             <a href="/llms.txt" class="dropdown-item">🤖 Index llms.txt</a>
             <a href="/rss" target="_blank" class="dropdown-item">📡 Flux RSS 2.0</a>
             <a href="/api/jobs" target="_blank" class="dropdown-item">⚡ API REST JSON</a>
@@ -960,8 +964,8 @@ export function renderHTML(jobs = [], meta = {}) {
   <!-- 2. HERO SECTION -->
   <main class="container">
     <section class="hero-section">
-      <h1 class="hero-title">Trouvez votre prochain job <span class="brand-accent">100% télétravail</span>.</h1>
-      <p class="hero-subtitle">Le répertoire vérifié des meilleures opportunités sans restriction géographique (CDI, Freelance, CDD, Stage). Accès direct et sans intermédiaire.</p>
+      <h1 class="hero-title" data-i18n="hero_title" data-i18n-html="true">Trouvez votre prochain job <span class="brand-accent">100% télétravail</span>.</h1>
+      <p class="hero-subtitle" data-i18n="hero_sub">Le répertoire vérifié des meilleures opportunités sans restriction géographique (CDI, Freelance, CDD, Stage). Accès direct et sans intermédiaire.</p>
     </section>
 
     <!-- 3. UNIFIED MASTER COMMAND SEARCH BAR -->
@@ -1027,17 +1031,17 @@ export function renderHTML(jobs = [], meta = {}) {
     <!-- 4. TOOLBAR SECTION -->
     <section class="toolbar-section">
       <div class="results-count-wrapper">
-        <span>Affichage de <span class="count-number" id="visibleCount">0</span> offre(s)</span>
-        <button id="resetAllFiltersBtn" class="reset-all-btn" onclick="resetAllFilters()">✕ Réinitialiser</button>
+        <span><span data-i18n="showing_jobs">Affichage de</span> <span class="count-number" id="visibleCount">0</span> <span data-i18n="jobs_count">offre(s)</span></span>
+        <button id="resetAllFiltersBtn" class="reset-all-btn" onclick="resetAllFilters()" data-i18n="reset_filters">✕ Réinitialiser</button>
       </div>
 
       <div class="view-controls">
         <div class="segmented-control">
           <button id="viewCardsBtn" class="segment-btn active" title="Vue Cartes">
-            <span>🗂️</span> <span class="hide-mobile">Cartes</span>
+            <span>🗂️</span> <span class="hide-mobile" data-i18n="view_cards">Cartes</span>
           </button>
           <button id="viewMdBtn" class="segment-btn" title="Vue Markdown">
-            <span>📋</span> <span class="hide-mobile">Markdown</span>
+            <span>📋</span> <span class="hide-mobile" data-i18n="view_md">Markdown</span>
           </button>
         </div>
 
@@ -1066,21 +1070,20 @@ export function renderHTML(jobs = [], meta = {}) {
     <!-- Markdown Table View -->
     <div id="markdownView" class="markdown-view-wrapper">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h2 style="font-size:1.05rem; font-weight:700;">Catalogue au format Markdown (LLM & Agent friendly)</h2>
-        <button id="copyMdBtn" class="btn-post-header" style="border:none; cursor:pointer;">
+        <h2 style="font-size:1.05rem; font-weight:700;" data-i18n="md_title">Catalogue au format Markdown (LLM & Agent friendly)</h2>
+        <button id="copyMdBtn" class="btn-post-header" style="border:none; cursor:pointer;" data-i18n="md_copy_btn">
           📋 Copier tout le Markdown
         </button>
       </div>
       <table class="markdown-table" id="markdownTable">
         <thead>
           <tr>
-            <th>Région</th>
-            <th>Type</th>
-            <th>Poste</th>
-            <th>Entreprise</th>
-            <th>Catégorie</th>
-            <th>Salaire</th>
-            <th>Lien</th>
+            <th data-i18n="th_region">Région</th>
+            <th data-i18n="th_type">Type</th>
+            <th data-i18n="th_role">Poste</th>
+            <th data-i18n="th_company">Entreprise</th>
+            <th data-i18n="th_salary">Salaire</th>
+            <th data-i18n="th_link">Lien</th>
           </tr>
         </thead>
         <tbody id="markdownTableBody"></tbody>
@@ -1090,9 +1093,9 @@ export function renderHTML(jobs = [], meta = {}) {
     <!-- Empty State -->
     <div id="emptyState" class="empty-state" style="display:none;">
       <div class="empty-state-icon">🔎</div>
-      <h3 style="color:var(--text); margin-bottom:0.4rem; font-size:1.15rem; font-weight:700;">Aucune offre correspondante</h3>
-      <p style="color:var(--text-muted); font-size:0.9rem;">Essayez d'élargir vos filtres ou effectuez une recherche par mot-clé.</p>
-      <button onclick="resetAllFilters()" class="btn-load-more" style="margin-top:1rem;">
+      <h3 style="color:var(--text); margin-bottom:0.4rem; font-size:1.15rem; font-weight:700;" data-i18n="empty_title">Aucune offre correspondante</h3>
+      <p style="color:var(--text-muted); font-size:0.9rem;" data-i18n="empty_sub">Essayez d'élargir vos filtres ou effectuez une recherche par mot-clé.</p>
+      <button onclick="resetAllFilters()" class="btn-load-more" style="margin-top:1rem;" data-i18n="reset_filters">
         Réinitialiser tous les filtres
       </button>
     </div>
@@ -1114,13 +1117,13 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-footer">
-        <a id="modalSeoLink" href="#" target="_blank" class="btn-fav-header" title="Ouvrir la page détaillée de l'offre">
-          📄 Fiche détaillée
+        <a id="modalSeoLink" href="#" target="_blank" class="btn-fav-header" title="Ouvrir la page détaillée de l'offre" data-i18n="modal_seo_btn">
+          📄 Fiche dédiée
         </a>
-        <button id="modalCopyBtn" class="btn-fav-header" title="Copier le lien">
+        <button id="modalCopyBtn" class="btn-fav-header" title="Copier le lien" data-i18n="modal_copy_link">
           🔗 Copier lien
         </button>
-        <a id="modalApplyBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-post-header">
+        <a id="modalApplyBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-post-header" data-i18n="modal_apply">
           Postuler directement ↗
         </a>
       </div>
@@ -1134,20 +1137,20 @@ export function renderHTML(jobs = [], meta = {}) {
         <div style="display:flex; align-items:center; gap:0.6rem;">
           <span style="font-size:1.4rem;">🔔</span>
           <div>
-            <h3 style="font-size:1.05rem; font-weight:700; color:var(--text);">Créer une alerte personnalisée</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Recevez chaque matin à 08h00 les offres adaptées à vos critères.</p>
+            <h3 style="font-size:1.05rem; font-weight:700; color:var(--text);" data-i18n="alert_modal_title">Créer une alerte personnalisée</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;" data-i18n="alert_modal_sub">Recevez chaque matin à 08h00 les offres adaptées à vos critères.</p>
           </div>
         </div>
         <button id="alertModalCloseBtn" class="btn-icon-header" style="width:32px; height:32px;">✕</button>
       </div>
       <form id="alertForm" class="modal-body" action="javascript:void(0);" onsubmit="event.preventDefault(); handleAlertSubmit(event); return false;" style="display:flex; flex-direction:column; gap:1rem;">
         <div class="form-group">
-          <label class="form-label" for="alertEmail">Votre adresse Email <span style="color:var(--rose);">*</span></label>
+          <label class="form-label" for="alertEmail"><span data-i18n="alert_email_lbl">Votre adresse Email :</span> <span style="color:var(--rose);">*</span></label>
           <input type="email" id="alertEmail" class="form-input" required placeholder="alex@exemple.com" />
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
           <div class="form-group">
-            <label class="form-label" for="alertRegion">Région autorisée</label>
+            <label class="form-label" for="alertRegion" data-i18n="alert_region_lbl">Zone géographique :</label>
             <select id="alertRegion" class="form-select">
               <option value="all">🌍 Toutes les régions</option>
               <option value="worldwide">🌍 Worldwide</option>
@@ -1158,7 +1161,7 @@ export function renderHTML(jobs = [], meta = {}) {
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="alertCategory">Métier / Domaine</label>
+            <label class="form-label" for="alertCategory" data-i18n="alert_cat_lbl">Métier / Domaine :</label>
             <select id="alertCategory" class="form-select">
               <option value="all">💼 Tous les métiers</option>
               <option value="tech">💻 Tech & Dev</option>
@@ -1172,7 +1175,7 @@ export function renderHTML(jobs = [], meta = {}) {
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
           <div class="form-group">
-            <label class="form-label" for="alertContract">Type de contrat</label>
+            <label class="form-label" for="alertContract" data-i18n="alert_contract_lbl">Type de contrat :</label>
             <select id="alertContract" class="form-select">
               <option value="all">📋 Tous les contrats</option>
               <option value="cdi_fulltime">💼 CDI / Full-time</option>
@@ -1182,20 +1185,20 @@ export function renderHTML(jobs = [], meta = {}) {
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="alertFrequency">Fréquence</label>
+            <label class="form-label" for="alertFrequency" data-i18n="alert_freq_lbl">Fréquence d'envoi :</label>
             <select id="alertFrequency" class="form-select">
-              <option value="daily">🌅 Chaque matin (08h00)</option>
-              <option value="weekly">📅 Hebdomadaire (Lundi)</option>
+              <option value="daily" data-i18n="alert_freq_daily">🌅 Chaque matin (08h00 UTC)</option>
+              <option value="weekly" data-i18n="alert_freq_weekly">📅 Hebdomadaire (Lundi)</option>
             </select>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="alertKeywords">Mots-clés optionnels</label>
+          <label class="form-label" for="alertKeywords" data-i18n="alert_kw_lbl">Mots-clés (optionnel) :</label>
           <input type="text" id="alertKeywords" class="form-input" placeholder="ex: react, golang, rust, devops..." />
         </div>
         <div id="alertFeedback" style="display:none; font-size:0.85rem; padding:0.6rem 0.8rem; border-radius:6px;"></div>
-        <button type="submit" id="alertSubmitBtn" class="btn-post-header" style="justify-content:center; padding:0.75rem; font-size:0.9rem; border:none; cursor:pointer; width:100%;">
-          🚀 Enregistrer mon alerte gratuite
+        <button type="submit" id="alertSubmitBtn" class="btn-post-header" style="justify-content:center; padding:0.75rem; font-size:0.9rem; border:none; cursor:pointer; width:100%;" data-i18n="alert_btn_submit">
+          🚀 Activer mon alerte
         </button>
       </form>
     </div>
@@ -1205,11 +1208,11 @@ export function renderHTML(jobs = [], meta = {}) {
   <section style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(16, 185, 129, 0.06) 100%); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3rem 0;">
     <div class="container" style="max-width: 620px; text-align: center;">
       <div style="font-size: 2rem; margin-bottom: 0.4rem;">📬</div>
-      <h2 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; color: var(--text);">Le Digest Quotidien du Full Remote</h2>
-      <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.55;">Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.</p>
+      <h2 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; color: var(--text);" data-i18n="digest_title">Le Digest Quotidien du Full Remote</h2>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.55;" data-i18n="digest_sub">Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.</p>
       <form id="quickNewsletterForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleQuickNewsletter(event); return false;" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
         <input type="email" id="quickEmail" required placeholder="Votre adresse email (ex: alex@gmail.com)" class="form-input" style="max-width: 340px; background: var(--bg-card);" />
-        <button type="submit" id="quickEmailBtn" class="btn-post-header" style="border: none; padding: 0.65rem 1.4rem; cursor: pointer;">
+        <button type="submit" id="quickEmailBtn" class="btn-post-header" style="border: none; padding: 0.65rem 1.4rem; cursor: pointer;" data-i18n="digest_btn">
           🚀 S'inscrire
         </button>
       </form>
@@ -1226,21 +1229,21 @@ export function renderHTML(jobs = [], meta = {}) {
             <span>🌍</span>
             <span>FullRemote<span class="brand-accent">.Jobs</span></span>
           </div>
-          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55; max-width:320px;">
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55; max-width:320px;" data-i18n="footer_brand_desc" data-i18n-html="true">
             L'annuaire mondial des carrières 100% télétravail. Développé et maintenu par <a href="https://edounze.com" target="_blank" style="color:var(--primary); font-weight:600;">Charles EDOU NZE</a>.
           </p>
         </div>
         <div>
-          <div class="footer-col-title">Plateforme</div>
+          <div class="footer-col-title" data-i18n="footer_col_plat">Plateforme</div>
           <div class="footer-col-links">
-            <a href="/">Explorer les offres</a>
-            <a href="/simulateur-salaire-remote">Simulateur Salaire</a>
-            <a href="/post-a-job">Publier une offre (49€)</a>
-            <a href="javascript:void(0);" onclick="openAlertModal()">Créer une alerte email</a>
+            <a href="/" data-i18n="footer_link_explore">Explorer les offres</a>
+            <a href="/simulateur-salaire-remote" data-i18n="footer_link_calc">Simulateur Salaire</a>
+            <a href="/post-a-job" data-i18n="footer_link_post">Publier une offre (49€)</a>
+            <a href="javascript:void(0);" onclick="openAlertModal()" data-i18n="footer_link_alert">Créer une alerte email</a>
           </div>
         </div>
         <div>
-          <div class="footer-col-title">IA & Développeurs</div>
+          <div class="footer-col-title" data-i18n="footer_col_ai">IA & Développeurs</div>
           <div class="footer-col-links">
             <a href="/llms.txt">Standard llms.txt</a>
             <a href="/llms-full.txt">Catalogue Markdown</a>
@@ -1250,7 +1253,7 @@ export function renderHTML(jobs = [], meta = {}) {
           </div>
         </div>
         <div>
-          <div class="footer-col-title">Ressources</div>
+          <div class="footer-col-title" data-i18n="footer_col_res">Ressources</div>
           <div class="footer-col-links">
             <a href="/rss" target="_blank">Flux RSS 2.0</a>
             <a href="/sitemap.xml" target="_blank">Sitemap XML</a>
@@ -1261,8 +1264,8 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
 
       <div class="footer-bottom">
-        <div>© 2026 FullRemote.Jobs — Tous droits réservés.</div>
-        <div>Indexation continue • 9 sources mondiales agrégées</div>
+        <div data-i18n="footer_rights">© 2026 FullRemote.Jobs — Tous droits réservés.</div>
+        <div data-i18n="footer_sources">Indexation continue • 9 sources mondiales agrégées</div>
       </div>
     </div>
   </footer>
@@ -1295,6 +1298,309 @@ export function renderHTML(jobs = [], meta = {}) {
       if (fc) fc.textContent = favorites.size;
     }
     updateFavCounters();
+
+    // ══════════════════════════════════════════════════
+    // Internationalization (i18n) Engine (FR / EN)
+    // ══════════════════════════════════════════════════
+    const I18N = {
+      fr: {
+        nav_explore: "Explorer",
+        nav_calc: "💶 Simulateur",
+        nav_alerts: "🔔 Alertes",
+        nav_favs: "Favoris",
+        nav_post: "Publier",
+        hero_title: "Trouvez votre prochain job <span class='brand-accent'>100% télétravail</span>.",
+        hero_sub: "Le répertoire vérifié des meilleures opportunités sans restriction géographique (CDI, Freelance, CDD, Stage). Accès direct et sans intermédiaire.",
+        search_ph: "Rechercher par titre, stack techno, entreprise (ex: Go, React, Python, Stripe, DevOps...)",
+        region_all: "🌍 Toutes les régions",
+        region_ww: "🌍 Worldwide (Sans limite)",
+        region_fr: "🇫🇷 France & Francophonie",
+        region_eu: "🇪🇺 Europe & UK",
+        region_us: "🇺🇸 Amériques (USA/CA/LATAM)",
+        region_apac: "🌏 Asie, Pacifique & MEA",
+        cat_all: "💼 Tous les métiers",
+        cat_tech: "💻 Tech & Dev",
+        cat_devops: "☁️ DevOps & Cloud",
+        cat_data: "🧠 Data & IA",
+        cat_design: "🎨 Design & UX/UI",
+        cat_product: "🚀 Product",
+        cat_mktg: "📈 Marketing & Sales",
+        contract_all: "📋 Tous les contrats",
+        contract_cdi: "💼 CDI / Full-time",
+        contract_free: "⚡ Freelance",
+        contract_cdd: "⏳ CDD / Part-time",
+        contract_intern: "🎓 Stage / Alternance",
+        salary_all: "💰 Tous les salaires",
+        salary_50: "💰 > 50k € / $",
+        salary_75: "💰 > 75k € / $",
+        salary_100: "💰 > 100k € / $",
+        salary_130: "💰 > 130k € / $",
+        chips_label: "💡 Populaire :",
+        showing_jobs: "Affichage de",
+        jobs_count: "offre(s)",
+        reset_filters: "✕ Réinitialiser",
+        sort_recent: "⚡ Plus récentes",
+        sort_salary: "💰 Salaire décroissant",
+        sort_company: "🏢 Entreprise (A-Z)",
+        view_cards: "Cartes",
+        view_md: "Markdown",
+        empty_title: "Aucune offre correspondante",
+        empty_sub: "Essayez d'élargir vos filtres ou effectuez une recherche par mot-clé.",
+        load_more: "Charger plus d'offres",
+        all_loaded: "🎉 Vous avez visualisé l'ensemble des offres.",
+        md_title: "Catalogue au format Markdown (LLM & Agent friendly)",
+        md_copy_btn: "📋 Copier tout le Markdown",
+        th_region: "Région",
+        th_type: "Type",
+        th_role: "Poste",
+        th_company: "Entreprise",
+        th_salary: "Salaire",
+        th_link: "Lien",
+        digest_title: "Le Digest Quotidien du Full Remote",
+        digest_sub: "Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.",
+        digest_input_ph: "Votre adresse email (ex: alex@gmail.com)",
+        digest_btn: "🚀 S'inscrire",
+        footer_brand_desc: "L'annuaire mondial des carrières 100% télétravail. Développé et maintenu par <a href='https://edounze.com' target='_blank' style='color:var(--primary); font-weight:600;'>Charles EDOU NZE</a>.",
+        footer_col_plat: "Plateforme",
+        footer_col_ai: "IA & Développeurs",
+        footer_col_res: "Ressources",
+        footer_link_explore: "Explorer les offres",
+        footer_link_calc: "Simulateur Salaire",
+        footer_link_post: "Publier une offre (49€)",
+        footer_link_alert: "Créer une alerte email",
+        footer_rights: "© 2026 FullRemote.Jobs — Tous droits réservés.",
+        footer_sources: "Indexation continue • 9 sources mondiales agrégées",
+        card_details: "Détails ↗",
+        modal_apply: "Postuler directement ↗",
+        modal_seo_btn: "📄 Fiche dédiée",
+        modal_copy_link: "🔗 Copier lien",
+        toast_fav_added: "Offre ajoutée aux favoris ❤️",
+        toast_fav_removed: "Offre retirée des favoris",
+        toast_link_copied: "Lien copié dans le presse-papiers ! 🔗",
+        toast_md_copied: "Markdown copié dans le presse-papiers ! 📋",
+        alert_modal_title: "Créer une alerte personnalisée",
+        alert_modal_sub: "Recevez chaque matin à 08h00 les offres adaptées à vos critères.",
+        alert_email_lbl: "Votre adresse Email :",
+        alert_region_lbl: "Zone géographique :",
+        alert_cat_lbl: "Métier / Domaine :",
+        alert_contract_lbl: "Type de contrat :",
+        alert_freq_lbl: "Fréquence d'envoi :",
+        alert_freq_daily: "🌅 Chaque matin (08h00 UTC)",
+        alert_freq_weekly: "📅 Hebdomadaire (Lundi)",
+        alert_kw_lbl: "Mots-clés (optionnel) :",
+        alert_btn_submit: "🚀 Activer mon alerte"
+      },
+      en: {
+        nav_explore: "Explore",
+        nav_calc: "💶 Calculator",
+        nav_alerts: "🔔 Alerts",
+        nav_favs: "Favorites",
+        nav_post: "Post a Job",
+        hero_title: "Find your next <span class='brand-accent'>100% remote job</span>.",
+        hero_sub: "The verified global directory of top full-remote opportunities (Full-time, Contract, Freelance, Intern). Direct access, zero fluff.",
+        search_ph: "Search by title, tech stack, company (e.g. Go, React, Python, Stripe, DevOps...)",
+        region_all: "🌍 All Regions",
+        region_ww: "🌍 Worldwide (No restrictions)",
+        region_fr: "🇫🇷 France & Francophonie",
+        region_eu: "🇪🇺 Europe & UK",
+        region_us: "🇺🇸 Americas (USA/CA/LATAM)",
+        region_apac: "🌏 Asia, Pacific & MEA",
+        cat_all: "💼 All Categories",
+        cat_tech: "💻 Tech & Engineering",
+        cat_devops: "☁️ DevOps & Cloud",
+        cat_data: "🧠 Data & AI",
+        cat_design: "🎨 Design & UX/UI",
+        cat_product: "🚀 Product Management",
+        cat_mktg: "📈 Marketing & Sales",
+        contract_all: "📋 All Contracts",
+        contract_cdi: "💼 Full-time / Permanent",
+        contract_free: "⚡ Freelance / Contract",
+        contract_cdd: "⏳ Part-time / Fixed-term",
+        contract_intern: "🎓 Internship",
+        salary_all: "💰 All Salaries",
+        salary_50: "💰 > $ / € 50k",
+        salary_75: "💰 > $ / € 75k",
+        salary_100: "💰 > $ / € 100k",
+        salary_130: "💰 > $ / € 130k",
+        chips_label: "💡 Popular:",
+        showing_jobs: "Showing",
+        jobs_count: "job(s)",
+        reset_filters: "✕ Reset",
+        sort_recent: "⚡ Most recent",
+        sort_salary: "💰 Highest salary",
+        sort_company: "🏢 Company (A-Z)",
+        view_cards: "Cards",
+        view_md: "Markdown",
+        empty_title: "No jobs match your current filters",
+        empty_sub: "Try broadening your search query or reset the active filters.",
+        load_more: "Load more jobs",
+        all_loaded: "🎉 You have viewed all available jobs.",
+        md_title: "Markdown Catalog (LLM & Agent friendly)",
+        md_copy_btn: "📋 Copy All Markdown",
+        th_region: "Region",
+        th_type: "Type",
+        th_role: "Role",
+        th_company: "Company",
+        th_salary: "Salary",
+        th_link: "Link",
+        digest_title: "The Daily Full Remote Digest",
+        digest_sub: "Get the top 10 verified 100% remote opportunities delivered directly to your inbox every morning at 8:00 AM. 0 spam, 1-click unsubscribe.",
+        digest_input_ph: "Your email address (e.g. alex@gmail.com)",
+        digest_btn: "🚀 Subscribe for Free",
+        footer_brand_desc: "The worldwide directory for 100% remote careers. Built & maintained by <a href='https://edounze.com' target='_blank' style='color:var(--primary); font-weight:600;'>Charles EDOU NZE</a>.",
+        footer_col_plat: "Platform",
+        footer_col_ai: "AI & Developers",
+        footer_col_res: "Resources",
+        footer_link_explore: "Explore Jobs",
+        footer_link_calc: "Salary Calculator",
+        footer_link_post: "Post a Job ($49 / 49€)",
+        footer_link_alert: "Create Email Alert",
+        footer_rights: "© 2026 FullRemote.Jobs — All rights reserved.",
+        footer_sources: "Continuous Indexing • 9 global remote sources aggregated",
+        card_details: "Details ↗",
+        modal_apply: "Apply directly on site ↗",
+        modal_seo_btn: "📄 Direct page",
+        modal_copy_link: "🔗 Copy link",
+        toast_fav_added: "Job added to favorites ❤️",
+        toast_fav_removed: "Job removed from favorites",
+        toast_link_copied: "Link copied to clipboard! 🔗",
+        toast_md_copied: "Markdown copied to clipboard! 📋",
+        alert_modal_title: "Create Custom Email Alert",
+        alert_modal_sub: "Receive fresh 100% remote opportunities matching your criteria every morning.",
+        alert_email_lbl: "Your email address:",
+        alert_region_lbl: "Geographic Region:",
+        alert_cat_lbl: "Target Category:",
+        alert_contract_lbl: "Contract Type:",
+        alert_freq_lbl: "Digest Frequency:",
+        alert_freq_daily: "🌅 Daily (08:00 AM UTC)",
+        alert_freq_weekly: "📅 Weekly (Every Monday)",
+        alert_kw_lbl: "Keywords (optional):",
+        alert_btn_submit: "🚀 Activate My Alert"
+      }
+    };
+
+    let currentLang = 'fr';
+    try {
+      const savedLang = localStorage.getItem('lang');
+      if (savedLang === 'fr' || savedLang === 'en') {
+        currentLang = savedLang;
+      } else {
+        const bLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+        currentLang = bLang.startsWith('fr') ? 'fr' : 'en';
+      }
+    } catch (e) {
+      currentLang = 'fr';
+    }
+
+    function applyLanguage(lang) {
+      currentLang = lang === 'en' ? 'en' : 'fr';
+      localStorage.setItem('lang', currentLang);
+      document.documentElement.lang = currentLang;
+
+      const dict = I18N[currentLang] || I18N.fr;
+
+      const langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) {
+        langBtn.textContent = currentLang === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR';
+      }
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          if (el.getAttribute('data-i18n-html') === 'true') {
+            el.innerHTML = dict[key];
+          } else {
+            el.textContent = dict[key];
+          }
+        }
+      });
+
+      const searchInp = document.getElementById('searchInput');
+      if (searchInp) searchInp.placeholder = dict.search_ph;
+
+      const regSelect = document.getElementById('regionSelect');
+      if (regSelect) {
+        const regMap = {
+          all: dict.region_all,
+          worldwide: dict.region_ww,
+          france: dict.region_fr,
+          europe: dict.region_eu,
+          americas: dict.region_us,
+          apac_mea: dict.region_apac
+        };
+        for (const opt of regSelect.options) {
+          if (regMap[opt.value]) opt.textContent = regMap[opt.value];
+        }
+      }
+
+      const catSelect = document.getElementById('categorySelect');
+      if (catSelect) {
+        const catMap = {
+          all: dict.cat_all,
+          tech: dict.cat_tech,
+          devops: dict.cat_devops,
+          data_ai: dict.cat_data,
+          design: dict.cat_design,
+          product: dict.cat_product,
+          marketing_sales: dict.cat_mktg
+        };
+        for (const opt of catSelect.options) {
+          if (catMap[opt.value]) opt.textContent = catMap[opt.value];
+        }
+      }
+
+      const contSelect = document.getElementById('contractSelect');
+      if (contSelect) {
+        const contMap = {
+          all: dict.contract_all,
+          cdi_fulltime: dict.contract_cdi,
+          freelance_contract: dict.contract_free,
+          cdd_parttime: dict.contract_cdd,
+          internship: dict.contract_intern
+        };
+        for (const opt of contSelect.options) {
+          if (contMap[opt.value]) opt.textContent = contMap[opt.value];
+        }
+      }
+
+      const salSelect = document.getElementById('salarySelect');
+      if (salSelect) {
+        const salMap = {
+          '0': dict.salary_all,
+          '50000': dict.salary_50,
+          '75000': dict.salary_75,
+          '100000': dict.salary_100,
+          '130000': dict.salary_130
+        };
+        for (const opt of salSelect.options) {
+          if (salMap[opt.value]) opt.textContent = salMap[opt.value];
+        }
+      }
+
+      const sortSel = document.getElementById('sortSelect');
+      if (sortSel) {
+        const sortMap = {
+          recent: dict.sort_recent,
+          salary_desc: dict.sort_salary,
+          company: dict.sort_company
+        };
+        for (const opt of sortSel.options) {
+          if (sortMap[opt.value]) opt.textContent = sortMap[opt.value];
+        }
+      }
+
+      const qEmail = document.getElementById('quickEmail');
+      if (qEmail) qEmail.placeholder = dict.digest_input_ph;
+
+      renderDynamicQuickChips();
+      renderActiveView();
+    }
+
+    window.toggleLanguage = function() {
+      const nextLang = currentLang === 'fr' ? 'en' : 'fr';
+      applyLanguage(nextLang);
+      showToast(nextLang === 'en' ? 'Switched to English 🇬🇧' : 'Passage en Français 🇫🇷');
+    };
 
     // Theme Management
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -1405,7 +1711,7 @@ export function renderHTML(jobs = [], meta = {}) {
           \${salaryHtml}
         </div>
         <div style="font-size:0.92rem; line-height:1.6; color:var(--text); margin-bottom:1.25rem;">
-          \${cleanDesc ? escapeHtml(cleanDesc) : "Consultez l'offre complète sur le site de l'employeur."}
+          \${cleanDesc ? escapeHtml(cleanDesc) : (currentLang === 'fr' ? "Consultez l'offre complète sur le site de l'employeur." : "View full job details directly on the employer's website.")}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
           \${tagsHtml}
@@ -1417,7 +1723,7 @@ export function renderHTML(jobs = [], meta = {}) {
       document.getElementById('modalApplyBtn').href = job.url || detailsUrl;
 
       document.getElementById('modalCopyBtn').onclick = () => {
-        navigator.clipboard.writeText(detailsUrl).then(() => showToast('Lien copié dans le presse-papiers ! 🔗'));
+        navigator.clipboard.writeText(detailsUrl).then(() => showToast(currentLang === 'fr' ? 'Lien copié dans le presse-papiers ! 🔗' : 'Link copied to clipboard! 🔗'));
       };
 
       jobModal.classList.add('open');
@@ -1428,10 +1734,10 @@ export function renderHTML(jobs = [], meta = {}) {
       e.stopPropagation();
       if (favorites.has(jobId)) {
         favorites.delete(jobId);
-        showToast('Offre retirée des favoris');
+        showToast(currentLang === 'fr' ? 'Offre retirée des favoris' : 'Removed from favorites');
       } else {
         favorites.add(jobId);
-        showToast('Offre ajoutée aux favoris ❤️');
+        showToast(currentLang === 'fr' ? 'Offre ajoutée aux favoris ❤️' : 'Added to favorites ❤️');
       }
       localStorage.setItem('fr_favs', JSON.stringify(Array.from(favorites)));
       updateFavCounters();
@@ -1478,12 +1784,13 @@ export function renderHTML(jobs = [], meta = {}) {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 7);
 
-      let html = '<span class="chips-label">💡 Populaire :</span>';
+      const chipsLabel = currentLang === 'fr' ? '💡 Populaire :' : '💡 Popular:';
+      let html = \`<span class="chips-label">\${escapeHtml(chipsLabel)}</span>\`;
       for (const [kw, count] of topKeywords) {
         html += \`<button class="quick-chip" onclick="applyQuickChip('\${escapeAttr(kw)}')">\${escapeHtml(kw)} <span style="font-size:0.7rem; opacity:0.75;">(\${count})</span></button>\`;
       }
-      html += \`<button class="quick-chip" onclick="applyQuickChip('CDI')">💼 CDI</button>\`;
-      html += \`<button class="quick-chip" onclick="applyQuickChip('Freelance')">⚡ Freelance</button>\`;
+      html += \`<button class="quick-chip" onclick="applyQuickChip('CDI')">💼 \${currentLang === 'fr' ? 'CDI' : 'Full-time'}</button>\`;
+      html += \`<button class="quick-chip" onclick="applyQuickChip('Freelance')">⚡ \${currentLang === 'fr' ? 'Freelance' : 'Contract'}</button>\`;
 
       container.innerHTML = html;
     }
@@ -1660,12 +1967,13 @@ export function renderHTML(jobs = [], meta = {}) {
       const contractTag = \`<span class="tag-badge tag-contract">\${j.contractIcon || '💼'} \${escapeHtml(j.contractType || 'CDI')}</span>\`;
       const regionTag = \`<span class="tag-badge">\${j.regionFlag || '🌍'} \${escapeHtml(j.region || 'Worldwide')}</span>\`;
 
-      const tagsHtml = (j.tags || []).slice(0, 3).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join('');
+      const favTitle = currentLang === 'fr' ? "Sauvegarder l'offre" : "Save job";
+      const detailsLabel = currentLang === 'fr' ? 'Détails ↗' : 'Details ↗';
 
       return \`
         <div class="job-card" onclick="openJobModal('\${escapeAttr(j.id)}')">
           <div>
-            <button class="btn-card-fav \${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '\${escapeAttr(j.id)}')" title="Sauvegarder l'offre">
+            <button class="btn-card-fav \${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '\${escapeAttr(j.id)}')" title="\${escapeAttr(favTitle)}">
               \${isFav ? '❤️' : '🤍'}
             </button>
             <div class="job-card-header">
@@ -1687,7 +1995,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
           <div class="job-card-footer">
             <div>\${tagsHtml}</div>
-            <span class="btn-apply-card">Détails ↗</span>
+            <span class="btn-apply-card">\${escapeHtml(detailsLabel)}</span>
           </div>
         </div>
       \`;
@@ -1710,7 +2018,7 @@ export function renderHTML(jobs = [], meta = {}) {
         if (loadMoreBtn) loadMoreBtn.style.display = 'none';
         if (allLoadedNotice) allLoadedNotice.style.display = 'block';
       } else if (loadMoreBtn) {
-        loadMoreBtn.textContent = \`Charger plus d'offres (\${currentRenderCount} / \${filteredJobs.length}) ⬇\`;
+        loadMoreBtn.textContent = currentLang === 'fr' ? \`Charger plus d'offres (\${currentRenderCount} / \${filteredJobs.length}) ⬇\` : \`Load more jobs (\${currentRenderCount} / \${filteredJobs.length}) ⬇\`;
       }
     };
 
@@ -1728,6 +2036,7 @@ export function renderHTML(jobs = [], meta = {}) {
     function renderMarkdownTable(list) {
       const tbody = document.getElementById('markdownTableBody');
       if (!tbody) return;
+      const applyLabel = currentLang === 'fr' ? 'Postuler ↗' : 'Apply ↗';
       tbody.innerHTML = list.slice(0, 100).map(j => \`
         <tr>
           <td>\${j.regionFlag || '🌍'} \${escapeHtml(j.region || '')}</td>
@@ -1736,9 +2045,24 @@ export function renderHTML(jobs = [], meta = {}) {
           <td>\${escapeHtml(j.company)}</td>
           <td>\${escapeHtml(j.category || '')}</td>
           <td>\${escapeHtml(j.salary || '-')}</td>
-          <td><a href="\${escapeAttr(j.url)}" target="_blank" style="color:var(--primary); font-weight:600;">Postuler ↗</a></td>
+          <td><a href="\${escapeAttr(j.url)}" target="_blank" style="color:var(--primary); font-weight:600;">\${escapeHtml(applyLabel)}</a></td>
         </tr>
       \`).join('');
+    }
+
+    // Markdown Copy Button
+    const copyMdBtn = document.getElementById('copyMdBtn');
+    if (copyMdBtn) {
+      copyMdBtn.onclick = () => {
+        const rows = filteredJobs.slice(0, 100).map(j => \`| \${j.region || 'Worldwide'} | \${j.contractType || 'CDI'} | [\${j.title}](\${j.url}) | \${j.company} | \${j.salary || '-'} |\`);
+        const header = currentLang === 'fr'
+          ? ['| Région | Type | Poste | Entreprise | Salaire |', '|---|---|---|---|---|'].join(String.fromCharCode(10))
+          : ['| Region | Type | Role | Company | Salary |', '|---|---|---|---|---|'].join(String.fromCharCode(10));
+        const md = header + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
+        navigator.clipboard.writeText(md).then(() => {
+          showToast(currentLang === 'fr' ? 'Markdown copié dans le presse-papiers ! 📋' : 'Markdown copied to clipboard! 📋');
+        });
+      };
     }
 
     // View Switcher (Cards vs Markdown)
@@ -1881,8 +2205,8 @@ export function renderHTML(jobs = [], meta = {}) {
       return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // Initial render
-    renderActiveView();
+    // Initial render & i18n boot
+    applyLanguage(currentLang);
   </script>
 </body>
 </html>`;

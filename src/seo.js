@@ -242,9 +242,10 @@ export function renderJobDetailPage(job, meta = {}) {
 <body>
   <header>
     <div class="header-inner">
-      <a href="/" class="back-btn">← Retour à l'annuaire FullRemote.Jobs</a>
+      <a href="/" class="back-btn" data-i18n="back_home">← Retour à l'annuaire FullRemote.Jobs</a>
       <div style="display:flex; align-items:center; gap:0.75rem;">
-        <a href="/post-a-job" style="font-size:0.85rem; font-weight:600; color:var(--primary);">Publier une offre</a>
+        <a href="/post-a-job" style="font-size:0.85rem; font-weight:600; color:var(--primary);" data-i18n="post_link">Publier une offre</a>
+        <button id="langToggleBtn" onclick="toggleLanguage()" style="background:var(--bg-card); border:1px solid var(--border); padding:0.35rem 0.5rem; border-radius:6px; cursor:pointer; font-size:0.75rem; font-weight:700; color:var(--text);" title="Changer de langue / Switch Language">🇬🇧 EN</button>
         <button id="themeToggleBtn" style="background:var(--bg-card); border:1px solid var(--border); padding:0.35rem 0.65rem; border-radius:6px; cursor:pointer;" title="Changer le thème">🌙</button>
       </div>
     </div>
@@ -267,7 +268,7 @@ export function renderJobDetailPage(job, meta = {}) {
       </div>
 
       <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem;">
-        <span class="badge badge-remote">✓ 100% Télétravail Garanti</span>
+        <span class="badge badge-remote" data-i18n="badge_remote">✓ 100% Télétravail Garanti</span>
         <span class="badge badge-contract">${job.contractIcon || "💼"} ${escapeHtml(job.contractType || "CDI / Full-time")}</span>
         <span class="badge badge-region">${job.regionFlag || "🌍"} ${escapeHtml(job.location || job.region)}</span>
         ${job.salary ? `<span class="badge badge-salary">💰 ${escapeHtml(job.salary)}</span>` : ""}
@@ -275,35 +276,35 @@ export function renderJobDetailPage(job, meta = {}) {
 
       <div class="meta-grid">
         <div>
-          <div class="meta-item-label">Catégorie</div>
+          <div class="meta-item-label" data-i18n="lbl_category">Catégorie</div>
           <div class="meta-item-val">${job.categoryIcon || "💼"} ${escapeHtml(job.category)}</div>
         </div>
         <div>
-          <div class="meta-item-label">Type de contrat</div>
+          <div class="meta-item-label" data-i18n="lbl_contract">Type de contrat</div>
           <div class="meta-item-val">${escapeHtml(job.contractType || "CDI")}</div>
         </div>
         <div>
-          <div class="meta-item-label">Zone géographique</div>
+          <div class="meta-item-label" data-i18n="lbl_region">Zone géographique</div>
           <div class="meta-item-val">${escapeHtml(job.region)}</div>
         </div>
         <div>
-          <div class="meta-item-label">Date de parution</div>
+          <div class="meta-item-label" data-i18n="lbl_date">Date de parution</div>
           <div class="meta-item-val">${job.published_at ? new Date(job.published_at).toLocaleDateString("fr-FR") : "Récent"}</div>
         </div>
       </div>
 
       <div style="margin-bottom: 2.5rem;">
-        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text);">Aperçu du poste</h2>
+        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text);" data-i18n="overview_title">Aperçu du poste</h2>
         <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.7;">
           ${escapeHtml(cleanSnippet || "Aucune description détaillée disponible.")}
         </p>
       </div>
 
       <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply">
+        <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply" data-i18n="btn_apply_direct">
           Postuler directement sur l'offre ↗
         </a>
-        <button onclick="navigator.clipboard.writeText(window.location.href); alert('Lien copié dans le presse-papiers !');" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.85rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        <button id="shareOfferBtn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.85rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer;" data-i18n="btn_share">
           🔗 Partager cette offre
         </button>
       </div>
@@ -334,10 +335,10 @@ export function renderJobDetailPage(job, meta = {}) {
       return `
       <section style="margin-top: 3rem; padding-top: 2rem;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em;" data-i18n="sim_title">
             💼 Offres similaires 100% Télétravail
           </h3>
-          <a href="/" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
+          <a href="/" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);" data-i18n="sim_see_all">
             Voir tout l'annuaire →
           </a>
         </div>
@@ -369,7 +370,7 @@ export function renderJobDetailPage(job, meta = {}) {
                   ${salaryBadge}
                 </div>
               </div>
-              <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-align: right; margin-top: 0.5rem;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-align: right; margin-top: 0.5rem;" data-i18n="sim_view_btn">
                 Consulter ↗
               </div>
             </a>
@@ -381,6 +382,83 @@ export function renderJobDetailPage(job, meta = {}) {
     })()}
   </main>
   <script>
+    const I18N_SEO = {
+      fr: {
+        back_home: "← Retour à l'annuaire FullRemote.Jobs",
+        post_link: "Publier une offre",
+        badge_remote: "✓ 100% Télétravail Garanti",
+        lbl_category: "Catégorie",
+        lbl_contract: "Type de contrat",
+        lbl_region: "Zone géographique",
+        lbl_date: "Date de parution",
+        overview_title: "Aperçu du poste",
+        btn_apply_direct: "Postuler directement sur l'offre ↗",
+        btn_share: "🔗 Partager cette offre",
+        sim_title: "💼 Offres similaires 100% Télétravail",
+        sim_see_all: "Voir tout l'annuaire →",
+        sim_view_btn: "Consulter ↗",
+        toast_copied: "Lien copié dans le presse-papiers ! 🔗"
+      },
+      en: {
+        back_home: "← Back to FullRemote.Jobs Directory",
+        post_link: "Post a Job",
+        badge_remote: "✓ 100% Remote Guaranteed",
+        lbl_category: "Category",
+        lbl_contract: "Contract Type",
+        lbl_region: "Location",
+        lbl_date: "Published Date",
+        overview_title: "Job Overview",
+        btn_apply_direct: "Apply directly on site ↗",
+        btn_share: "🔗 Share this Job",
+        sim_title: "💼 Similar 100% Remote Jobs",
+        sim_see_all: "View all remote jobs →",
+        sim_view_btn: "View Details ↗",
+        toast_copied: "Link copied to clipboard! 🔗"
+      }
+    };
+
+    let currentLang = 'fr';
+    try {
+      const savedLang = localStorage.getItem('lang');
+      if (savedLang === 'fr' || savedLang === 'en') {
+        currentLang = savedLang;
+      } else {
+        const bLang = (navigator.language || '').toLowerCase();
+        currentLang = bLang.startsWith('fr') ? 'fr' : 'en';
+      }
+    } catch(e) { currentLang = 'fr'; }
+
+    function applyLanguage(lang) {
+      currentLang = lang === 'en' ? 'en' : 'fr';
+      localStorage.setItem('lang', currentLang);
+      document.documentElement.lang = currentLang;
+
+      const dict = I18N_SEO[currentLang] || I18N_SEO.fr;
+      const langBtn = document.getElementById('langToggleBtn');
+      if (langBtn) langBtn.textContent = currentLang === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+      });
+    }
+
+    window.toggleLanguage = function() {
+      applyLanguage(currentLang === 'fr' ? 'en' : 'fr');
+    };
+
+    applyLanguage(currentLang);
+
+    const shareBtn = document.getElementById('shareOfferBtn');
+    if (shareBtn) {
+      shareBtn.onclick = () => {
+        const dict = I18N_SEO[currentLang] || I18N_SEO.fr;
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert(dict.toast_copied);
+        });
+      };
+    }
+
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     let currentTheme = localStorage.getItem('theme') || 'light';
     applyTheme(currentTheme);
