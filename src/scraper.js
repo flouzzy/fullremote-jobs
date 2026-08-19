@@ -977,6 +977,241 @@ export async function scrapeJobicyFrance() {
 }
 
 /**
+ * Source 10 : Welcome to the Jungle (100% Full Remote France & Europe)
+ */
+export async function scrapeWelcomeToTheJungle() {
+  try {
+    const res = await fetch("https://csekhvms53-dsn.algolia.net/1/indexes/wk_cms_jobs_production/query", {
+      method: "POST",
+      headers: {
+        "X-Algolia-Application-Id": "CSEKHVMS53",
+        "X-Algolia-Api-Key": "4bd8f6215d0cc52b26430765769e65a0",
+        "Referer": "https://www.welcometothejungle.com/",
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+      },
+      body: JSON.stringify({
+        query: "",
+        filters: "remote:fulltime",
+        hitsPerPage: 100,
+      }),
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) {
+      console.warn(`Source WTTJ HTTP ${res.status}`);
+      return [];
+    }
+
+    const data = await res.json();
+    const hits = data.hits || [];
+
+    return hits
+      .filter((j) => isStrictlyRemote(j.name, j.profile || ""))
+      .map((j) => {
+        const org = j.organization || {};
+        const title = j.name || "Poste Remote";
+        const company = org.name || "Entreprise";
+        const orgSlug = org.slug || "company";
+        const jobUrl = `https://www.welcometothejungle.com/fr/companies/${orgSlug}/jobs/${j.slug}`;
+        const logo = (org.logo && org.logo.url) || "";
+        const rawContract = (j.contract_type_names && j.contract_type_names.fr) || j.contract_type || "";
+        const contract = detectContractType(title, rawContract, "", []);
+        const rawCountry = (j.office && j.office.country) || "France";
+        const region = detectRegion(rawCountry, title, []);
+        const category = categorizeJob(title, "", []);
+
+        let salaryStr = "";
+        if (j.salary_yearly_minimum && j.salary_maximum) {
+          salaryStr = `${Math.round(j.salary_yearly_minimum / 1000)}k - ${Math.round(j.salary_maximum / 1000)}k € / an`;
+        } else if (j.salary_yearly_minimum) {
+          salaryStr = `À partir de ${Math.round(j.salary_yearly_minimum / 1000)}k € / an`;
+        }
+        const salaryObj = parseSalaryDetails(salaryStr);
+        const lang = j.language === "fr" ? "fr" : detectLanguage(title, "");
+
+        return {
+          id: `wttj-${j.objectID || j.slug}`,
+          title,
+          company,
+          company_logo: logo,
+          url: jobUrl,
+          category: category.label,
+          categoryId: category.id,
+          categoryIcon: category.icon,
+          contractType: contract.label,
+          contractTypeId: contract.id,
+          contractIcon: contract.icon,
+          job_type: contract.label,
+          location: j.office && j.office.city ? `${j.office.city} (100% Remote)` : "France & Europe",
+          region: region.label,
+          regionId: region.id,
+          regionFlag: region.flag,
+          salary: salaryObj.raw,
+          salary_min_eur: salaryObj.min_eur,
+          salary_max_eur: salaryObj.max_eur,
+          salary_min_usd: salaryObj.min_usd,
+          salary_max_usd: salaryObj.max_usd,
+          currency: salaryObj.currency,
+          published_at: j.published_at || new Date().toISOString(),
+          description_snippet: stripHtml(j.profile || title).slice(0, 280) + "...",
+          source: "WelcomeToTheJungle",
+          language: lang,
+          is_verified: 1,
+        };
+      });
+  } catch (err) {
+    console.warn("Source WTTJ erreur:", err.message);
+    return [];
+  }
+}
+
+/**
+ * Source 11 : Free-Work / Freelance-Info (Missions et CDI 100% Télétravail FR)
+ */
+export async function scrapeFreeWork() {
+  try {
+    const res = await fetch("https://api.free-work.com/job_postings?remote=full&page=1", {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    const jobs = data["hydra:member"] || [];
+
+    return jobs.map((j) => {
+      const comp = j.company ? j.company.name : "Entreprise Tech";
+      const title = j.title || "Mission Remote";
+      const url = j.slug ? `https://www.free-work.com/fr/tech-it/jobs/${j.slug}` : `https://www.free-work.com/fr/tech-it/${j.id}`;
+      const isContractor = j.contracts && j.contracts.includes("contractor");
+      const contract = isContractor
+        ? { id: "freelance_contract", label: "Freelance / Contract", icon: "⚡" }
+        : { id: "cdi_fulltime", label: "CDI / Full-time", icon: "💼" };
+
+      const salaryText = j.dailySalary ? `TJM : ${j.dailySalary}` : (j.annualSalary ? `${j.annualSalary} / an` : "");
+      const salaryObj = parseSalaryDetails(salaryText);
+      const category = categorizeJob(title, "", (j.skills || []).map((s) => s.name));
+      const region = detectRegion("France", title, []);
+
+      return {
+        id: `freework-${j.id}`,
+        title,
+        company: comp,
+        company_logo: (j.company && j.company.logo && j.company.logo.medium) || "",
+        url,
+        category: category.label,
+        categoryId: category.id,
+        categoryIcon: category.icon,
+        contractType: contract.label,
+        contractTypeId: contract.id,
+        contractIcon: contract.icon,
+        job_type: contract.label,
+        location: "France (100% Télétravail)",
+        region: region.label,
+        regionId: region.id,
+        regionFlag: region.flag,
+        salary: salaryObj.raw,
+        salary_min_eur: salaryObj.min_eur,
+        salary_max_eur: salaryObj.max_eur,
+        salary_min_usd: salaryObj.min_usd,
+        salary_max_usd: salaryObj.max_usd,
+        currency: salaryObj.currency,
+        published_at: j.publishedAt || new Date().toISOString(),
+        description_snippet: stripHtml(title).slice(0, 280) + "...",
+        source: "Free-Work",
+        language: "fr",
+        is_verified: 1,
+      };
+    });
+  } catch (err) {
+    console.warn("Source Free-Work erreur:", err.message);
+    return [];
+  }
+}
+
+/**
+ * Source 12 : Greenhouse Public Boards (Licornes & Scale-ups Remote-First)
+ */
+export async function scrapeGreenhouseRemote() {
+  const companies = [
+    { slug: "platformsh", name: "Platform.sh" },
+    { slug: "algolia", name: "Algolia" },
+    { slug: "dashlane", name: "Dashlane" },
+    { slug: "dataiku", name: "Dataiku" },
+    { slug: "openclassrooms", name: "OpenClassrooms" },
+    { slug: "strapi", name: "Strapi" },
+    { slug: "ledger", name: "Ledger" },
+    { slug: "frontapp", name: "Front" },
+    { slug: "qonto", name: "Qonto" },
+  ];
+
+  const results = await Promise.allSettled(
+    companies.map(async ({ slug, name }) => {
+      const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs`, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const jobs = data.jobs || [];
+
+      return jobs
+        .filter((j) => {
+          const loc = (j.location && j.location.name) || "";
+          return (
+            loc.toLowerCase().includes("remote") ||
+            loc.toLowerCase().includes("télétravail") ||
+            loc.toLowerCase().includes("anywhere") ||
+            loc.toLowerCase().includes("france")
+          );
+        })
+        .map((j) => {
+          const title = j.title || "Poste Remote";
+          const loc = (j.location && j.location.name) || "Worldwide";
+          const category = categorizeJob(title, "", []);
+          const region = detectRegion(loc, title, []);
+          const contract = detectContractType(title, "", "", []);
+
+          return {
+            id: `gh-${slug}-${j.id}`,
+            title,
+            company: name,
+            company_logo: "",
+            url: j.absolute_url || `https://boards.greenhouse.io/${slug}/jobs/${j.id}`,
+            category: category.label,
+            categoryId: category.id,
+            categoryIcon: category.icon,
+            contractType: contract.label,
+            contractTypeId: contract.id,
+            contractIcon: contract.icon,
+            job_type: contract.label,
+            location: loc,
+            region: region.label,
+            regionId: region.id,
+            regionFlag: region.flag,
+            salary: "",
+            salary_min_eur: 0,
+            salary_max_eur: 0,
+            salary_min_usd: 0,
+            salary_max_usd: 0,
+            currency: "EUR",
+            published_at: j.updated_at || new Date().toISOString(),
+            description_snippet: `${title} chez ${name} (100% Remote / ${loc}).`,
+            source: name,
+            language: detectLanguage(title, ""),
+            is_verified: 1,
+          };
+        });
+    })
+  );
+
+  return results
+    .filter((r) => r.status === "fulfilled")
+    .flatMap((r) => r.value);
+}
+
+/**
  * Pipeline d'agrégation globale avec purge des offres obsolètes (> 30 jours / 1 mois)
  */
 export async function scrapeAllJobs() {
@@ -990,6 +1225,9 @@ export async function scrapeAllJobs() {
     scrapeHackerNews(),
     scrapeHimalayas(),
     scrapeNoDesk(),
+    scrapeWelcomeToTheJungle(),
+    scrapeFreeWork(),
+    scrapeGreenhouseRemote(),
   ];
 
   const results = await Promise.allSettled(tasks);
