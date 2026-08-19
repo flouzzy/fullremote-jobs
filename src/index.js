@@ -41,6 +41,13 @@ import {
   updateTalentProfileByToken,
   deleteTalentProfileByToken,
   recordTalentContact,
+  recordJobClick,
+  recordJobFeedback,
+  getTalentApplications,
+  updateTalentApplicationStatus,
+  deleteTalentApplication,
+  reportDeadJob,
+  getTrackingKpis,
 } from "./db.js";
 import {
   sendResendEmail,
@@ -463,12 +470,13 @@ export default {
         });
       }
 
-      const [metrics, allTalents] = await Promise.all([
+      const [metrics, allTalents, trackingKpis] = await Promise.all([
         getAdminDashboardMetrics(env.DB),
         getAllTalentsForAdmin(env.DB, { limit: 200 }),
+        getTrackingKpis(env.DB),
       ]);
 
-      const html = renderAdminDashboardPage(metrics || {}, allTalents || [], admin, { siteUrl });
+      const html = renderAdminDashboardPage(metrics || {}, allTalents || [], admin, { siteUrl, trackingKpis });
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
@@ -609,7 +617,11 @@ export default {
       if (!talent) {
         return Response.redirect(new URL("/talents/join", request.url).toString(), 302);
       }
-      const html = renderManageTalentPage(talent, successMsg, errorMsg, { siteUrl, welcome });
+      let applications = [];
+      if (talent && env && env.DB) {
+        applications = await getTalentApplications(env.DB, talent.id);
+      }
+      const html = renderManageTalentPage(talent, successMsg, errorMsg, { siteUrl, welcome, applications });
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
@@ -759,6 +771,203 @@ export default {
         return new Response(
           JSON.stringify({ success: true, message: "Proposition transmise au candidat !" }),
           { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // ----------------------------------------------------
+    // API TRACKING DE CLICS & MODALE POST-CANDIDATURE
+    // ----------------------------------------------------
+
+    // API Enregistrement Clic Sortant : POST /api/track/click
+    if (pathname === "/api/track/click" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { jobId, jobTitle, company, userType, userId, userEmail, referrer, tags } = body;
+
+        let clickId = null;
+        if (env && env.DB && jobId) {
+          await initDb(env.DB);
+          clickId = await recordJobClick(env.DB, {
+            jobId,
+            jobTitle,
+            company,
+            userType: userType || "guest",
+            userId,
+            userEmail,
+            referrer,
+            tags: tags || []
+          });
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, clickId }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Feedback Post-Clic ("Avez-vous postulé ?") : POST /api/track/feedback
+    if (pathname === "/api/track/feedback" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { clickId, jobId, feedback, talentToken, userEmail, notes } = body;
+
+        if (!jobId || !feedback) {
+          return new Response(
+            JSON.stringify({ success: false, error: "jobId et feedback requis." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        let res = { success: true };
+        if (env && env.DB) {
+          await initDb(env.DB);
+          res = await recordJobFeedback(env.DB, {
+            clickId,
+            jobId,
+            feedback,
+            talentToken,
+            userEmail,
+            notes
+          });
+        }
+
+        return new Response(
+          JSON.stringify(res),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Signalement de lien mort : POST /api/track/report
+    if (pathname === "/api/track/report" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { jobId, reason, details } = body;
+
+        if (env && env.DB && jobId) {
+          await initDb(env.DB);
+          await reportDeadJob(env.DB, { jobId, reason: reason || "expired", details });
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, message: "Merci ! Notre équipe a été notifiée." }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Récupération des Candidatures d'un Talent : GET /api/talents/applications
+    if (pathname === "/api/talents/applications" && request.method === "GET") {
+      try {
+        const token = url.searchParams.get("token") || "";
+        if (!token) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Token requis." }),
+            { status: 401, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        let applications = [];
+        if (env && env.DB) {
+          await initDb(env.DB);
+          const talent = await getTalentByToken(env.DB, token);
+          if (talent) {
+            applications = await getTalentApplications(env.DB, talent.id);
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, applications }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Mise à jour statut candidature : POST /api/talents/applications/update-status
+    if (pathname === "/api/talents/applications/update-status" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { token, jobId, status, notes } = body;
+
+        if (!token || !jobId || !status) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Paramètres manquants." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        if (env && env.DB) {
+          await initDb(env.DB);
+          const talent = await getTalentByToken(env.DB, token);
+          if (talent) {
+            await updateTalentApplicationStatus(env.DB, talent.id, jobId, status, notes);
+            return new Response(
+              JSON.stringify({ success: true, message: "Statut mis à jour !" }),
+              { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+            );
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ success: false, error: "Talent non trouvé." }),
+          { status: 404, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Suppression candidature : POST /api/talents/applications/delete
+    if (pathname === "/api/talents/applications/delete" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { token, jobId } = body;
+
+        if (env && env.DB && token && jobId) {
+          await initDb(env.DB);
+          const talent = await getTalentByToken(env.DB, token);
+          if (talent) {
+            await deleteTalentApplication(env.DB, talent.id, jobId);
+            return new Response(
+              JSON.stringify({ success: true, message: "Candidature retirée." }),
+              { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+            );
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ success: false, error: "Action non autorisée." }),
+          { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
         );
       } catch (err) {
         return new Response(

@@ -815,6 +815,7 @@ export function renderJoinTalentPoolPage(meta = {}) {
 export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", meta = {}) {
   const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const isWelcome = meta.welcome || false;
+  const applications = Array.isArray(meta.applications) ? meta.applications : [];
   const seniority = SENIORITY_MAP[talent.seniority] || SENIORITY_MAP.senior;
   const availability = AVAILABILITY_MAP[talent.availability] || AVAILABILITY_MAP["30_days"];
   const tags = Array.isArray(talent.tags) ? talent.tags : [];
@@ -1094,7 +1095,78 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
       </div>
     </div>
 
-    <!-- 3. Préférences d'Alertes Offres d'Emploi (Job Drops) -->
+    <!-- 3. Mes Candidatures Suivies -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin-bottom:0.25rem; display:flex; align-items:center; gap:0.5rem;">
+            <span>📂</span> Mes Candidatures Suivies
+            <span style="font-size:0.75rem; font-weight:700; background:var(--meta-bg); border:1px solid var(--border); padding:2px 8px; border-radius:12px; color:var(--primary);" id="appCountBadge">
+              ${applications.length} offre(s)
+            </span>
+          </h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">
+            Suivez en temps réel l'avancement de vos candidatures remote et notez vos relances.
+          </p>
+        </div>
+        <a href="/" target="_blank" class="btn btn-outline" style="font-size:0.8rem; padding:0.45rem 0.85rem;">
+          🔍 Explorer plus d'offres
+        </a>
+      </div>
+
+      <div id="applicationsContainer">
+        ${applications.length === 0 ? `
+          <div style="text-align:center; padding:2rem 1rem; background:var(--meta-bg); border:1px dashed var(--border); border-radius:12px;">
+            <div style="font-size:2rem; margin-bottom:0.4rem;">🎯</div>
+            <div style="font-weight:700; font-size:0.95rem; color:var(--text); margin-bottom:0.25rem;">Aucune candidature enregistrée pour le moment</div>
+            <p style="font-size:0.83rem; color:var(--text-muted); max-width:400px; margin:0 auto 1rem;">
+              Lorsque vous cliquez sur "Postuler" sur une offre FullRemote.Jobs, elle apparaîtra automatiquement ici pour vous permettre de suivre vos entretiens et vos relances !
+            </p>
+            <a href="/" class="btn btn-primary" style="font-size:0.82rem;">
+              Explorer les opportunités 100% télétravail →
+            </a>
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            ${applications.map(app => `
+              <div class="app-item-card" id="app_card_${escapeAttr(app.job_id)}" style="background:var(--meta-bg); border:1px solid var(--border); border-radius:10px; padding:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div style="flex:1; min-width:260px;">
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                    <span style="font-weight:700; font-size:0.95rem; color:var(--text);">${escapeHtml(app.job_title)}</span>
+                    <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">chez ${escapeHtml(app.company)}</span>
+                  </div>
+                  <div style="font-size:0.75rem; color:var(--text-dim); display:flex; gap:0.75rem; flex-wrap:wrap;">
+                    <span>📅 Postulé le ${new Date(app.applied_at).toLocaleDateString('fr-FR')}</span>
+                    ${app.salary ? `<span>💰 ${escapeHtml(app.salary)}</span>` : ''}
+                    ${app.region ? `<span>🌍 ${escapeHtml(app.region)}</span>` : ''}
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                  <select onchange="updateAppStatus('${escapeAttr(app.job_id)}', this.value)" class="form-select" style="width:auto; font-size:0.82rem; padding:0.4rem 0.6rem; font-weight:700;">
+                    <option value="applied" ${app.status === 'applied' ? 'selected' : ''}>🚀 Postulé</option>
+                    <option value="interviewing" ${app.status === 'interviewing' ? 'selected' : ''}>🎙️ Entretien en cours</option>
+                    <option value="offer" ${app.status === 'offer' ? 'selected' : ''}>🎉 Offre reçue !</option>
+                    <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>❌ Non retenu</option>
+                    <option value="archived" ${app.status === 'archived' ? 'selected' : ''}>📦 Archivé</option>
+                  </select>
+
+                  <a href="${escapeHtml(app.job_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="font-size:0.78rem; padding:0.4rem 0.65rem;">
+                    Consulter l'offre ↗
+                  </a>
+
+                  <button onclick="deleteApp('${escapeAttr(app.job_id)}')" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem; padding:4px;" title="Retirer de la liste">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </div>
+
+    <!-- 4. Préférences d'Alertes Offres d'Emploi (Job Drops) -->
     <div class="card">
       <div style="margin-bottom:1.25rem;">
         <h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin-bottom:0.25rem;">
@@ -1270,6 +1342,51 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
         btn.textContent = '💾 Enregistrer les modifications';
       }
     }
+
+    // Gestion des Candidatures Suivies
+    window.updateAppStatus = function(jobId, newStatus) {
+      const currentToken = '${escapeAttr(talent.manage_token)}';
+      fetch('/api/talents/applications/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: currentToken,
+          jobId: jobId,
+          status: newStatus
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res && res.success) {
+          alert('Statut mis à jour ! ✅');
+        }
+      });
+    };
+
+    window.deleteApp = function(jobId) {
+      if (!confirm('Voulez-vous retirer cette candidature de votre suivi ?')) return;
+      const currentToken = '${escapeAttr(talent.manage_token)}';
+      fetch('/api/talents/applications/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: currentToken,
+          jobId: jobId
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res && res.success) {
+          const el = document.getElementById('app_card_' + jobId);
+          if (el) el.remove();
+          const badge = document.getElementById('appCountBadge');
+          if (badge) {
+            const currentCount = document.querySelectorAll('.app-item-card').length;
+            badge.textContent = currentCount + ' offre(s)';
+          }
+        }
+      });
+    };
 
     // Persistance de la session Talent
     try {

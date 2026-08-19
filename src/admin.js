@@ -142,6 +142,7 @@ export function renderAdminDashboardPage(metrics = {}, allTalents = [], adminUse
   const alerts = metrics.alerts || {};
   const push = metrics.push || {};
   const logs = metrics.logs || [];
+  const tracking = meta.trackingKpis || {};
 
   return `<!DOCTYPE html>
 <html lang="fr" class="dark">
@@ -284,6 +285,57 @@ export function renderAdminDashboardPage(metrics = {}, allTalents = [], adminUse
         <div class="kpi-label">Portée Profils Talents</div>
         <div class="kpi-value">${talents.total_views || 0}</div>
         <div class="kpi-sub">👁️ Vues cumulées de profils</div>
+      </div>
+
+      <div class="kpi-card" style="border-top:3px solid #3b82f6;">
+        <div class="kpi-label">Clics Sortants & Candidatures</div>
+        <div class="kpi-value">${tracking.totalClicks || 0} <span style="font-size:1rem; color:var(--text-dim);">clics</span></div>
+        <div class="kpi-sub">🎯 ${tracking.totalApplied || 0} confirmées (${tracking.conversionRate || 0}% conv.)</div>
+      </div>
+    </div>
+
+    <!-- Tracking Clics & Signalements Liens Morts -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏢 Top Entreprises Cliquées / Postulées</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Entreprise</th>
+              <th style="text-align:right;">Clics</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(tracking.topCompanies || []).map(c => `
+              <tr>
+                <td style="font-weight:700;">${escapeHtml(c.company)}</td>
+                <td style="text-align:right; font-family:var(--font-mono); font-weight:800; color:var(--primary);">${c.clicks}</td>
+              </tr>
+            `).join("") || "<tr><td colspan='2' style='color:var(--text-dim);'>Aucun clic enregistré</td></tr>"}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚠️ Signalements Liens Morts / Expirés</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Offre</th>
+              <th>Entreprise</th>
+              <th style="text-align:right;">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(tracking.recentReports || []).map(r => `
+              <tr>
+                <td><a href="/jobs/${encodeURIComponent(r.job_id)}" target="_blank" style="color:var(--primary); font-weight:600;">${escapeHtml(r.title || r.job_id)}</a></td>
+                <td>${escapeHtml(r.company || 'N/A')}</td>
+                <td style="text-align:right; font-size:0.75rem; color:var(--text-dim);">${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+              </tr>
+            `).join("") || "<tr><td colspan='3' style='color:var(--text-dim);'>Aucun signalement</td></tr>"}
+          </tbody>
+        </table>
       </div>
     </div>
 

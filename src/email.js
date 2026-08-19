@@ -102,6 +102,29 @@ export function matchJobToAlert(job, alert = {}) {
 }
 
 /**
+ * Calcule un score d'affinité pour ordonner les offres du digest selon les technologies postulées
+ */
+export function scoreJobForUser(job, appliedTags = []) {
+  if (!job) return 0;
+  let score = 10;
+  const jobTags = (job.tags || []).map(t => t.toLowerCase());
+  const appliedSet = new Set((appliedTags || []).map(t => t.toLowerCase()));
+
+  for (const tag of jobTags) {
+    if (appliedSet.has(tag)) {
+      score += 25; // Bonus +25 par technologie postulée
+    }
+  }
+
+  const pubTime = job.published_at ? new Date(job.published_at).getTime() : Date.now();
+  const hoursOld = (Date.now() - pubTime) / (1000 * 3600);
+  if (hoursOld < 24) score += 15;
+  else if (hoursOld < 72) score += 5;
+
+  return score;
+}
+
+/**
  * Génère le template HTML pour l'email de confirmation d'inscription
  */
 export function buildWelcomeEmailHtml({ alert, siteUrl = DEFAULT_SITE_URL }) {

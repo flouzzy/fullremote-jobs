@@ -136,6 +136,53 @@ export async function initDb(db) {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
       CREATE INDEX IF NOT EXISTS idx_talent_contacts_tid ON talent_contacts(talent_id);
+
+      CREATE TABLE IF NOT EXISTS job_clicks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        job_id TEXT NOT NULL,
+        job_title TEXT,
+        company TEXT,
+        user_type TEXT DEFAULT 'guest',
+        user_id TEXT,
+        user_email TEXT,
+        status TEXT DEFAULT 'clicked',
+        tags_json TEXT DEFAULT '[]',
+        referrer TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_clicks_job ON job_clicks(job_id);
+      CREATE INDEX IF NOT EXISTS idx_clicks_user ON job_clicks(user_id);
+      CREATE INDEX IF NOT EXISTS idx_clicks_status ON job_clicks(status);
+
+      CREATE TABLE IF NOT EXISTS talent_applications (
+        id TEXT PRIMARY KEY,
+        talent_id TEXT NOT NULL,
+        job_id TEXT NOT NULL,
+        job_title TEXT NOT NULL,
+        company TEXT NOT NULL,
+        company_logo TEXT,
+        job_url TEXT NOT NULL,
+        salary TEXT,
+        contract_type TEXT,
+        region TEXT,
+        tags_json TEXT DEFAULT '[]',
+        status TEXT DEFAULT 'applied',
+        notes TEXT,
+        applied_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(talent_id, job_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_app_talent ON talent_applications(talent_id);
+      CREATE INDEX IF NOT EXISTS idx_app_status ON talent_applications(status);
+
+      CREATE TABLE IF NOT EXISTS job_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        job_id TEXT NOT NULL,
+        reason TEXT DEFAULT 'expired',
+        details TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_reports_job ON job_reports(job_id);
     `);
 
     // Migration progressive pour colonnes CV si table déjà existante
@@ -1093,6 +1140,196 @@ export async function getAllTalentsForAdmin(db, options = {}) {
   } catch (err) {
     console.error("Erreur getAllTalentsForAdmin D1 :", err);
     return [];
+  }
+}
+
+/**
+ * Enregistre un clic sortant vers une offre
+ */
+export async function recordJobClick(db, { jobId, jobTitle, company, userType = "guest", userId = null, userEmail = null, referrer = null, tags = [] }) {
+  if (!db || !jobId) return null;
+  try {
+    const res = await db.prepare(`
+      INSERT INTO job_clicks (job_id, job_title, company, user_type, user_id, user_email, referrer, tags_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      jobId,
+      jobTitle || "",
+      company || "",
+      userType || "guest",
+      userId || null,
+      userEmail || null,
+      referrer || "",
+      JSON.stringify(tags || [])
+    ).run();
+
+    return res?.meta?.last_row_id || null;
+  } catch (err) {
+    console.error("Erreur recordJobClick D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Enregistre le feedback post-clic ('applied', 'viewing', 'dead_link')
+ */
+export async function recordJobFeedback(db, { clickId, jobId, feedback, talentToken, userEmail, notes }) {
+  if (!db || !jobId) return { success: false };
+  try {
+    // 1. Mettre à jour le statut du clic si clickId fourni
+    if (clickId) {
+      await db.prepare("UPDATE job_clicks SET status = ? WHERE id = ?").bind(feedback, clickId).run();
+    }
+
+    // 2. Si talent connecté et a postulé, enregistrer dans talent_applications
+    let talent = null;
+    if (talentToken) {
+      talent = await getTalentByToken(db, talentToken);
+    } else if (userEmail) {
+      const { results } = await db.prepare("SELECT * FROM talents WHERE email = ? LIMIT 1").bind(userEmail.toLowerCase().trim()).all();
+      talent = results && results.length > 0 ? results[0] : null;
+    }
+
+    if (feedback === "applied" && talent) {
+      // Récupérer les détails du job
+      const job = await getJobById(db, jobId);
+      const appId = `app_${talent.id}_${jobId}`;
+      await db.prepare(`
+        INSERT INTO talent_applications (id, talent_id, job_id, job_title, company, company_logo, job_url, salary, contract_type, region, tags_json, status, notes, applied_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'applied', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(talent_id, job_id) DO UPDATE SET
+          status = 'applied',
+          notes = COALESCE(excluded.notes, talent_applications.notes),
+          updated_at = CURRENT_TIMESTAMP
+      `).bind(
+        appId,
+        talent.id,
+        jobId,
+        job?.title || "Poste Remote",
+        job?.company || "Entreprise",
+        job?.company_logo || "",
+        job?.url || "",
+        job?.salary || "",
+        job?.contractType || job?.contract_type_label || "CDI / Full-time",
+        job?.region || job?.region_label || "Worldwide",
+        job?.tags_json || JSON.stringify(job?.tags || []),
+        notes || ""
+      ).run();
+    }
+
+    // 3. Si lien mort signalé
+    if (feedback === "dead_link" || feedback === "reported_dead") {
+      await reportDeadJob(db, { jobId, reason: "expired", details: notes || "Signalé via modale post-clic" });
+    }
+
+    return { success: true, savedToTalent: !!(feedback === "applied" && talent) };
+  } catch (err) {
+    console.error("Erreur recordJobFeedback D1 :", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Récupère toutes les candidatures d'un talent
+ */
+export async function getTalentApplications(db, talentId) {
+  if (!db || !talentId) return [];
+  try {
+    const { results } = await db.prepare(`
+      SELECT * FROM talent_applications WHERE talent_id = ? ORDER BY applied_at DESC
+    `).bind(talentId).all();
+
+    return (results || []).map(r => ({
+      ...r,
+      tags: JSON.parse(r.tags_json || "[]")
+    }));
+  } catch (err) {
+    console.error("Erreur getTalentApplications D1 :", err);
+    return [];
+  }
+}
+
+/**
+ * Met à jour le statut ou les notes d'une candidature
+ */
+export async function updateTalentApplicationStatus(db, talentId, jobId, status, notes = null) {
+  if (!db || !talentId || !jobId) return false;
+  try {
+    if (notes !== null) {
+      await db.prepare(`
+        UPDATE talent_applications SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE talent_id = ? AND job_id = ?
+      `).bind(status, notes, talentId, jobId).run();
+    } else {
+      await db.prepare(`
+        UPDATE talent_applications SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE talent_id = ? AND job_id = ?
+      `).bind(status, talentId, jobId).run();
+    }
+    return true;
+  } catch (err) {
+    console.error("Erreur updateTalentApplicationStatus D1 :", err);
+    return false;
+  }
+}
+
+/**
+ * Supprime une candidature de la liste du talent
+ */
+export async function deleteTalentApplication(db, talentId, jobId) {
+  if (!db || !talentId || !jobId) return false;
+  try {
+    await db.prepare("DELETE FROM talent_applications WHERE talent_id = ? AND job_id = ?").bind(talentId, jobId).run();
+    return true;
+  } catch (err) {
+    console.error("Erreur deleteTalentApplication D1 :", err);
+    return false;
+  }
+}
+
+/**
+ * Signale un lien mort ou expiré
+ */
+export async function reportDeadJob(db, { jobId, reason = "expired", details = "" }) {
+  if (!db || !jobId) return false;
+  try {
+    await db.prepare(`
+      INSERT INTO job_reports (job_id, reason, details) VALUES (?, ?, ?)
+    `).bind(jobId, reason, details).run();
+    return true;
+  } catch (err) {
+    console.error("Erreur reportDeadJob D1 :", err);
+    return false;
+  }
+}
+
+/**
+ * Récupère les métriques de tracking pour l'admin cockpit
+ */
+export async function getTrackingKpis(db) {
+  if (!db) return null;
+  try {
+    const [clicksTotalRes, appliedTotalRes, topCompaniesRes, recentReportsRes] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as count FROM job_clicks").first(),
+      db.prepare("SELECT COUNT(*) as count FROM job_clicks WHERE status = 'applied'").first(),
+      db.prepare("SELECT company, COUNT(*) as clicks FROM job_clicks WHERE company != '' GROUP BY company ORDER BY clicks DESC LIMIT 5").all(),
+      db.prepare("SELECT r.*, j.title, j.company, j.url FROM job_reports r LEFT JOIN jobs j ON r.job_id = j.id ORDER BY r.created_at DESC LIMIT 10").all()
+    ]);
+
+    const totalClicks = clicksTotalRes?.count || 0;
+    const totalApplied = appliedTotalRes?.count || 0;
+    const conversionRate = totalClicks > 0 ? Math.round((totalApplied / totalClicks) * 100) : 0;
+
+    return {
+      totalClicks,
+      totalApplied,
+      conversionRate,
+      topCompanies: topCompaniesRes?.results || [],
+      recentReports: recentReportsRes?.results || []
+    };
+  } catch (err) {
+    console.error("Erreur getTrackingKpis D1 :", err);
+    return null;
   }
 }
 

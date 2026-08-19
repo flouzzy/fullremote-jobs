@@ -488,7 +488,7 @@ export function renderJobDetailPage(job, meta = {}) {
           ${renderMarkdownToHtml(cleanSnippet || "Consultez l'offre complète directement sur le site de l'employeur.")}
         </div>
         <div style="margin-top:0.75rem; text-align:right;">
-          <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; font-weight:700; color:var(--primary); text-decoration:underline;">
+          <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; font-weight:700; color:var(--primary); text-decoration:underline;" onclick="handleApplyClick('${escapeHtml(job.id)}', '${escapeHtml(job.url)}', event)">
             Consulter l'annonce officielle intégrale chez ${escapeHtml(job.company)} ↗
           </a>
         </div>
@@ -535,7 +535,7 @@ export function renderJobDetailPage(job, meta = {}) {
       </section>
 
       <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply" data-i18n="btn_apply_direct">
+        <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply" data-i18n="btn_apply_direct" onclick="handleApplyClick('${escapeHtml(job.id)}', '${escapeHtml(job.url)}', event)">
           Postuler sur le site officiel ↗
         </a>
         <button id="shareOfferBtn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.85rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer;" data-i18n="btn_share">
@@ -639,6 +639,44 @@ export function renderJobDetailPage(job, meta = {}) {
       </section>
       `;
     })()}
+
+    <!-- Modal Feedback Post-Candidature ("Avez-vous postulé ?") -->
+    <div id="postApplyModal" class="modal-backdrop" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter:blur(4px);">
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; max-width:440px; width:90%; padding:1.75rem; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.25);">
+        <div style="font-size:2.25rem; margin-bottom:0.5rem;">🚀</div>
+        <h3 id="postApplyTitle" style="font-size:1.2rem; font-weight:800; color:var(--text); margin-bottom:0.35rem;">
+          Avez-vous postulé chez ${escapeHtml(job.company)} ?
+        </h3>
+        <p id="postApplySubtitle" style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-bottom:1.25rem;">
+          Enregistrez cette candidature pour la retrouver dans votre espace et améliorer vos suggestions quotidiennes.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1rem;">
+          <button onclick="submitPostApplyFeedback('applied')" style="background:var(--primary); color:white; border:none; padding:0.75rem; border-radius:8px; font-weight:700; font-size:0.92rem; cursor:pointer; width:100%;">
+            ✅ Oui, j'ai postulé !
+          </button>
+          <button onclick="submitPostApplyFeedback('viewing')" style="background:var(--meta-bg); border:1px solid var(--border); color:var(--text); padding:0.65rem; border-radius:8px; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%;">
+            👀 Pas encore, je consulte
+          </button>
+        </div>
+
+        <div id="postApplyGuestBox" style="display:none; background:var(--meta-bg); border:1px solid var(--border); border-radius:8px; padding:0.75rem; margin-bottom:1rem; text-align:left;">
+          <label style="font-size:0.72rem; font-weight:700; color:var(--text); display:block; margin-bottom:0.25rem;">
+            💡 Associer à mon profil Talent (Email) :
+          </label>
+          <input type="email" id="postApplyGuestEmail" placeholder="votre@email.com" style="width:100%; padding:0.4rem 0.6rem; font-size:0.82rem; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; color:var(--text);" />
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:0.75rem; border-top:1px solid var(--border); font-size:0.75rem;">
+          <button onclick="reportDeadLinkModal()" style="background:none; border:none; color:var(--text-dim); text-decoration:underline; cursor:pointer;">
+            ⚠️ Signaler offre expirée
+          </button>
+          <button onclick="closePostApplyModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-weight:600;">
+            Fermer ✕
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
   <script>
     const JOB_CURRENT = ${JSON.stringify({
@@ -906,6 +944,155 @@ export function renderJobDetailPage(job, meta = {}) {
       themeToggleBtn.onclick = () => {
         currentTheme = currentTheme === 'light' ? 'dark' : 'light';
         applyTheme(currentTheme);
+      };
+    }
+
+    // Tracking Clics Sortants & Modale Post-Candidature
+    let currentTrackingClick = null;
+
+    window.handleApplyClick = function(jobId, targetUrl, event) {
+      if (event) {
+        event.preventDefault();
+      }
+
+      const talentToken = localStorage.getItem('fullremote_talent_token') || '';
+      const destUrl = targetUrl || JOB_CURRENT.url || window.location.href;
+
+      // 1. Ouvrir instantanément l'offre dans un nouvel onglet
+      window.open(destUrl, '_blank', 'noopener,noreferrer');
+
+      // 2. Journaliser le clic en arrière-plan
+      currentTrackingClick = {
+        jobId: jobId,
+        jobTitle: JOB_CURRENT.title || '',
+        company: JOB_CURRENT.company || '',
+        destUrl: destUrl,
+        clickId: null
+      };
+
+      try {
+        fetch('/api/track/click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId: jobId,
+            jobTitle: JOB_CURRENT.title,
+            company: JOB_CURRENT.company,
+            userType: talentToken ? 'talent' : 'guest',
+            userId: talentToken || null,
+            referrer: document.referrer || window.location.href,
+            tags: JOB_CURRENT.tags || []
+          }),
+          keepalive: true
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.clickId && currentTrackingClick) {
+            currentTrackingClick.clickId = data.clickId;
+          }
+        })
+        .catch(() => {});
+      } catch (e) {}
+
+      // 3. Ouvrir la modale d'engagement
+      setTimeout(() => {
+        openPostApplyModal();
+      }, 350);
+    };
+
+    function openPostApplyModal() {
+      const modal = document.getElementById('postApplyModal');
+      if (!modal) return;
+
+      const tToken = localStorage.getItem('fullremote_talent_token');
+      const guestBox = document.getElementById('postApplyGuestBox');
+      if (guestBox) {
+        guestBox.style.display = tToken ? 'none' : 'block';
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    window.closePostApplyModal = function() {
+      const modal = document.getElementById('postApplyModal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.submitPostApplyFeedback = function(status) {
+      if (!currentTrackingClick) {
+        closePostApplyModal();
+        return;
+      }
+
+      const talentToken = localStorage.getItem('fullremote_talent_token') || '';
+      const emailInput = document.getElementById('postApplyGuestEmail');
+      const guestEmail = (emailInput ? emailInput.value : '').trim();
+
+      if (status === 'applied') {
+        try {
+          const localApps = JSON.parse(localStorage.getItem('my_remote_applications') || '[]');
+          const exists = localApps.some(a => a.jobId === currentTrackingClick.jobId);
+          if (!exists) {
+            localApps.unshift({
+              jobId: currentTrackingClick.jobId,
+              title: currentTrackingClick.jobTitle,
+              company: currentTrackingClick.company,
+              url: currentTrackingClick.destUrl,
+              appliedAt: new Date().toISOString(),
+              status: 'applied'
+            });
+            localStorage.setItem('my_remote_applications', JSON.stringify(localApps));
+          }
+        } catch (e) {}
+      }
+
+      fetch('/api/track/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clickId: currentTrackingClick.clickId,
+          jobId: currentTrackingClick.jobId,
+          feedback: status,
+          talentToken: talentToken || null,
+          userEmail: guestEmail || null
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (status === 'applied') {
+          if (res && (res.savedToTalent || talentToken)) {
+            alert(currentLang === 'fr' ? 'Candidature enregistrée dans votre espace Talent ! 📂' : 'Application saved to your Talent profile! 📂');
+          } else {
+            alert(currentLang === 'fr' ? 'Candidature enregistrée dans vos candidatures suivies ! 🚀' : 'Application recorded in your tracker! 🚀');
+          }
+        } else if (status === 'viewing') {
+          alert(currentLang === 'fr' ? 'Offre marquée comme consultée 👀' : 'Job marked as viewed 👀');
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        closePostApplyModal();
+      });
+    };
+
+    window.reportDeadLinkModal = function() {
+      if (!currentTrackingClick) return;
+      const jId = currentTrackingClick.jobId;
+      fetch('/api/track/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: jId, reason: 'expired' })
+      })
+      .then(() => {
+        alert(currentLang === 'fr' ? 'Merci ! Notre équipe a été notifiée pour vérifier cette offre.' : 'Thank you! Our team has been notified.');
+        closePostApplyModal();
+      });
+    };
+
+    const postApplyModalEl = document.getElementById('postApplyModal');
+    if (postApplyModalEl) {
+      postApplyModalEl.onclick = (e) => {
+        if (e.target === postApplyModalEl) closePostApplyModal();
       };
     }
   </script>
