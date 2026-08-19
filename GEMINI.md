@@ -36,3 +36,13 @@
 ## 6. Politique Anti-Spam & Fréquence Notifications
 - **Emails (Resend)** : **STRICT MAXIMUM 1 email par jour / par 24h** pour le digest d'annonces (`isAlertEligibleForEmail()`). Ne jamais envoyer plus d'un digest quotidien, même lors de rafraîchissements manuels ou d'exécutions répétées du scraper. Capé aux 10 meilleures opportunités.
 - **Web Push Navigateur** : Diffusion en temps réel autorisée dès la détection de nouvelles offres.
+
+## 7. Normalisation Stack Technique (Top 50 TIOBE & Frameworks)
+- **Extraction Sémantique Multi-Flux** : Utiliser `extractTechStack(title, desc, rawTags)` basée sur `TIOBE_TECH_PATTERNS` pour indexer précisément les technologies (Top 50 TIOBE + High-Demand Remote : Elixir, Solidity, Rust, Go, etc.).
+- **Liaison Hiérarchique** : Les frameworks doivent automatiquement hériter de leur langage parent (`Laravel`/`Symfony`/`WordPress` -> `PHP`, `FastAPI`/`Django` -> `Python`, `Flutter` -> `Dart`, `Phoenix` -> `Elixir`, `PL/SQL`/`T-SQL` -> `SQL`).
+- **Purge de Fraîcheur 30 Jours** : Seules les offres publiées il y a moins de 30 jours doivent être persistées dans Cloudflare D1.
+
+## 8. Programmatic SEO & Outils 10x Candidats
+- **Pages d'Atterrissage Dédiées** : Maintenir le dictionnaire `PROGRAMMATIC_PAGES` dans [src/seo.js](file:///var/www/edounze/fullremote-jobs/src/seo.js) pour les routes dédiées par technologie et par région (`/remote-laravel-jobs`, `/remote-python-jobs`, etc.) et les référencer dans `generateSitemap()`.
+- **Direct-to-DM Pitch & Geo-Arbitrage** : Intégrer systématiquement le générateur de pitch IA et le radar de pouvoir d'achat sur les pages `/jobs/:id` et dans la modal interactive de la page d'accueil.
+
