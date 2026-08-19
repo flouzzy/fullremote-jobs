@@ -966,7 +966,8 @@ export function renderHTML(jobs = [], meta = {}) {
               🔔 <span data-i18n="nav_alerts">Créer une alerte email</span>
             </button>
             <div style="height:1px; background:var(--border); margin:4px 0;"></div>
-            <a href="/talents" class="dropdown-item">🚀 Vivier Talents</a>
+            <a href="/talents/join" id="menuTalentLink" class="dropdown-item">🚀 Rejoindre le Vivier (Gratuit)</a>
+            <a href="/talents" class="dropdown-item">👥 Annuaire des Talents</a>
             <a href="/simulateur-salaire-remote" class="dropdown-item" data-i18n="nav_calc">💶 Simulateur Salaire</a>
             <a href="/llms.txt" class="dropdown-item">🤖 Index llms.txt</a>
             <a href="/rss" target="_blank" class="dropdown-item">📡 Flux RSS 2.0</a>
@@ -2411,6 +2412,13 @@ export function renderHTML(jobs = [], meta = {}) {
         if (fLink) {
           fLink.href = '/talents/manage?token=' + encodeURIComponent(tTok);
           fLink.textContent = '⚙️ Mon Espace Talent';
+        }
+        const mLink = document.getElementById('menuTalentLink');
+        if (mLink) {
+          mLink.href = '/talents/manage?token=' + encodeURIComponent(tTok);
+          mLink.innerHTML = '⚙️ Mon Espace Talent';
+          mLink.style.fontWeight = '700';
+          mLink.style.color = 'var(--primary)';
         }
       }
     } catch (_) {}
