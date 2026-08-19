@@ -1732,15 +1732,98 @@ export function renderHTML(jobs = [], meta = {}) {
       return lang === 'fr' ? \`Il y a \${months} mois\` : \`\${months}mo ago\`;
     }
 
+    function formatInlineMarkdown(str) {
+      return str
+        .replace(/\\*\\*(.*?)\\*\\*/g, '<strong style="font-weight:700; color:var(--text);">$1</strong>')
+        .replace(/__(.*?)__/g, '<strong style="font-weight:700; color:var(--text);">$1</strong>')
+        .replace(/\\*([^\\*\\n]+)\\*/g, '<em>$1</em>')
+        .replace(/_([^_]+)_/g, '<em>$1</em>')
+        .replace(new RegExp('\\x60([^\\x60]+)\\x60', 'g'), '<code style="background:var(--meta-bg); border:1px solid var(--border); padding:2px 5px; border-radius:4px; font-size:0.88em;">$1</code>');
+    }
+
+    function renderMarkdownToHtml(text) {
+      if (!text) return '';
+      const rawText = String(text);
+      const rawLines = rawText.split('\\n');
+      const htmlParts = [];
+      let inList = false;
+      let currentListItems = [];
+      let currentParagraphLines = [];
+
+      function flushParagraph() {
+        if (currentParagraphLines.length > 0) {
+          const pText = currentParagraphLines.join('<br>');
+          htmlParts.push('<p style="margin-bottom:0.75rem; line-height:1.7;">' + formatInlineMarkdown(pText) + '</p>');
+          currentParagraphLines = [];
+        }
+      }
+
+      function flushList() {
+        if (inList && currentListItems.length > 0) {
+          const itemsHtml = currentListItems
+            .map(function(it) { return '<li style="margin-bottom:0.35rem; line-height:1.6;">' + formatInlineMarkdown(it) + '</li>'; })
+            .join('');
+          htmlParts.push('<ul style="margin:0.5rem 0 0.85rem 1.25rem; padding:0; list-style-type:disc;">' + itemsHtml + '</ul>');
+          currentListItems = [];
+          inList = false;
+        }
+      }
+
+      for (let i = 0; i < rawLines.length; i++) {
+        const line = rawLines[i];
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          flushParagraph();
+          continue;
+        }
+
+        if (/^#{1,4}\\s+/.test(trimmed)) {
+          flushParagraph();
+          flushList();
+          if (/^###\\s+/.test(trimmed)) {
+            htmlParts.push('<h4 style="font-size:1.05rem; font-weight:800; color:var(--text); margin:1.25rem 0 0.4rem;">' + formatInlineMarkdown(trimmed.replace(/^###\\s+/, '')) + '</h4>');
+          } else if (/^##\\s+/.test(trimmed)) {
+            htmlParts.push('<h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin:1.5rem 0 0.5rem;">' + formatInlineMarkdown(trimmed.replace(/^##\\s+/, '')) + '</h3>');
+          } else if (/^#\\s+/.test(trimmed)) {
+            htmlParts.push('<h2 style="font-size:1.25rem; font-weight:800; color:var(--text); margin:1.75rem 0 0.6rem;">' + formatInlineMarkdown(trimmed.replace(/^#\\s+/, '')) + '</h2>');
+          } else {
+            htmlParts.push('<h5 style="font-size:1rem; font-weight:700; color:var(--text); margin:1rem 0 0.3rem;">' + formatInlineMarkdown(trimmed.replace(/^#{4,}\\s+/, '')) + '</h5>');
+          }
+          continue;
+        }
+
+        if (/^([*•\\-+]\s+|\\d+\\.\\s+)/.test(trimmed)) {
+          flushParagraph();
+          inList = true;
+          currentListItems.push(trimmed.replace(/^([*•\\-+]\s+|\\d+\\.\\s+)/, ''));
+          continue;
+        }
+
+        if (inList) {
+          flushList();
+        }
+        currentParagraphLines.push(trimmed);
+      }
+
+      flushParagraph();
+      flushList();
+
+      return htmlParts.join('');
+    }
+
     function cleanSnippet(text) {
       if (!text) return '';
-      try {
-        const div = document.createElement('div');
-        div.innerHTML = String(text);
-        return (div.textContent || div.innerText || '').replace(/\\s+/g, ' ').trim();
-      } catch (e) {
-        return String(text).replace(/<[^>]+>/g, ' ').trim();
-      }
+      return String(text)
+        .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '')
+        .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '')
+        .replace(/<br\\s*[\\/]?>/gi, '\\n')
+        .replace(/<\\/p>/gi, '\\n\\n')
+        .replace(/<\\/li>/gi, '\\n')
+        .replace(/<li[^>]*>/gi, '• ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/[ \\t]+/g, ' ')
+        .trim();
     }
 
     function openJobModal(jobId) {
@@ -1865,8 +1948,8 @@ export function renderHTML(jobs = [], meta = {}) {
             </div>
             \${job.source ? \`<span style="font-size:0.75rem; color:var(--text-dim); background:var(--meta-bg); border:1px solid var(--border); padding:2px 6px; border-radius:4px;">Source : \${escapeHtml(job.source)}</span>\` : ''}
           </div>
-          <div style="font-size:0.92rem; line-height:1.65; color:var(--text); white-space:pre-line; max-height:260px; overflow-y:auto; background:var(--meta-bg); border:1px solid var(--border); border-radius:8px; padding:1rem;">
-            \${cleanDesc ? escapeHtml(cleanDesc) : (currentLang === 'fr' ? "Consultez l'offre complète sur le site de l'employeur." : "View full job details directly on the employer's website.")}
+          <div style="font-size:0.92rem; line-height:1.65; color:var(--text); max-height:280px; overflow-y:auto; background:var(--meta-bg); border:1px solid var(--border); border-radius:8px; padding:1rem 1.25rem;">
+            \${cleanDesc ? renderMarkdownToHtml(cleanDesc) : (currentLang === 'fr' ? "<p>Consultez l'offre complète sur le site de l'employeur.</p>" : "<p>View full job details directly on the employer's website.</p>")}
           </div>
           \${(cleanDesc.length < 250 || cleanDesc.endsWith('...')) ? \`
             <div style="margin-top:0.45rem; font-size:0.8rem; text-align:right;">

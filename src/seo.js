@@ -13,6 +13,86 @@ function escapeHtml(str = "") {
     .replace(/'/g, "&#039;");
 }
 
+function formatInlineMarkdown(str) {
+  return str
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:700; color:var(--text);">$1</strong>')
+    .replace(/__(.*?)__/g, '<strong style="font-weight:700; color:var(--text);">$1</strong>')
+    .replace(/\*([^*\n]+)\*/g, "<em>$1</em>")
+    .replace(/_([^_]+)_/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, '<code style="background:var(--meta-bg); border:1px solid var(--border); padding:2px 5px; border-radius:4px; font-size:0.88em; font-family:monospace;">$1</code>');
+}
+
+export function renderMarkdownToHtml(text = "") {
+  if (!text) return "";
+  let escaped = escapeHtml(text);
+  escaped = escaped.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const rawLines = escaped.split("\n");
+  const htmlParts = [];
+  let inList = false;
+  let currentListItems = [];
+  let currentParagraphLines = [];
+
+  function flushParagraph() {
+    if (currentParagraphLines.length > 0) {
+      const pText = currentParagraphLines.join("<br>");
+      htmlParts.push(`<p style="margin-bottom:0.75rem; line-height:1.7;">${formatInlineMarkdown(pText)}</p>`);
+      currentParagraphLines = [];
+    }
+  }
+
+  function flushList() {
+    if (inList && currentListItems.length > 0) {
+      const itemsHtml = currentListItems
+        .map(it => `<li style="margin-bottom:0.35rem; line-height:1.6;">${formatInlineMarkdown(it)}</li>`)
+        .join("");
+      htmlParts.push(`<ul style="margin:0.5rem 0 0.85rem 1.25rem; padding:0; list-style-type:disc;">${itemsHtml}</ul>`);
+      currentListItems = [];
+      inList = false;
+    }
+  }
+
+  for (let line of rawLines) {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushParagraph();
+      continue;
+    }
+
+    if (/^#{1,4}\s+/.test(trimmed)) {
+      flushParagraph();
+      flushList();
+      if (/^###\s+/.test(trimmed)) {
+        htmlParts.push(`<h4 style="font-size:1.05rem; font-weight:800; color:var(--text); margin:1.25rem 0 0.4rem;">${formatInlineMarkdown(trimmed.replace(/^###\s+/, ''))}</h4>`);
+      } else if (/^##\s+/.test(trimmed)) {
+        htmlParts.push(`<h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin:1.5rem 0 0.5rem;">${formatInlineMarkdown(trimmed.replace(/^##\s+/, ''))}</h3>`);
+      } else if (/^#\s+/.test(trimmed)) {
+        htmlParts.push(`<h2 style="font-size:1.25rem; font-weight:800; color:var(--text); margin:1.75rem 0 0.6rem;">${formatInlineMarkdown(trimmed.replace(/^#\s+/, ''))}</h2>`);
+      } else {
+        htmlParts.push(`<h5 style="font-size:1rem; font-weight:700; color:var(--text); margin:1rem 0 0.3rem;">${formatInlineMarkdown(trimmed.replace(/^#{4,}\s+/, ''))}</h5>`);
+      }
+      continue;
+    }
+
+    if (/^([*•\-+]\s+|\d+\.\s+)/.test(trimmed)) {
+      flushParagraph();
+      inList = true;
+      currentListItems.push(trimmed.replace(/^([*•\-+]\s+|\d+\.\s+)/, ''));
+      continue;
+    }
+
+    if (inList) {
+      flushList();
+    }
+    currentParagraphLines.push(trimmed);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return htmlParts.join("");
+}
+
 /**
  * Génère une page HTML dédiée pour une offre avec balises Schema.org JobPosting et OpenGraph
  */
@@ -404,8 +484,8 @@ export function renderJobDetailPage(job, meta = {}) {
 
       <div style="margin-bottom: 2.25rem;">
         <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);" data-i18n="overview_title">📝 Description du Poste & Missions</h2>
-        <div style="font-size: 0.96rem; color: var(--text); line-height: 1.7; white-space: pre-line; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
-          ${escapeHtml(cleanSnippet || "Consultez l'offre complète directement sur le site de l'employeur.")}
+        <div style="font-size: 0.96rem; color: var(--text); line-height: 1.7; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+          ${renderMarkdownToHtml(cleanSnippet || "Consultez l'offre complète directement sur le site de l'employeur.")}
         </div>
         <div style="margin-top:0.75rem; text-align:right;">
           <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; font-weight:700; color:var(--primary); text-decoration:underline;">
