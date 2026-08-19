@@ -28,12 +28,20 @@ import {
   getActivePushSubscriptions,
   deletePushSubscription,
   logNotification,
+  saveTalentProfile,
+  queryTalentsFromDb,
+  getTalentById,
+  getTalentByToken,
+  updateTalentStatus,
+  recordTalentContact,
 } from "./db.js";
 import {
   sendResendEmail,
   buildWelcomeEmailHtml,
   buildJobDigestEmailHtml,
   matchJobToAlert,
+  buildTalentWelcomeEmailHtml,
+  buildTalentContactNotificationEmailHtml,
 } from "./email.js";
 import {
   DEFAULT_VAPID_PUBLIC_KEY,
@@ -47,6 +55,11 @@ import {
   PROGRAMMATIC_PAGES,
   renderProgrammaticLandingPage,
 } from "./seo.js";
+import {
+  renderTalentsDirectoryPage,
+  renderJoinTalentPoolPage,
+  renderManageTalentPage,
+} from "./talents.js";
 import {
   generateRobotsTxt,
   generateLlmsTxt,
@@ -410,6 +423,175 @@ export default {
           ...corsHeaders,
         },
       });
+    }
+
+    // 9.ter Routes Talent Drops & Reverse Recruiting
+    if (pathname === "/talents") {
+      if (env && env.DB) await initDb(env.DB);
+      const talents = env && env.DB ? await queryTalentsFromDb(env.DB) : [];
+      const html = renderTalentsDirectoryPage(talents, { siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=60, s-maxage=300",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    if (pathname === "/talents/join" || pathname === "/rejoindre-le-vivier") {
+      const html = renderJoinTalentPoolPage({ siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=600",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    if (pathname === "/talents/manage") {
+      const token = url.searchParams.get("token") || "";
+      const successMsg = url.searchParams.get("success") || "";
+      const errorMsg = url.searchParams.get("error") || "";
+      let talent = null;
+      if (token && env && env.DB) {
+        await initDb(env.DB);
+        talent = await getTalentByToken(env.DB, token);
+      }
+      if (!talent) {
+        return Response.redirect(new URL("/talents/join", request.url).toString(), 302);
+      }
+      const html = renderManageTalentPage(talent, successMsg, errorMsg, { siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // API Inscription Talent : POST /api/talents/join
+    if (pathname === "/api/talents/join" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const email = (body.email || "").trim().toLowerCase();
+        const title = (body.title || "").trim();
+        const primaryStack = (body.primary_stack || "").trim();
+
+        if (!email || !title || !primaryStack) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Veuillez remplir le titre, la stack et votre email." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        let savedTalent = null;
+        if (env && env.DB) {
+          await initDb(env.DB);
+          savedTalent = await saveTalentProfile(env.DB, body);
+        } else {
+          savedTalent = { id: `talent_${Date.now()}`, manage_token: `token_${Date.now()}`, ...body };
+        }
+
+        // Envoi email de confirmation avec lien secret
+        const resendApiKey = env.RESEND_API_KEY;
+        const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
+        const welcomeHtml = buildTalentWelcomeEmailHtml({ talent: savedTalent, siteUrl });
+
+        await sendResendEmail({
+          apiKey: resendApiKey,
+          from: fromEmail,
+          to: email,
+          subject: "🚀 Confirmation : Votre profil Talent 100% Remote est activé !",
+          html: welcomeHtml,
+        });
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            id: savedTalent.id,
+            manage_token: savedTalent.manage_token,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Sollicitation Recruteur -> Talent : POST /api/talents/:id/contact
+    if (pathname.startsWith("/api/talents/") && pathname.endsWith("/contact") && request.method === "POST") {
+      try {
+        const talentId = decodeURIComponent(pathname.replace("/api/talents/", "").replace("/contact", "")).trim();
+        const body = await request.json();
+        const { recruiter_name, recruiter_company, recruiter_email, message } = body;
+
+        if (!recruiter_name || !recruiter_company || !recruiter_email || !message) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Veuillez renseigner tous les champs obligatoires (*)." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        let talent = null;
+        if (env && env.DB) {
+          await initDb(env.DB);
+          talent = await getTalentById(env.DB, talentId);
+          await recordTalentContact(env.DB, { ...body, talent_id: talentId });
+        }
+
+        if (talent && talent.email) {
+          const resendApiKey = env.RESEND_API_KEY;
+          const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
+          const notifHtml = buildTalentContactNotificationEmailHtml({ talent, contact: body, siteUrl });
+
+          await sendResendEmail({
+            apiKey: resendApiKey,
+            from: fromEmail,
+            to: talent.email,
+            subject: `💼 Opportunité Remote de ${recruiter_company} pour votre profil`,
+            html: notifHtml,
+          });
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, message: "Proposition transmise au candidat !" }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Mise à jour Statut Talent (Pause / Actif / Recruté) : POST /api/talents/manage/status
+    if (pathname === "/api/talents/manage/status" && request.method === "POST") {
+      let token = "";
+      let status = "";
+      const contentType = request.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        const body = await request.json();
+        token = body.token || "";
+        status = body.status || "";
+      } else {
+        const formData = await request.formData();
+        token = formData.get("token") || "";
+        status = formData.get("status") || "";
+      }
+
+      if (token && status && env && env.DB) {
+        await initDb(env.DB);
+        await updateTalentStatus(env.DB, token, status);
+      }
+
+      return Response.redirect(new URL(`/talents/manage?token=${encodeURIComponent(token)}&success=Statut mis à jour avec succès.`, request.url).toString(), 302);
     }
 
     // 9. API Création de Session Stripe Checkout (49 €) : POST /api/checkout/create-session ou /api/jobs/draft

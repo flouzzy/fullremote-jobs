@@ -344,6 +344,131 @@ export function buildJobDigestEmailHtml({
 </html>`;
 }
 
+/**
+ * Template de confirmation d'inscription au Vivier de Talents
+ */
+export function buildTalentWelcomeEmailHtml({ talent = {}, siteUrl = DEFAULT_SITE_URL }) {
+  const canonicalUrl = (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  const manageUrl = `${canonicalUrl}/talents/manage?token=${encodeURIComponent(talent.manage_token || "")}`;
+  const publicProfileUrl = `${canonicalUrl}/talents/${encodeURIComponent(talent.id || "")}`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenue dans le Vivier de Talents Full Remote !</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
+  <div style="max-width:600px; margin:0 auto; padding:32px 16px;">
+    <div style="background-color:#ffffff; border-radius:16px; padding:32px 24px; box-shadow:0 4px 12px rgba(0,0,0,0.06); border:1px solid #e2e8f0;">
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="font-size:36px; line-height:1; margin-bottom:10px;">🚀</div>
+        <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:0; letter-spacing:-0.02em;">
+          Votre profil Talent est activé !
+        </h1>
+        <p style="font-size:14px; color:#64748b; margin-top:6px;">
+          Vous faites désormais partie du vivier vérifié 100% télétravail.
+        </p>
+      </div>
+
+      <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin:20px 0;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#2563eb; letter-spacing:0.05em; margin-bottom:10px;">
+          Votre Carte Anonyme
+        </div>
+        <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:4px;">
+          ${escapeHtml(talent.title || "Développeur Remote")} (${escapeHtml(talent.seniority || "Senior")})
+        </div>
+        <div style="font-size:13px; color:#475569; margin-bottom:8px;">
+          Stack : <strong>${escapeHtml(talent.primary_stack || "")}</strong>
+        </div>
+        <div style="font-size:13px; color:#059669; font-weight:700;">
+          💰 Prétentions : ${escapeHtml(talent.salary_expectation || "Non spécifié")}
+        </div>
+      </div>
+
+      <div style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:24px;">
+        🔒 <strong>Votre anonymat est protégé</strong> : Vos coordonnées réelles ne sont jamais affichées publiquement. Lorsqu'une entreprise souhaite vous contacter, vous recevrez une notification détaillée par email et vous restez 100% libre d'y répondre.
+      </div>
+
+      <div style="text-align:center; margin:28px 0;">
+        <a href="${manageUrl}" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; font-weight:700; font-size:14px; padding:12px 24px; border-radius:8px; text-decoration:none;">
+          ⚙️ Gérer mon profil ou mettre en pause ↗
+        </a>
+      </div>
+
+      <p style="font-size:12px; color:#94a3b8; text-align:center; margin:0;">
+        Conservez cet email précieusement pour modifier vos informations à tout moment.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Template de notification au Talent lors d'une sollicitation recruteur
+ */
+export function buildTalentContactNotificationEmailHtml({ talent = {}, contact = {}, siteUrl = DEFAULT_SITE_URL }) {
+  const canonicalUrl = (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  const manageUrl = `${canonicalUrl}/talents/manage?token=${encodeURIComponent(talent.manage_token || "")}`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nouvelle opportunité 100% Remote pour votre profil</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
+  <div style="max-width:600px; margin:0 auto; padding:32px 16px;">
+    <div style="background-color:#ffffff; border-radius:16px; padding:32px 24px; box-shadow:0 4px 12px rgba(0,0,0,0.06); border:1px solid #e2e8f0;">
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="font-size:36px; line-height:1; margin-bottom:10px;">💼</div>
+        <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:0; letter-spacing:-0.02em;">
+          Une entreprise souhaite vous contacter !
+        </h1>
+        <p style="font-size:14px; color:#64748b; margin-top:6px;">
+          Sollicitation reçue via FullRemote.Jobs pour votre profil <strong>${escapeHtml(talent.title || "")}</strong>.
+        </p>
+      </div>
+
+      <!-- Détails Recruteur -->
+      <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin:20px 0;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#2563eb; letter-spacing:0.05em; margin-bottom:12px;">
+          Coordonnées du Décideur
+        </div>
+        <div style="font-size:14px; color:#0f172a; margin-bottom:6px;">
+          <strong>Recruteur :</strong> ${escapeHtml(contact.recruiter_name)} (${escapeHtml(contact.recruiter_company)})
+        </div>
+        <div style="font-size:14px; color:#0f172a; margin-bottom:6px;">
+          <strong>Email direct :</strong> <a href="mailto:${escapeHtml(contact.recruiter_email)}" style="color:#2563eb; text-decoration:underline;">${escapeHtml(contact.recruiter_email)}</a>
+        </div>
+        ${contact.job_title ? `<div style="font-size:14px; color:#0f172a; margin-bottom:6px;"><strong>Poste proposé :</strong> ${escapeHtml(contact.job_title)}</div>` : ""}
+        ${contact.job_url ? `<div style="font-size:14px; color:#0f172a; margin-bottom:6px;"><strong>Lien de l'offre :</strong> <a href="${escapeHtml(contact.job_url)}" target="_blank" style="color:#2563eb; text-decoration:underline;">Consulter l'offre ↗</a></div>` : ""}
+      </div>
+
+      <!-- Message du recruteur -->
+      <div style="border-left:4px solid #2563eb; background-color:#eff6ff; padding:16px; border-radius:0 8px 8px 0; margin-bottom:24px;">
+        <div style="font-size:12px; font-weight:700; color:#1e40af; margin-bottom:6px;">Message personnalisé :</div>
+        <div style="font-size:14px; color:#1e293b; line-height:1.6; white-space:pre-wrap;">${escapeHtml(contact.message || "")}</div>
+      </div>
+
+      <div style="text-align:center; margin:28px 0;">
+        <a href="mailto:${escapeHtml(contact.recruiter_email)}?subject=Re:%20Votre%20sollicitation%20FullRemote.Jobs" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; font-weight:700; font-size:15px; padding:14px 28px; border-radius:8px; text-decoration:none;">
+          ✉️ Répondre directement au recruteur ↗
+        </a>
+      </div>
+
+      <div style="border-top:1px solid #e2e8f0; padding-top:16px; margin-top:24px; text-align:center; font-size:12px; color:#64748b;">
+        Vous n'êtes plus disponible ? <a href="${manageUrl}" style="color:#2563eb; text-decoration:underline;">Mettre mon profil en pause en 1 clic</a>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 function escapeHtml(text = "") {
   return String(text)
     .replace(/&/g, "&amp;")
@@ -352,3 +477,4 @@ function escapeHtml(text = "") {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+

@@ -926,6 +926,7 @@ export function renderHTML(jobs = [], meta = {}) {
       <!-- Center: Clean Navigation Links -->
       <nav class="header-nav">
         <a href="/" class="nav-link active" data-i18n="nav_explore">Explorer</a>
+        <a href="/talents" class="nav-link" style="color:var(--primary); font-weight:700;">🚀 Talents</a>
         <a href="/simulateur-salaire-remote" class="nav-link" data-i18n="nav_calc">💶 Simulateur</a>
         <button class="nav-link" style="border:none; background:transparent; cursor:pointer;" onclick="openAlertModal()" data-i18n="nav_alerts">🔔 Alertes</button>
       </nav>
@@ -1242,6 +1243,8 @@ export function renderHTML(jobs = [], meta = {}) {
           <div class="footer-col-title" data-i18n="footer_col_plat">Plateforme</div>
           <div class="footer-col-links">
             <a href="/" data-i18n="footer_link_explore">Explorer les offres</a>
+            <a href="/talents" style="color:var(--primary); font-weight:700;">🚀 Vivier Talents (Reverse)</a>
+            <a href="/talents/join">Rejoindre le Vivier (Gratuit)</a>
             <a href="/simulateur-salaire-remote" data-i18n="footer_link_calc">Simulateur Salaire</a>
             <a href="/post-a-job" data-i18n="footer_link_post">Publier une offre (49€)</a>
             <a href="javascript:void(0);" onclick="openAlertModal()" data-i18n="footer_link_alert">Créer une alerte email</a>

@@ -92,6 +92,47 @@ export async function initDb(db) {
       );
       CREATE INDEX IF NOT EXISTS idx_notif_logs_type ON notification_logs(type);
       CREATE INDEX IF NOT EXISTS idx_notif_logs_sent ON notification_logs(sent_at DESC);
+
+      CREATE TABLE IF NOT EXISTS talents (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        seniority TEXT DEFAULT 'senior',
+        primary_stack TEXT NOT NULL,
+        tags_json TEXT DEFAULT '[]',
+        salary_expectation TEXT,
+        min_eur INTEGER DEFAULT 0,
+        tjm_eur INTEGER DEFAULT 0,
+        availability TEXT DEFAULT '30_days',
+        location TEXT DEFAULT 'France / Europe',
+        bio_snippet TEXT,
+        github_url TEXT,
+        linkedin_url TEXT,
+        portfolio_url TEXT,
+        email TEXT NOT NULL,
+        manage_token TEXT NOT NULL UNIQUE,
+        status TEXT DEFAULT 'active',
+        view_count INTEGER DEFAULT 0,
+        contact_count INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_talents_status ON talents(status);
+      CREATE INDEX IF NOT EXISTS idx_talents_seniority ON talents(seniority);
+      CREATE INDEX IF NOT EXISTS idx_talents_availability ON talents(availability);
+      CREATE INDEX IF NOT EXISTS idx_talents_token ON talents(manage_token);
+
+      CREATE TABLE IF NOT EXISTS talent_contacts (
+        id TEXT PRIMARY KEY,
+        talent_id TEXT NOT NULL,
+        recruiter_name TEXT NOT NULL,
+        recruiter_company TEXT NOT NULL,
+        recruiter_email TEXT NOT NULL,
+        job_title TEXT,
+        job_url TEXT,
+        message TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_talent_contacts_tid ON talent_contacts(talent_id);
     `);
   } catch (e) {
     console.warn("DB init notice:", e.message);
@@ -529,4 +570,213 @@ export async function logNotification(db, logData = {}) {
     console.error("Erreur logNotification D1 :", err);
   }
 }
+
+/**
+ * Enregistre ou met à jour un profil de talent dans D1
+ */
+export async function saveTalentProfile(db, data = {}) {
+  if (!db) return null;
+  try {
+    const id = data.id || `talent_${Math.random().toString(36).substring(2, 9)}`;
+    const manageToken = data.manage_token || `token_${Math.random().toString(36).substring(2, 12)}_${Date.now().toString(36)}`;
+    const tagsJson = JSON.stringify(data.tags || []);
+
+    await db
+      .prepare(
+        `INSERT INTO talents (
+          id, title, seniority, primary_stack, tags_json, salary_expectation,
+          min_eur, tjm_eur, availability, location, bio_snippet,
+          github_url, linkedin_url, portfolio_url, email, manage_token,
+          status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+          title = excluded.title,
+          seniority = excluded.seniority,
+          primary_stack = excluded.primary_stack,
+          tags_json = excluded.tags_json,
+          salary_expectation = excluded.salary_expectation,
+          min_eur = excluded.min_eur,
+          tjm_eur = excluded.tjm_eur,
+          availability = excluded.availability,
+          location = excluded.location,
+          bio_snippet = excluded.bio_snippet,
+          github_url = excluded.github_url,
+          linkedin_url = excluded.linkedin_url,
+          portfolio_url = excluded.portfolio_url,
+          email = excluded.email,
+          updated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(
+        id,
+        data.title || "Développeur Remote",
+        data.seniority || "senior",
+        data.primary_stack || "Fullstack",
+        tagsJson,
+        data.salary_expectation || "",
+        data.min_eur || 0,
+        data.tjm_eur || 0,
+        data.availability || "30_days",
+        data.location || "France / Europe",
+        data.bio_snippet || "",
+        data.github_url || "",
+        data.linkedin_url || "",
+        data.portfolio_url || "",
+        data.email || "",
+        manageToken
+      )
+      .run();
+
+    return { id, manage_token: manageToken, ...data };
+  } catch (err) {
+    console.error("Erreur saveTalentProfile D1 :", err);
+    throw err;
+  }
+}
+
+/**
+ * Récupère les profils de talents actifs
+ */
+export async function queryTalentsFromDb(db, options = {}) {
+  if (!db) return [];
+  try {
+    const limit = options.limit || 50;
+    const seniority = options.seniority || "all";
+    const availability = options.availability || "all";
+    const q = (options.q || "").toLowerCase().trim();
+
+    let sql = "SELECT * FROM talents WHERE status = 'active'";
+    const params = [];
+
+    if (seniority !== "all") {
+      sql += " AND seniority = ?";
+      params.push(seniority);
+    }
+    if (availability !== "all") {
+      sql += " AND availability = ?";
+      params.push(availability);
+    }
+    if (q) {
+      sql += " AND (LOWER(title) LIKE ? OR LOWER(primary_stack) LIKE ? OR LOWER(tags_json) LIKE ? OR LOWER(bio_snippet) LIKE ?)";
+      const term = `%${q}%`;
+      params.push(term, term, term, term);
+    }
+
+    sql += " ORDER BY created_at DESC LIMIT ?";
+    params.push(limit);
+
+    const stmt = db.prepare(sql);
+    const { results } = await stmt.bind(...params).all();
+
+    return (results || []).map((row) => ({
+      ...row,
+      tags: JSON.parse(row.tags_json || "[]"),
+    }));
+  } catch (err) {
+    console.error("Erreur queryTalentsFromDb D1 :", err);
+    return [];
+  }
+}
+
+/**
+ * Récupère un talent par son ID public
+ */
+export async function getTalentById(db, id) {
+  if (!db || !id) return null;
+  try {
+    const row = await db.prepare("SELECT * FROM talents WHERE id = ?").bind(id).first();
+    if (!row) return null;
+    return {
+      ...row,
+      tags: JSON.parse(row.tags_json || "[]"),
+    };
+  } catch (err) {
+    console.error("Erreur getTalentById D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère un talent par son token privé de gestion
+ */
+export async function getTalentByToken(db, token) {
+  if (!db || !token) return null;
+  try {
+    const row = await db.prepare("SELECT * FROM talents WHERE manage_token = ?").bind(token).first();
+    if (!row) return null;
+    return {
+      ...row,
+      tags: JSON.parse(row.tags_json || "[]"),
+    };
+  } catch (err) {
+    console.error("Erreur getTalentByToken D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Met à jour le statut d'un talent (active / paused / hired)
+ */
+export async function updateTalentStatus(db, token, status) {
+  if (!db || !token || !status) return false;
+  try {
+    const res = await db
+      .prepare("UPDATE talents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE manage_token = ?")
+      .bind(status, token)
+      .run();
+    return res.success;
+  } catch (err) {
+    console.error("Erreur updateTalentStatus D1 :", err);
+    return false;
+  }
+}
+
+/**
+ * Enregistre une mise en relation recruteur -> talent
+ */
+export async function recordTalentContact(db, contactData = {}) {
+  if (!db) return null;
+  try {
+    const id = `contact_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
+    await db
+      .prepare(
+        `INSERT INTO talent_contacts (
+          id, talent_id, recruiter_name, recruiter_company, recruiter_email,
+          job_title, job_url, message, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+      )
+      .bind(
+        id,
+        contactData.talent_id || "",
+        contactData.recruiter_name || "",
+        contactData.recruiter_company || "",
+        contactData.recruiter_email || "",
+        contactData.job_title || "",
+        contactData.job_url || "",
+        contactData.message || ""
+      )
+      .run();
+
+    // Incrémente le compteur de contacts reçus par le talent
+    await db
+      .prepare("UPDATE talents SET contact_count = contact_count + 1 WHERE id = ?")
+      .bind(contactData.talent_id)
+      .run();
+
+    return { id, ...contactData };
+  } catch (err) {
+    console.error("Erreur recordTalentContact D1 :", err);
+    throw err;
+  }
+}
+
+/**
+ * Incrémente le compteur de vues d'un talent
+ */
+export async function incrementTalentViews(db, id) {
+  if (!db || !id) return;
+  try {
+    await db.prepare("UPDATE talents SET view_count = view_count + 1 WHERE id = ?").bind(id).run();
+  } catch (e) {}
+}
+
 
