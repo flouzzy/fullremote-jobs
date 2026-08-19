@@ -416,6 +416,50 @@ export function buildTalentWelcomeEmailHtml({ talent = {}, siteUrl = DEFAULT_SIT
 }
 
 /**
+ * Template de connexion sécurisée par Magic Link
+ */
+export function buildTalentMagicLinkEmailHtml({ talent = {}, siteUrl = DEFAULT_SITE_URL }) {
+  const canonicalUrl = (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  const manageUrl = `${canonicalUrl}/talents/manage?token=${encodeURIComponent(talent.manage_token || "")}`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votre lien de connexion à FullRemote.Jobs</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
+  <div style="max-width:600px; margin:0 auto; padding:32px 16px;">
+    <div style="background-color:#ffffff; border-radius:16px; padding:32px 24px; box-shadow:0 4px 12px rgba(0,0,0,0.06); border:1px solid #e2e8f0;">
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="font-size:36px; line-height:1; margin-bottom:10px;">🔑</div>
+        <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:0; letter-spacing:-0.02em;">
+          Votre lien de connexion magique
+        </h1>
+        <p style="font-size:14px; color:#64748b; margin-top:6px;">
+          Cliquez sur le bouton ci-dessous pour accéder directement à votre espace de gestion sans mot de passe.
+        </p>
+      </div>
+
+      <div style="text-align:center; margin:32px 0;">
+        <a href="${manageUrl}" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; font-weight:700; font-size:15px; padding:14px 32px; border-radius:8px; text-decoration:none; box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+          🔓 Me connecter à mon Espace Privé ↗
+        </a>
+      </div>
+
+      <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; font-size:13px; color:#64748b; line-height:1.5;">
+        <strong>Informations de sécurité :</strong><br>
+        • Ce lien est personnel et vous permet de gérer votre profil <strong>${escapeHtml(talent.title || "")}</strong>.<br>
+        • Si vous n'avez pas demandé ce lien, vous pouvez ignorer cet email en toute sécurité.
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
  * Template de notification au Talent lors d'une sollicitation recruteur
  */
 export function buildTalentContactNotificationEmailHtml({ talent = {}, contact = {}, siteUrl = DEFAULT_SITE_URL }) {

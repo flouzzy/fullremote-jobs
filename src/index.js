@@ -32,6 +32,7 @@ import {
   queryTalentsFromDb,
   getTalentById,
   getTalentByToken,
+  getTalentByEmail,
   updateTalentStatus,
   recordTalentContact,
 } from "./db.js";
@@ -41,6 +42,7 @@ import {
   buildJobDigestEmailHtml,
   matchJobToAlert,
   buildTalentWelcomeEmailHtml,
+  buildTalentMagicLinkEmailHtml,
   buildTalentContactNotificationEmailHtml,
 } from "./email.js";
 import {
@@ -59,6 +61,7 @@ import {
   renderTalentsDirectoryPage,
   renderJoinTalentPoolPage,
   renderManageTalentPage,
+  renderTalentLoginPage,
 } from "./talents.js";
 import {
   generateRobotsTxt,
@@ -450,6 +453,17 @@ export default {
       });
     }
 
+    if (pathname === "/talents/login" || pathname === "/connexion-talent") {
+      const html = renderTalentLoginPage({ siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=600",
+          ...corsHeaders,
+        },
+      });
+    }
+
     if (pathname === "/talents/manage") {
       const token = url.searchParams.get("token") || "";
       const successMsg = url.searchParams.get("success") || "";
@@ -470,6 +484,45 @@ export default {
           ...corsHeaders,
         },
       });
+    }
+
+    // API Connexion Talent par Magic Link : POST /api/talents/magic-link
+    if (pathname === "/api/talents/magic-link" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const email = (body.email || "").trim().toLowerCase();
+
+        if (email && env && env.DB) {
+          await initDb(env.DB);
+          const talent = await getTalentByEmail(env.DB, email);
+          if (talent) {
+            const resendApiKey = env.RESEND_API_KEY;
+            const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
+            const magicLinkHtml = buildTalentMagicLinkEmailHtml({ talent, siteUrl });
+
+            await sendResendEmail({
+              apiKey: resendApiKey,
+              from: fromEmail,
+              to: email,
+              subject: "🔑 Votre lien magique de connexion — FullRemote.Jobs",
+              html: magicLinkHtml,
+            });
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Si cette adresse est associée à un profil, votre lien magique vient de vous être envoyé !",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
     }
 
     // API Inscription Talent : POST /api/talents/join

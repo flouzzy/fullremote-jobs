@@ -523,6 +523,12 @@ export function renderJoinTalentPoolPage(meta = {}) {
         <p style="font-size:0.95rem; color:var(--text-muted); margin-top:0.4rem;">
           Créez votre profil anonyme vérifié et laissez les meilleures entreprises remote-first vous contacter en direct.
         </p>
+        <div style="margin-top:0.75rem; font-size:0.85rem;">
+          <span style="color:var(--text-muted);">Déjà inscrit au vivier ?</span>
+          <a href="/talents/login" style="color:var(--primary); font-weight:700; text-decoration:none; margin-left:0.35rem;">
+            🔑 Me connecter par email (Magic Link) →
+          </a>
+        </div>
       </div>
 
       <form id="talentJoinForm" onsubmit="submitTalentProfile(event)">
@@ -1010,4 +1016,130 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
 </body>
 </html>`;
 }
+
+/**
+ * 4. Page de Connexion par Magic Link : /talents/login
+ */
+export function renderTalentLoginPage(meta = {}) {
+  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+
+  return `<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion Espace Talent (Magic Link) — FullRemote.Jobs</title>
+  <meta name="description" content="Accédez à votre espace privé de gestion candidat sans mot de passe grâce à votre lien de connexion magique." />
+  <link rel="canonical" href="${siteUrl}/talents/login" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔑</text></svg>">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --emerald: #10b981;
+      --meta-bg: #f1f5f9;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+    .container { max-width: 520px; margin: auto; padding: 2rem 1.5rem; width: 100%; }
+    header { border-bottom: 1px solid var(--border); background: var(--bg-card); padding: 1rem 0; }
+    .header-inner { max-width: 840px; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .login-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem 2rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+    .form-input { width: 100%; background: var(--meta-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.95rem; color: var(--text); font-family: inherit; margin-bottom: 1rem; }
+    .form-input:focus { outline: none; border-color: var(--primary); background: #ffffff; }
+    .btn-submit { background: var(--primary); color: white; font-weight: 800; font-size: 0.95rem; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; width: 100%; transition: background 0.15s ease; }
+    .btn-submit:hover { background: var(--primary-hover); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a href="/" style="font-weight:800; font-size:1.15rem; color:var(--text); text-decoration:none; display:flex; align-items:center; gap:0.4rem;">
+        <span>🌍</span> FullRemote<span style="color:var(--primary);">.Jobs</span>
+      </a>
+      <a href="/talents" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">
+        ← Annuaire des Talents
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="login-card">
+      <div style="text-align:center; margin-bottom:1.75rem;">
+        <div style="font-size:2.5rem; margin-bottom:0.4rem;">🔑</div>
+        <h1 style="font-size:1.6rem; font-weight:800; color:var(--text); letter-spacing:-0.02em;">
+          Connexion Espace Talent
+        </h1>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-top:0.35rem;">
+          Saisissez votre email pour recevoir votre lien de connexion magique sans mot de passe.
+        </p>
+      </div>
+
+      <form id="magicLinkForm" onsubmit="submitMagicLink(event)">
+        <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.4rem;">
+          Votre adresse email réelle (privée & protégée) *
+        </label>
+        <input type="email" id="loginEmail" name="email" required class="form-input" placeholder="votre.email@domaine.com" autocomplete="email" />
+
+        <button type="submit" id="submitLoginBtn" class="btn-submit">
+          📩 M'envoyer mon lien de connexion magique
+        </button>
+
+        <div id="loginFeedback" style="display:none; margin-top:1.25rem; font-size:0.88rem; font-weight:600; text-align:center; padding:0.85rem; border-radius:8px;"></div>
+      </form>
+
+      <div style="text-align:center; margin-top:1.75rem; padding-top:1.25rem; border-top:1px solid var(--border); font-size:0.85rem; color:var(--text-muted);">
+        Vous n'avez pas encore de profil ? <a href="/talents/join" style="color:var(--primary); font-weight:700; text-decoration:none;">Créer mon profil gratuit →</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function submitMagicLink(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitLoginBtn');
+      const feedback = document.getElementById('loginFeedback');
+      const email = (document.getElementById('loginEmail').value || '').trim();
+
+      if (!email) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours...';
+
+      try {
+        const res = await fetch('/api/talents/magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(16,185,129,0.12)';
+        feedback.style.color = '#047857';
+        feedback.textContent = '📬 Si cette adresse est associée à un profil, votre lien magique de connexion vient de vous être envoyé par email. Vérifiez votre boîte de réception !';
+      } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239,68,68,0.12)';
+        feedback.style.color = '#b91c1c';
+        feedback.textContent = '❌ Erreur de communication. Veuillez réessayer.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '📩 Renvoyer le lien de connexion';
+      }
+    }
+  </script>
+</body>
+</html>`;
+}
+
 

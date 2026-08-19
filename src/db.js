@@ -732,6 +732,24 @@ export async function getTalentByToken(db, token) {
 }
 
 /**
+ * Récupère un profil talent par son adresse email
+ */
+export async function getTalentByEmail(db, email) {
+  if (!db || !email) return null;
+  try {
+    const row = await db.prepare("SELECT * FROM talents WHERE LOWER(email) = LOWER(?) ORDER BY created_at DESC LIMIT 1").bind(email.trim()).first();
+    if (!row) return null;
+    return {
+      ...row,
+      tags: JSON.parse(row.tags_json || "[]"),
+    };
+  } catch (err) {
+    console.error("Erreur getTalentByEmail D1 :", err);
+    return null;
+  }
+}
+
+/**
  * Met à jour le statut d'un talent (active / paused / hired)
  */
 export async function updateTalentStatus(db, token, status) {
