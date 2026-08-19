@@ -390,7 +390,7 @@ export function renderJobDetailPage(job, meta = {}) {
       })()}
 
       <div style="margin-bottom: 2.25rem;">
-        <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);" data-i18n="overview_title">Description Complète du Poste</h2>
+        <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);" data-i18n="overview_title">📝 Description du Poste & Missions</h2>
         <div style="font-size: 0.96rem; color: var(--text); line-height: 1.7; white-space: pre-line; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
           ${escapeHtml(cleanSnippet || "Consultez l'offre complète directement sur le site de l'employeur.")}
         </div>
@@ -568,7 +568,7 @@ export function renderJobDetailPage(job, meta = {}) {
         lbl_contract: "Type de contrat",
         lbl_region: "Zone géographique",
         lbl_date: "Date de parution",
-        overview_title: "Aperçu du poste",
+        overview_title: "📝 Description du Poste & Missions",
         btn_apply_direct: "Postuler sur le site officiel ↗",
         btn_share: "🔗 Partager cette offre",
         sim_title: "💼 Offres similaires 100% Télétravail",
@@ -598,7 +598,7 @@ export function renderJobDetailPage(job, meta = {}) {
         lbl_contract: "Contract Type",
         lbl_region: "Location",
         lbl_date: "Published Date",
-        overview_title: "Job Overview",
+        overview_title: "📝 Job Overview & Responsibilities",
         btn_apply_direct: "Apply directly on official site ↗",
         btn_share: "🔗 Share this Job",
         sim_title: "💼 Similar 100% Remote Jobs",

@@ -1327,6 +1327,8 @@ export async function scrapeWelcomeToTheJungle() {
         const salaryObj = parseSalaryDetails(salaryStr);
         const lang = j.language === "fr" ? "fr" : detectLanguage(title, "", tags);
 
+        const wttjDesc = [j.summary, j.key_missions, j.profile, j.description].filter(Boolean).join("\n\n");
+
         return {
           id: `wttj-${j.objectID || j.slug}`,
           title,
@@ -1352,7 +1354,7 @@ export async function scrapeWelcomeToTheJungle() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.published_at || new Date().toISOString(),
-          description_snippet: stripHtml(j.profile || j.description || title, true).slice(0, 4000),
+          description_snippet: stripHtml(wttjDesc || title, true).slice(0, 4000),
           source: "WelcomeToTheJungle",
           language: lang,
           is_verified: 1,
@@ -1393,6 +1395,7 @@ export async function scrapeFreeWork() {
       const tags = extractTechStack(title, "", skillNames);
       const category = categorizeJob(title, "", tags);
       const region = detectRegion("France", title, tags);
+      const fwDesc = [j.description, j.candidateProfile, j.companyDescription].filter(Boolean).join("\n\n");
 
       return {
         id: `freework-${j.id}`,
@@ -1419,7 +1422,7 @@ export async function scrapeFreeWork() {
         salary_max_usd: salaryObj.max_usd,
         currency: salaryObj.currency,
         published_at: j.publishedAt || new Date().toISOString(),
-        description_snippet: stripHtml(j.description || j.profile || title, true).slice(0, 4000),
+        description_snippet: stripHtml(fwDesc || title, true).slice(0, 4000),
         source: "Free-Work",
         language: "fr",
         is_verified: 1,

@@ -1837,12 +1837,22 @@ export function renderHTML(jobs = [], meta = {}) {
         </div>
 
         <div style="margin-bottom:1.25rem;">
-          <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.4rem;">
-            \${currentLang === 'fr' ? 'Description Complète du Poste' : 'Full Job Description'}
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">
+              \${currentLang === 'fr' ? '📝 Description & Missions' : '📝 Job Description & Overview'}
+            </div>
+            \${job.source ? \`<span style="font-size:0.75rem; color:var(--text-dim); background:var(--meta-bg); border:1px solid var(--border); padding:2px 6px; border-radius:4px;">Source : \${escapeHtml(job.source)}</span>\` : ''}
           </div>
           <div style="font-size:0.92rem; line-height:1.65; color:var(--text); white-space:pre-line; max-height:260px; overflow-y:auto; background:var(--meta-bg); border:1px solid var(--border); border-radius:8px; padding:1rem;">
             \${cleanDesc ? escapeHtml(cleanDesc) : (currentLang === 'fr' ? "Consultez l'offre complète sur le site de l'employeur." : "View full job details directly on the employer's website.")}
           </div>
+          \${(cleanDesc.length < 250 || cleanDesc.endsWith('...')) ? \`
+            <div style="margin-top:0.45rem; font-size:0.8rem; text-align:right;">
+              <a href="\${job.url || detailsUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); font-weight:700; text-decoration:underline;">
+                \${currentLang === 'fr' ? 'Consulter le texte intégral de l\\'annonce ↗' : 'Read full text on employer site ↗'}
+              </a>
+            </div>
+          \` : ''}
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1.25rem;">
