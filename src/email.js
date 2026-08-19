@@ -460,6 +460,46 @@ export function buildTalentMagicLinkEmailHtml({ talent = {}, siteUrl = DEFAULT_S
 }
 
 /**
+ * Template de connexion Magic Link Administrateur
+ */
+export function buildAdminMagicLinkEmailHtml({ adminUser = {}, siteUrl = DEFAULT_SITE_URL }) {
+  const canonicalUrl = (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  const adminUrl = `${canonicalUrl}/admin?token=${encodeURIComponent(adminUser.token || "")}`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accès Administrateur — FullRemote.Jobs</title>
+</head>
+<body style="margin:0; padding:0; background-color:#0b0f19; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#f9fafb;">
+  <div style="max-width:600px; margin:0 auto; padding:32px 16px;">
+    <div style="background-color:#111827; border-radius:16px; padding:32px 24px; box-shadow:0 10px 25px rgba(0,0,0,0.5); border:1px solid #1f2937; text-align:center;">
+      <div style="font-size:36px; line-height:1; margin-bottom:12px;">🛡️</div>
+      <h1 style="font-size:22px; font-weight:800; color:#f9fafb; margin:0; letter-spacing:-0.02em;">
+        Connexion au Cockpit Administrateur
+      </h1>
+      <p style="font-size:14px; color:#9ca3af; margin-top:8px;">
+        Accès SuperAdmin sécurisé pour <strong>${escapeHtml(adminUser.email || "")}</strong>.
+      </p>
+
+      <div style="margin:32px 0;">
+        <a href="${adminUrl}" style="display:inline-block; background-color:#3b82f6; color:#ffffff !important; font-weight:800; font-size:15px; padding:14px 32px; border-radius:8px; text-decoration:none; box-shadow:0 4px 12px rgba(59,130,246,0.4);">
+          ⚡ Ouvrir le Cockpit Admin ↗
+        </a>
+      </div>
+
+      <div style="background-color:#162032; border:1px solid #1f2937; border-radius:12px; padding:14px; font-size:12px; color:#9ca3af; line-height:1.5; text-align:left;">
+        🔒 <strong>Sécurité renforcée :</strong> Ce lien d'accès vous donne les droits de supervision complète sur FullRemote.Jobs. Ne le partagez jamais.
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
  * Template de notification au Talent lors d'une sollicitation recruteur
  */
 export function buildTalentContactNotificationEmailHtml({ talent = {}, contact = {}, siteUrl = DEFAULT_SITE_URL }) {

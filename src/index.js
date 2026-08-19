@@ -33,6 +33,10 @@ import {
   getTalentById,
   getTalentByToken,
   getTalentByEmail,
+  getAdminByToken,
+  getAdminByEmail,
+  getAdminDashboardMetrics,
+  getAllTalentsForAdmin,
   updateTalentStatus,
   recordTalentContact,
 } from "./db.js";
@@ -43,6 +47,7 @@ import {
   matchJobToAlert,
   buildTalentWelcomeEmailHtml,
   buildTalentMagicLinkEmailHtml,
+  buildAdminMagicLinkEmailHtml,
   buildTalentContactNotificationEmailHtml,
 } from "./email.js";
 import {
@@ -63,6 +68,10 @@ import {
   renderManageTalentPage,
   renderTalentLoginPage,
 } from "./talents.js";
+import {
+  renderAdminLoginPage,
+  renderAdminDashboardPage,
+} from "./admin.js";
 import {
   generateRobotsTxt,
   generateLlmsTxt,
@@ -426,6 +435,119 @@ export default {
           ...corsHeaders,
         },
       });
+    }
+
+    // 9.quater Routes Cockpit Exécutif Administrateur : /admin
+    if (pathname === "/admin" || pathname === "/admin/dashboard") {
+      const token = url.searchParams.get("token") || "";
+      let admin = null;
+      if (token && env && env.DB) {
+        await initDb(env.DB);
+        admin = await getAdminByToken(env.DB, token);
+      }
+      if (!admin) {
+        const loginHtml = renderAdminLoginPage({ siteUrl });
+        return new Response(loginHtml, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            ...corsHeaders,
+          },
+        });
+      }
+
+      const [metrics, allTalents] = await Promise.all([
+        getAdminDashboardMetrics(env.DB),
+        getAllTalentsForAdmin(env.DB, { limit: 200 }),
+      ]);
+
+      const html = renderAdminDashboardPage(metrics || {}, allTalents || [], admin, { siteUrl });
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    if (pathname === "/admin/login") {
+      const loginHtml = renderAdminLoginPage({ siteUrl });
+      return new Response(loginHtml, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // API Demande Magic Link Admin : POST /api/admin/magic-link
+    if (pathname === "/api/admin/magic-link" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const email = (body.email || "").trim().toLowerCase();
+
+        if (!email) {
+          return new Response(JSON.stringify({ success: false, error: "Veuillez renseigner votre email." }), {
+            status: 400,
+            headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders },
+          });
+        }
+
+        let adminUser = null;
+        if (env && env.DB) {
+          await initDb(env.DB);
+          adminUser = await getAdminByEmail(env.DB, email);
+        }
+
+        if (adminUser) {
+          const resendApiKey = env.RESEND_API_KEY;
+          const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
+          const magicHtml = buildAdminMagicLinkEmailHtml({ adminUser, siteUrl });
+
+          await sendResendEmail({
+            apiKey: resendApiKey,
+            from: fromEmail,
+            to: email,
+            subject: "🛡️ Votre accès SuperAdmin FullRemote.Jobs",
+            html: magicHtml,
+          });
+
+          return new Response(
+            JSON.stringify({ success: true, message: "Lien magique administrateur envoyé avec succès !" }),
+            { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ success: false, error: "Cet email n'est pas autorisé en tant qu'administrateur." }),
+          { status: 403, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // API Purge des offres obsolètes (> 30j) : POST /api/admin/jobs/purge
+    if (pathname === "/api/admin/jobs/purge" && request.method === "POST") {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const token = body.token || "";
+        let admin = null;
+        if (token && env && env.DB) {
+          admin = await getAdminByToken(env.DB, token);
+        }
+        if (!admin) {
+          return new Response(JSON.stringify({ success: false, error: "Non autorisé" }), { status: 401, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+        }
+
+        const res = await env.DB.prepare("DELETE FROM jobs WHERE datetime(published_at) < datetime('now', '-30 days')").run();
+        return new Response(JSON.stringify({ success: true, purged: res.meta?.changes || 0 }), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+      }
     }
 
     // 9.ter Routes Talent Drops & Reverse Recruiting

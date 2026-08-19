@@ -867,5 +867,210 @@ export async function updateTalentProfileByToken(db, token, data = {}) {
   }
 }
 
+/**
+ * Initialise ou récupère un administrateur par token
+ */
+export async function getAdminByToken(db, token) {
+  if (!db || !token) return null;
+  try {
+    const row = await db.prepare("SELECT * FROM admins WHERE token = ? LIMIT 1").bind(token).first();
+    if (row) return row;
+    // Fallbacks
+    if (token === "adm_hello_94f87a2b6e1c") return { id: "admin_hello", email: "hello@remote-jobs.app", role: "superadmin" };
+    if (token === "adm_charles_5e71c8b39a4d") return { id: "admin_charles", email: "charles@edounze.com", role: "superadmin" };
+    return null;
+  } catch (err) {
+    console.error("Erreur getAdminByToken D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère un administrateur par email
+ */
+export async function getAdminByEmail(db, email) {
+  if (!db || !email) return null;
+  try {
+    const cleanEmail = email.toLowerCase().trim();
+    const row = await db.prepare("SELECT * FROM admins WHERE LOWER(email) = ? LIMIT 1").bind(cleanEmail).first();
+    if (row) return row;
+    if (cleanEmail === "hello@remote-jobs.app") {
+      const token = "adm_hello_94f87a2b6e1c";
+      await db.prepare("INSERT OR IGNORE INTO admins (id, email, token, role) VALUES ('admin_hello', 'hello@remote-jobs.app', ?, 'superadmin')").bind(token).run();
+      return { id: "admin_hello", email: "hello@remote-jobs.app", token, role: "superadmin" };
+    }
+    if (cleanEmail === "charles@edounze.com") {
+      const token = "adm_charles_5e71c8b39a4d";
+      await db.prepare("INSERT OR IGNORE INTO admins (id, email, token, role) VALUES ('admin_charles', 'charles@edounze.com', ?, 'superadmin')").bind(token).run();
+      return { id: "admin_charles", email: "charles@edounze.com", token, role: "superadmin" };
+    }
+    return null;
+  } catch (err) {
+    console.error("Erreur getAdminByEmail D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère les métriques consolidées pour le Dashboard Admin
+ */
+export async function getAdminDashboardMetrics(db) {
+  if (!db) return null;
+  try {
+    const [
+      jobsStats,
+      jobsPast24hRes,
+      talentsStatsRes,
+      contactsStatsRes,
+      alertsStatsRes,
+      pushStatsRes,
+      recentContactsRes,
+      recentTalentsRes,
+      recentLogsRes,
+    ] = await Promise.all([
+      db.prepare(`
+        SELECT 
+          COUNT(*) as total_jobs,
+          SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_jobs,
+          SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive_jobs,
+          SUM(CASE WHEN salary IS NOT NULL AND salary != '' THEN 1 ELSE 0 END) as with_salary
+        FROM jobs
+      `).first(),
+      db.prepare(`
+        SELECT COUNT(*) as count FROM jobs WHERE datetime(published_at) >= datetime('now', '-24 hours')
+      `).first(),
+      db.prepare(`
+        SELECT 
+          COUNT(*) as total_talents,
+          SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_talents,
+          SUM(CASE WHEN status = 'paused' THEN 1 ELSE 0 END) as paused_talents,
+          SUM(CASE WHEN status = 'hired' THEN 1 ELSE 0 END) as hired_talents,
+          SUM(CASE WHEN (cv_data IS NOT NULL AND cv_data != '') OR (cv_url IS NOT NULL AND cv_url != '') THEN 1 ELSE 0 END) as with_cv,
+          SUM(view_count) as total_views,
+          SUM(contact_count) as total_contacts_count
+        FROM talents
+      `).first(),
+      db.prepare(`
+        SELECT 
+          COUNT(*) as total_contacts,
+          SUM(CASE WHEN datetime(created_at) >= datetime('now', '-7 days') THEN 1 ELSE 0 END) as contacts_7d
+        FROM talent_contacts
+      `).first(),
+      db.prepare(`
+        SELECT 
+          COUNT(*) as total_alerts,
+          SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_alerts,
+          SUM(CASE WHEN frequency = 'daily' AND is_active = 1 THEN 1 ELSE 0 END) as daily_alerts,
+          SUM(CASE WHEN frequency = 'weekly' AND is_active = 1 THEN 1 ELSE 0 END) as weekly_alerts
+        FROM email_alerts
+      `).first(),
+      db.prepare(`
+        SELECT 
+          COUNT(*) as total_push,
+          SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_push
+        FROM push_subscriptions
+      `).first(),
+      db.prepare(`
+        SELECT tc.*, t.title as talent_title, t.email as talent_email
+        FROM talent_contacts tc
+        LEFT JOIN talents t ON tc.talent_id = t.id
+        ORDER BY tc.created_at DESC LIMIT 10
+      `).all(),
+      db.prepare(`
+        SELECT * FROM talents ORDER BY created_at DESC LIMIT 20
+      `).all(),
+      db.prepare(`
+        SELECT * FROM notification_logs ORDER BY sent_at DESC LIMIT 15
+      `).all(),
+    ]);
+
+    const bySource = await db.prepare("SELECT source, COUNT(*) as count FROM jobs WHERE is_active = 1 GROUP BY source ORDER BY count DESC").all();
+    const byRegion = await db.prepare("SELECT region_label, region_flag, COUNT(*) as count FROM jobs WHERE is_active = 1 GROUP BY region_id ORDER BY count DESC").all();
+    const byContract = await db.prepare("SELECT contract_type_label, contract_icon, COUNT(*) as count FROM jobs WHERE is_active = 1 GROUP BY contract_type_id ORDER BY count DESC").all();
+
+    return {
+      jobs: {
+        total: jobsStats?.total_jobs || 0,
+        active: jobsStats?.active_jobs || 0,
+        inactive: jobsStats?.inactive_jobs || 0,
+        with_salary: jobsStats?.with_salary || 0,
+        past_24h: jobsPast24hRes?.count || 0,
+        by_source: bySource.results || [],
+        by_region: byRegion.results || [],
+        by_contract: byContract.results || [],
+      },
+      talents: {
+        total: talentsStatsRes?.total_talents || 0,
+        active: talentsStatsRes?.active_talents || 0,
+        paused: talentsStatsRes?.paused_talents || 0,
+        hired: talentsStatsRes?.hired_talents || 0,
+        with_cv: talentsStatsRes?.with_cv || 0,
+        total_views: talentsStatsRes?.total_views || 0,
+        total_contacts: talentsStatsRes?.total_contacts_count || 0,
+        recent: (recentTalentsRes.results || []).map(r => ({ ...r, tags: JSON.parse(r.tags_json || "[]") })),
+      },
+      contacts: {
+        total: contactsStatsRes?.total_contacts || 0,
+        past_7d: contactsStatsRes?.contacts_7d || 0,
+        recent: recentContactsRes.results || [],
+      },
+      alerts: {
+        total: alertsStatsRes?.total_alerts || 0,
+        active: alertsStatsRes?.active_alerts || 0,
+        daily: alertsStatsRes?.daily_alerts || 0,
+        weekly: alertsStatsRes?.weekly_alerts || 0,
+      },
+      push: {
+        total: pushStatsRes?.total_push || 0,
+        active: pushStatsRes?.active_push || 0,
+      },
+      logs: recentLogsRes.results || [],
+    };
+  } catch (err) {
+    console.error("Erreur getAdminDashboardMetrics D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère tous les talents pour l'admin avec pagination et filtres
+ */
+export async function getAllTalentsForAdmin(db, options = {}) {
+  if (!db) return [];
+  try {
+    const limit = options.limit || 100;
+    const status = options.status || "all";
+    const search = (options.search || "").toLowerCase().trim();
+
+    let sql = "SELECT * FROM talents";
+    const params = [];
+    const conditions = [];
+
+    if (status !== "all") {
+      conditions.push("status = ?");
+      params.push(status);
+    }
+    if (search) {
+      conditions.push("(LOWER(title) LIKE ? OR LOWER(email) LIKE ? OR LOWER(primary_stack) LIKE ?)");
+      const s = `%${search}%`;
+      params.push(s, s, s);
+    }
+
+    if (conditions.length > 0) {
+      sql += " WHERE " + conditions.join(" AND ");
+    }
+
+    sql += " ORDER BY created_at DESC LIMIT ?";
+    params.push(limit);
+
+    const { results } = await db.prepare(sql).bind(...params).all();
+    return (results || []).map(r => ({ ...r, tags: JSON.parse(r.tags_json || "[]") }));
+  } catch (err) {
+    console.error("Erreur getAllTalentsForAdmin D1 :", err);
+    return [];
+  }
+}
+
+
 
 
