@@ -522,7 +522,7 @@ export function renderJoinTalentPoolPage(meta = {}) {
         <div class="form-group">
           <label class="form-label">Titre professionnel visé *</label>
           <input type="text" id="talentTitle" name="title" required class="form-input" placeholder="ex: Senior Backend Engineer (Laravel / Go) ou Lead DevOps" />
-          <div class="form-hint">Exemples : Senior Fullstack React/Node, Lead Symfony & Cloud, Staff Data Engineer...</div>
+          <div class="form-hint">Exemples : Senior Fullstack React/Node, Lead Symfony & Cloud, Staff Data Engineer, Fractional CTO...</div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
@@ -548,20 +548,49 @@ export function renderJoinTalentPoolPage(meta = {}) {
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Stack technique principale (mots-clés séparés par des virgules) *</label>
-          <input type="text" id="talentStack" name="primary_stack" required class="form-input" placeholder="ex: PHP, Laravel, Vue.js, PostgreSQL, Docker, AWS" />
-        </div>
-
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
           <div class="form-group">
-            <label class="form-label">Prétentions salariales ou TJM *</label>
-            <input type="text" id="talentSalary" name="salary_expectation" required class="form-input" placeholder="ex: 75k€ - 85k€ / an ou 550€ / j" />
+            <label class="form-label">Zone géographique & Fuseau de travail *</label>
+            <select id="talentLocation" name="location" required class="form-select">
+              <option value="France & Francophonie (UTC+1 / CET)" selected>🇫🇷 France & Francophonie (UTC+1 / CET)</option>
+              <option value="Europe & UK (UTC±0 à UTC+2)">🇪🇺 Europe & UK (UTC±0 à UTC+2)</option>
+              <option value="Worldwide (Global / Anywhere)">🌍 Worldwide / Sans limite (Global Anywhere)</option>
+              <option value="Amériques (EST / PST / UTC-5 à UTC-8)">🇺🇸 Amériques (EST / PST / UTC-5 à UTC-8)</option>
+              <option value="Asie & Pacifique (UTC+7 à UTC+10)">🌏 Asie & Pacifique (UTC+7 à UTC+10)</option>
+              <option value="MEA & Afrique (UTC+0 à UTC+4)">🌍 MEA / Afrique & Moyen-Orient (UTC+0 à UTC+4)</option>
+              <option value="Digital Nomad (Flexible / Async-First)">🏝️ Nomade Digital (Fuseau flexible / Async)</option>
+            </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Zone géographique & Fuseau *</label>
-            <input type="text" id="talentLocation" name="location" required class="form-input" value="France & Europe (UTC+1)" />
+            <label class="form-label">Prétentions salariales ou TJM visé *</label>
+            <select id="talentSalary" name="salary_expectation" required class="form-select">
+              <option value="45k - 55k € / an">💼 CDI : 45k - 55k € / an</option>
+              <option value="55k - 65k € / an">💼 CDI : 55k - 65k € / an</option>
+              <option value="65k - 80k € / an" selected>💼 CDI : 65k - 80k € / an</option>
+              <option value="80k - 100k € / an">💼 CDI : 80k - 100k € / an</option>
+              <option value="100k - 130k € / an">💼 CDI : 100k - 130k € / an</option>
+              <option value="130k - 160k € / an (US Tech)">💼 CDI : 130k - 160k € / an (US Tech / Scale-up)</option>
+              <option value="> 160k € / an (Staff / Principal)">💼 CDI : > 160k € / an (Staff / Principal)</option>
+              <option value="TJM : 350€ - 450€ / jour">⚡ Freelance : 350€ - 450€ / jour (TJM)</option>
+              <option value="TJM : 450€ - 600€ / jour">⚡ Freelance : 450€ - 600€ / jour (TJM)</option>
+              <option value="TJM : 600€ - 800€ / jour">⚡ Freelance : 600€ - 800€ / jour (TJM)</option>
+              <option value="TJM : > 800€ / jour">⚡ Freelance : > 800€ / jour (Expert / Architect)</option>
+              <option value="Gratification Stage / Alternance">🎓 Stage & Alternance : Gratification / Salaire légal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Stack technique principale *</label>
+          <input type="text" id="talentStack" name="primary_stack" required class="form-input" placeholder="ex: PHP, Laravel, Vue.js, PostgreSQL, Docker, AWS" />
+          <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.45rem;">
+            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; align-self:center;">+ Suggestions :</span>
+            ${["PHP", "Laravel", "Symfony", "React", "TypeScript", "Vue.js", "Python", "Go", "Rust", "Java", "C#", "Docker", "Kubernetes", "AWS", "PostgreSQL", "IA/LLM", "Node.js"].map(tag => `
+              <button type="button" onclick="addStackTag('${tag}')" style="font-size:0.72rem; font-weight:600; padding:2px 7px; border-radius:6px; border:1px solid var(--border); background:var(--meta-bg); color:var(--text); cursor:pointer; transition:all 0.15s ease;">
+                + ${tag}
+              </button>
+            `).join("")}
           </div>
         </div>
 
@@ -599,6 +628,16 @@ export function renderJoinTalentPoolPage(meta = {}) {
   </main>
 
   <script>
+    function addStackTag(tag) {
+      const input = document.getElementById('talentStack');
+      if (!input) return;
+      const current = input.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (!current.includes(tag)) {
+        current.push(tag);
+        input.value = current.join(', ');
+      }
+    }
+
     async function submitTalentProfile(e) {
       e.preventDefault();
       const btn = document.getElementById('submitTalentBtn');
@@ -649,7 +688,7 @@ export function renderJoinTalentPoolPage(meta = {}) {
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(239,68,68,0.12)';
         feedback.style.color = '#b91c1c';
-        feedback.textContent = '❌ Erreur réseau lors de la soumission.';
+        feedback.textContent = '❌ Erreur réseau. Veuillez réessayer.';
       } finally {
         btn.disabled = false;
         btn.textContent = '🚀 Activer mon Profil Talent Gratuitement';
