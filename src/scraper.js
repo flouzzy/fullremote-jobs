@@ -52,13 +52,20 @@ export function parseSalaryDetails(rawSalary = "") {
   }
 
   const clean = rawSalary.replace(/\s+/g, " ").trim();
-  const isHourly = /\b(hour|hr|heure|h|tjm|jour|day)\b/i.test(clean);
+  const isDaily = /\b(tjm|jour|day|j)\b/i.test(clean);
+  const isHourly = /\b(hour|hr|heure|h)\b/i.test(clean) && !/\b(month|an|mois|year)\b/i.test(clean);
   const isEur = /€|\beur\b/i.test(clean);
   const isUsd = /\$|\busd\b/i.test(clean);
   const isGbp = /£|\bgbp\b/i.test(clean);
 
+  // Normalisation des k ou K (ex: 44k -> 44000, 50k€ -> 50000)
+  const normalized = clean.replace(/(\d+[\d\s,.]*)\s*[kK]\b/g, (_, p1) => {
+    const base = p1.replace(/[\s,.]/g, "");
+    return String(parseInt(base, 10) * 1000);
+  });
+
   // Extraction des montants numériques
-  const numbers = (clean.match(/\d+[\d\s,.]*/g) || [])
+  const numbers = (normalized.match(/\d+[\d\s,.]*/g) || [])
     .map((n) => parseInt(n.replace(/[\s,.]/g, ""), 10))
     .filter((n) => !isNaN(n) && n > 0);
 
@@ -76,10 +83,16 @@ export function parseSalaryDetails(rawSalary = "") {
   let min = numbers[0];
   let max = numbers.length > 1 ? numbers[1] : min;
 
-  // Conversion taux horaire / journalier vers équivalent annuel indicatif (~1900h / an)
-  if (isHourly && min < 1000) {
-    min = min * 1900;
-    max = max * 1900;
+  // Conversion TJM journalier vers brut annuel indicatif (~218 jours / an)
+  if (isDaily && min < 3000) {
+    min = min * 218;
+    max = max * 218;
+  } else if (isHourly && min < 500) {
+    min = min * 1800;
+    max = max * 1800;
+  } else if (min < 200 && /an|year|annual/i.test(clean)) {
+    min = min * 1000;
+    max = max * 1000;
   }
 
   let min_eur = min;

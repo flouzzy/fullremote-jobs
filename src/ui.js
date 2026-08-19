@@ -1727,12 +1727,46 @@ export function renderHTML(jobs = [], meta = {}) {
       const cleanDesc = cleanSnippet(job.description_snippet);
 
       // Geo-Arbitrage values
-      const eurVal = job.salary_min_eur || (job.salary_max_eur ? Math.round((job.salary_min_eur + job.salary_max_eur)/2) : 65000);
-      const isUsd = (job.currency === "USD" || (job.salary && job.salary.includes("$")));
-      const usdVal = job.salary_min_usd || Math.round(eurVal * 1.09);
-      const pppEquiv = Math.round(eurVal * (isUsd ? 1.35 : 1.15));
-      const netSalariedMonthly = Math.round((eurVal * 0.77) / 12);
-      const tjmEquiv = Math.round(eurVal / 210);
+      const salaryStr = (job.salary || '').trim();
+      let minVal = job.salary_min_eur || 0;
+      let maxVal = job.salary_max_eur || 0;
+      let isUsd = (job.currency === 'USD' || salaryStr.includes('$') || /\\busd\\b/i.test(salaryStr));
+      let isDaily = /\\b(tjm|jour|day|j)\\b/i.test(salaryStr);
+      let isHourly = /\\b(hour|hr|heure|h)\\b/i.test(salaryStr) && !/\\b(month|an|mois|year)\\b/i.test(salaryStr);
+
+      if (salaryStr) {
+        const norm = salaryStr.replace(/(\\d+[\\d\\s,.]*)\\s*[kK]\\b/g, (_, p1) => {
+          return String(parseInt(p1.replace(/[\\s,.]/g, ''), 10) * 1000);
+        });
+        const nums = (norm.match(/\\d+[\\d\\s,.]*/g) || [])
+          .map(n => parseInt(n.replace(/[\\s,.]/g, ''), 10))
+          .filter(n => !isNaN(n) && n > 0);
+        if (nums.length > 0) {
+          minVal = nums[0];
+          maxVal = nums.length > 1 ? nums[1] : minVal;
+          if (isDaily && minVal < 3000) { minVal = minVal * 218; maxVal = maxVal * 218; }
+          else if (isHourly && minVal < 500) { minVal = minVal * 1800; maxVal = maxVal * 1800; }
+          else if (minVal < 200 && /an|year|annual/i.test(salaryStr)) { minVal = minVal * 1000; maxVal = maxVal * 1000; }
+        }
+      }
+
+      const hasSpecifiedSalary = minVal > 0;
+      const baseSalary = hasSpecifiedSalary ? Math.round((minVal + maxVal) / 2) : 55000;
+      let eurGross = baseSalary;
+      let usdGross = baseSalary;
+
+      if (isUsd) {
+        usdGross = baseSalary;
+        eurGross = Math.round(baseSalary / 1.08);
+      } else {
+        eurGross = baseSalary;
+        usdGross = Math.round(baseSalary * 1.08);
+      }
+
+      const livingMultiplier = isUsd ? 1.30 : (hasSpecifiedSalary ? 1.15 : 1.0);
+      const pppEquiv = Math.round(eurGross * livingMultiplier);
+      const netSalariedMonthly = Math.round((eurGross * 0.77) / 12);
+      const tjmEquiv = Math.round((eurGross / 218) * 1.5);
 
       body.innerHTML = \`
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">

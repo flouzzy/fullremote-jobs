@@ -297,17 +297,46 @@ export function renderJobDetailPage(job, meta = {}) {
 
       <!-- Radar de Pouvoir d'Achat & Geo-Arbitrage -->
       ${(() => {
-        const hasSalary = job.salary_min_eur > 0 || (job.salary && job.salary.length > 2);
-        const eurVal = job.salary_min_eur || (job.salary_max_eur ? Math.round((job.salary_min_eur + job.salary_max_eur)/2) : 65000);
-        const usdVal = job.salary_min_usd || Math.round(eurVal * 1.09);
-        const isUsd = (job.currency === "USD" || (job.salary && job.salary.includes("$")));
-        
-        // Pouvoir d'achat équivalent en France (Arbitrage US/EU)
-        const livingMultiplier = isUsd ? 1.35 : 1.15;
-        const equivalentPpp = Math.round(eurVal * livingMultiplier);
-        const netSalariedMonthly = Math.round((eurVal * 0.77) / 12);
-        const netFreelanceMonthly = Math.round((eurVal * 0.88) / 12);
-        const tjmEquivalent = Math.round(eurVal / 210);
+        const salaryStr = (job.salary || "").trim();
+        let min = job.salary_min_eur || 0;
+        let max = job.salary_max_eur || 0;
+        let isUsd = (job.currency === "USD" || salaryStr.includes("$") || /\busd\b/i.test(salaryStr));
+        let isDaily = /\b(tjm|jour|day|j)\b/i.test(salaryStr);
+        let isHourly = /\b(hour|hr|heure|h)\b/i.test(salaryStr) && !/\b(month|an|mois|year)\b/i.test(salaryStr);
+
+        if (salaryStr) {
+          const norm = salaryStr.replace(/(\d+[\d\s,.]*)\s*[kK]\b/g, (_, p1) => {
+            return String(parseInt(p1.replace(/[\s,.]/g, ""), 10) * 1000);
+          });
+          const nums = (norm.match(/\d+[\d\s,.]*/g) || [])
+            .map(n => parseInt(n.replace(/[\s,.]/g, ""), 10))
+            .filter(n => !isNaN(n) && n > 0);
+          if (nums.length > 0) {
+            min = nums[0];
+            max = nums.length > 1 ? nums[1] : min;
+            if (isDaily && min < 3000) { min = min * 218; max = max * 218; }
+            else if (isHourly && min < 500) { min = min * 1800; max = max * 1800; }
+            else if (min < 200 && /an|year|annual/i.test(salaryStr)) { min = min * 1000; max = max * 1000; }
+          }
+        }
+
+        const hasSpecifiedSalary = min > 0;
+        const baseSalary = hasSpecifiedSalary ? Math.round((min + max) / 2) : 55000;
+        let eurGross = baseSalary;
+        let usdGross = baseSalary;
+
+        if (isUsd) {
+          usdGross = baseSalary;
+          eurGross = Math.round(baseSalary / 1.08);
+        } else {
+          eurGross = baseSalary;
+          usdGross = Math.round(baseSalary * 1.08);
+        }
+
+        const livingMultiplier = isUsd ? 1.30 : (hasSpecifiedSalary ? 1.15 : 1.0);
+        const equivalentPpp = Math.round(eurGross * livingMultiplier);
+        const netSalariedMonthly = Math.round((eurGross * 0.77) / 12);
+        const tjmEquivalent = Math.round((eurGross / 218) * 1.5);
 
         return `
         <section class="geo-radar-card" style="background: linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(16,185,129,0.06) 100%); border: 1px solid rgba(37,99,235,0.25); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem;">
@@ -325,10 +354,10 @@ export function renderJobDetailPage(job, meta = {}) {
             <div style="background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:10px;">
               <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;" data-i18n="radar_base_salary">Rémunération Brute</div>
               <div style="font-size:1.25rem; font-weight:800; color:var(--emerald); margin-top:0.25rem;">
-                ${job.salary ? escapeHtml(job.salary) : `~${eurVal.toLocaleString('fr-FR')} € / an`}
+                ${job.salary ? escapeHtml(job.salary) : `~${eurGross.toLocaleString('fr-FR')} € / an`}
               </div>
               <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.15rem;">
-                ${isUsd ? `≈ ${eurVal.toLocaleString('fr-FR')} € (taux de change direct)` : `≈ ${usdVal.toLocaleString('en-US')} $ USD`}
+                ${isUsd ? `≈ ${eurGross.toLocaleString('fr-FR')} € (taux de change 1€ = 1.08$)` : `≈ ${usdGross.toLocaleString('en-US')} $ USD`}
               </div>
             </div>
 
@@ -338,7 +367,7 @@ export function renderJobDetailPage(job, meta = {}) {
                 ≈ ${equivalentPpp.toLocaleString('fr-FR')} € / an
               </div>
               <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.15rem;" data-i18n="radar_ppp_desc">
-                Pouvoir d'achat réel ajusté au coût de la vie
+                ${isUsd ? "Arbitrage US/FR (+30% pouvoir d'achat)" : "Gain province/remote (+15% vs Paris)"}
               </div>
             </div>
 
@@ -354,7 +383,7 @@ export function renderJobDetailPage(job, meta = {}) {
           </div>
 
           <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
-            💡 <em>En télétravail international depuis la France, un contrat US ou UK à <strong>${isUsd ? '$' + usdVal.toLocaleString('en-US') : eurVal.toLocaleString('fr-FR') + ' €'}</strong> offre un niveau de vie nettement supérieur à la moyenne locale.</em>
+            💡 <em>En télétravail depuis la France, un contrat à <strong>${isUsd ? '$' + usdGross.toLocaleString('en-US') : eurGross.toLocaleString('fr-FR') + ' €'}</strong> génère un net avant impôt de <strong>~${netSalariedMonthly.toLocaleString('fr-FR')} € / mois</strong> en CDI ou un TJM de <strong>~${tjmEquivalent} € / j</strong> en Freelance.</em>
           </div>
         </section>
         `;
