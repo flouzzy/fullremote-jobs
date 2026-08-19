@@ -1249,7 +1249,7 @@ export function renderHTML(jobs = [], meta = {}) {
             <span>FullRemote<span class="brand-accent">.Jobs</span></span>
           </div>
           <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55; max-width:320px;" data-i18n="footer_brand_desc" data-i18n-html="true">
-            L'annuaire mondial des carrières 100% télétravail. Made with ❤️ by <a href="https://edounze.com" target="_blank" style="color:var(--primary); font-weight:600;">Charles EDOU NZE</a>.
+            L'annuaire mondial des carrières 100% télétravail. Built with ❤️ by <a href="https://edounze.com" target="_blank" style="color:var(--primary); font-weight:600;">Charles EDOU NZE</a>.
           </p>
         </div>
         <div>
@@ -1401,7 +1401,7 @@ export function renderHTML(jobs = [], meta = {}) {
         digest_sub: "Recevez chaque matin à 08h00 les 10 meilleures opportunités vérifiées 100% télétravail directement dans votre boîte mail. 0 spam, désinscription en 1 clic.",
         digest_input_ph: "Votre adresse email (ex: alex@gmail.com)",
         digest_btn: "🚀 S'inscrire",
-        footer_brand_desc: "L'annuaire mondial des carrières 100% télétravail. Made with ❤️ by <a href='https://edounze.com' target='_blank' style='color:var(--primary); font-weight:600;'>Charles EDOU NZE</a>.",
+        footer_brand_desc: "L'annuaire mondial des carrières 100% télétravail. Built with ❤️ by <a href='https://edounze.com' target='_blank' style='color:var(--primary); font-weight:600;'>Charles EDOU NZE</a>.",
         footer_col_plat: "Plateforme",
         footer_col_ai: "IA & Développeurs",
         footer_col_res: "Ressources",
@@ -1488,7 +1488,7 @@ export function renderHTML(jobs = [], meta = {}) {
         digest_sub: "Get the top 10 verified 100% remote opportunities delivered directly to your inbox every morning at 8:00 AM. 0 spam, 1-click unsubscribe.",
         digest_input_ph: "Your email address (e.g. alex@gmail.com)",
         digest_btn: "🚀 Subscribe for Free",
-        footer_brand_desc: "The worldwide directory for 100% remote careers. Made with ❤️ by <a href='https://edounze.com' target='_blank' style='color:var(--primary); font-weight:600;'>Charles EDOU NZE</a>.",
+        footer_brand_desc: "The worldwide directory for 100% remote careers. Built with ❤️ by <a href='https://edounze.com' target='_blank' style='color:var(--primary); font-weight:600;'>Charles EDOU NZE</a>.",
         footer_col_plat: "Platform",
         footer_col_ai: "AI & Developers",
         footer_col_res: "Resources",
