@@ -8,7 +8,7 @@ const USER_AGENT = "FullRemoteJobsBot/1.0 (+https://fullremote-jobs.edounze.com)
 /**
  * Nettoie et extrait un texte propre à partir d'un fragment HTML ou XML
  */
-export function stripHtml(html = "") {
+export function stripHtml(html = "", preserveParagraphs = false) {
   if (!html) return "";
   let clean = String(html);
   // 1. Décodage préventif des entités HTML (flux RSS encodant &lt;p&gt;)
@@ -23,6 +23,15 @@ export function stripHtml(html = "") {
       .replace(/&nbsp;/gi, " ");
   }
 
+  // Conversion des sauts de ligne et listes si preserveParagraphs
+  if (preserveParagraphs) {
+    clean = clean
+      .replace(/<br\s*[\/]?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "• ");
+  }
+
   // 2. Suppression stricte des balises scripts, styles et HTML
   clean = clean
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
@@ -30,6 +39,14 @@ export function stripHtml(html = "") {
     .replace(/<[^>]+>/g, " ");
 
   // 3. Nettoyage des entités résiduelles et espaces multiples
+  if (preserveParagraphs) {
+    return clean
+      .replace(/&[a-z0-9#]+;/gi, " ")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n\s*\n\s*\n+/g, "\n\n")
+      .trim();
+  }
+
   return clean
     .replace(/&[a-z0-9#]+;/gi, " ")
     .replace(/\s+/g, " ")
@@ -621,7 +638,7 @@ async function scrapeRemotive() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.publication_date || new Date().toISOString(),
-          description_snippet: stripHtml(j.description).slice(0, 280) + "...",
+          description_snippet: stripHtml(j.description, true).slice(0, 4000),
           source: "Remotive",
           language: lang,
           is_verified: 1,
@@ -706,7 +723,7 @@ async function scrapeJobicy() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.pubDate || new Date().toISOString(),
-          description_snippet: stripHtml(j.jobExcerpt || j.jobDescription).slice(0, 280) + "...",
+          description_snippet: stripHtml(j.jobDescription || j.jobExcerpt || "", true).slice(0, 4000),
           source: "Jobicy",
           language: lang,
           is_verified: 1,
@@ -765,7 +782,7 @@ async function scrapeArbeitnow() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.created_at ? new Date(j.created_at * 1000).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(j.description).slice(0, 280) + "...",
+          description_snippet: stripHtml(j.description, true).slice(0, 4000),
           source: "Arbeitnow",
           language: lang,
           is_verified: 1,
@@ -830,7 +847,7 @@ async function scrapeRemoteOk() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.date ? new Date(j.date).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(j.description).slice(0, 280) + "...",
+          description_snippet: stripHtml(j.description, true).slice(0, 4000),
           source: "RemoteOK",
           language: lang,
           is_verified: 1,
@@ -907,7 +924,7 @@ async function scrapeWeWorkRemotely() {
         salary_max_usd: salaryObj.max_usd,
         currency: salaryObj.currency,
         published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-        description_snippet: stripHtml(item.description).slice(0, 280) + "...",
+        description_snippet: stripHtml(item.description, true).slice(0, 4000),
         source: "WeWorkRemotely",
         language: lang,
         is_verified: 1,
@@ -983,7 +1000,7 @@ async function scrapeHackerNews() {
         salary_max_usd: salaryObj.max_usd,
         currency: salaryObj.currency,
         published_at: c.time ? new Date(c.time * 1000).toISOString() : new Date().toISOString(),
-        description_snippet: clean.slice(0, 280) + "...",
+        description_snippet: stripHtml(c.text, true).slice(0, 4000),
         source: "HackerNews",
         language: lang,
         is_verified: 1,
@@ -1067,7 +1084,7 @@ export async function scrapeHimalayas() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.pubDate ? new Date(j.pubDate * 1000).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(j.excerpt || j.description || "").slice(0, 280) + "...",
+          description_snippet: stripHtml(j.description || j.excerpt || "", true).slice(0, 4000),
           source: "Himalayas",
           language: lang,
           is_verified: 1,
@@ -1109,7 +1126,8 @@ export async function scrapeNoDesk() {
       const fullTitle = titleMatch ? titleMatch[1] : "";
       const url = linkMatch ? linkMatch[1] : "";
       const pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
-      const desc = descMatch ? stripHtml(descMatch[1]) : "";
+      const rawDesc = descMatch ? descMatch[1] : "";
+      const desc = stripHtml(rawDesc, true);
 
       let title = fullTitle;
       let company = "Entreprise Remote";
@@ -1159,7 +1177,7 @@ export async function scrapeNoDesk() {
         salary_max_usd: salaryObj.max_usd,
         currency: salaryObj.currency,
         published_at: pubDate,
-        description_snippet: desc.slice(0, 280) + "...",
+        description_snippet: desc.slice(0, 4000),
         source: "NoDesk",
         language: lang,
         is_verified: 1,
@@ -1227,7 +1245,7 @@ export async function scrapeJobicyFrance() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.pubDate ? new Date(j.pubDate).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(j.jobExcerpt || j.jobDescription || "").slice(0, 280) + "...",
+          description_snippet: stripHtml(j.jobDescription || j.jobExcerpt || "", true).slice(0, 4000),
           source: "JobicyFR",
           language: lang,
           is_verified: 1,
@@ -1334,7 +1352,7 @@ export async function scrapeWelcomeToTheJungle() {
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
           published_at: j.published_at || new Date().toISOString(),
-          description_snippet: stripHtml(j.profile || title).slice(0, 280) + "...",
+          description_snippet: stripHtml(j.profile || j.description || title, true).slice(0, 4000),
           source: "WelcomeToTheJungle",
           language: lang,
           is_verified: 1,
@@ -1401,7 +1419,7 @@ export async function scrapeFreeWork() {
         salary_max_usd: salaryObj.max_usd,
         currency: salaryObj.currency,
         published_at: j.publishedAt || new Date().toISOString(),
-        description_snippet: stripHtml(title).slice(0, 280) + "...",
+        description_snippet: stripHtml(j.description || j.profile || title, true).slice(0, 4000),
         source: "Free-Work",
         language: "fr",
         is_verified: 1,
@@ -1557,7 +1575,7 @@ export async function scrapeLaraJobs() {
           salary_max_usd: 0,
           currency: "USD",
           published_at: pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(desc).slice(0, 280) + "...",
+          description_snippet: stripHtml(desc, true).slice(0, 4000),
           source: "LaraJobs",
           language: "en",
           is_verified: 1,

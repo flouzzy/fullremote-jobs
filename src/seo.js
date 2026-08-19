@@ -19,7 +19,7 @@ function escapeHtml(str = "") {
 export function renderJobDetailPage(job, meta = {}) {
   const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
   const canonicalUrl = `${siteUrl}/jobs/${encodeURIComponent(job.id)}`;
-  const cleanSnippet = stripHtml(job.description_snippet || "");
+  const cleanSnippet = stripHtml(job.description_snippet || "", true);
   const title = `${job.title} chez ${job.company} (100% Full Remote)`;
   const description = `${job.title} — ${job.company} recrute en 100% télétravail (${job.region}). Contrat : ${job.contractType || "CDI / Full-time"}.${job.salary ? ` Salaire : ${job.salary}.` : ""} Postulez directement sans inscription.`;
 
@@ -389,11 +389,16 @@ export function renderJobDetailPage(job, meta = {}) {
         `;
       })()}
 
-      <div style="margin-bottom: 2rem;">
-        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text);" data-i18n="overview_title">Aperçu du poste</h2>
-        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.7;">
-          ${escapeHtml(cleanSnippet || "Aucune description détaillée disponible.")}
-        </p>
+      <div style="margin-bottom: 2.25rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);" data-i18n="overview_title">Description Complète du Poste</h2>
+        <div style="font-size: 0.96rem; color: var(--text); line-height: 1.7; white-space: pre-line; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+          ${escapeHtml(cleanSnippet || "Consultez l'offre complète directement sur le site de l'employeur.")}
+        </div>
+        <div style="margin-top:0.75rem; text-align:right;">
+          <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; font-weight:700; color:var(--primary); text-decoration:underline;">
+            Consulter l'annonce officielle intégrale chez ${escapeHtml(job.company)} ↗
+          </a>
+        </div>
       </div>
 
       <!-- Module 10x : AI Direct-to-Hiring-Manager Pitch Generator -->

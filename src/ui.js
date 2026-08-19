@@ -1799,8 +1799,13 @@ export function renderHTML(jobs = [], meta = {}) {
           </div>
         </div>
 
-        <div style="font-size:0.92rem; line-height:1.6; color:var(--text); margin-bottom:1.25rem;">
-          \${cleanDesc ? escapeHtml(cleanDesc) : (currentLang === 'fr' ? "Consultez l'offre complète sur le site de l'employeur." : "View full job details directly on the employer's website.")}
+        <div style="margin-bottom:1.25rem;">
+          <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.4rem;">
+            \${currentLang === 'fr' ? 'Description Complète du Poste' : 'Full Job Description'}
+          </div>
+          <div style="font-size:0.92rem; line-height:1.65; color:var(--text); white-space:pre-line; max-height:260px; overflow-y:auto; background:var(--meta-bg); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+            \${cleanDesc ? escapeHtml(cleanDesc) : (currentLang === 'fr' ? "Consultez l'offre complète sur le site de l'employeur." : "View full job details directly on the employer's website.")}
+          </div>
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1.25rem;">
