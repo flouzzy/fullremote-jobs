@@ -330,6 +330,11 @@ export default {
     const pathname = url.pathname;
     const siteUrl = ((env && env.SITE_URL) || `${url.protocol}//${url.host}`).replace(/\/+$/, "");
 
+    // Redirection permanente 301 de l'ancien domaine vers remote-jobs.app
+    if (url.host.includes("edounze.com")) {
+      return Response.redirect(`https://remote-jobs.app${pathname}${url.search}`, 301);
+    }
+
     // Headers standards de sécurité et CORS
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
