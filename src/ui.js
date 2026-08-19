@@ -1699,6 +1699,26 @@ export function renderHTML(jobs = [], meta = {}) {
       };
     }
 
+    function timeAgo(dateStr, lang = 'fr') {
+      if (!dateStr) return lang === 'fr' ? 'Récemment' : 'Recently';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return lang === 'fr' ? 'Récemment' : 'Recently';
+      const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+      if (diffSec < 3600) {
+        const mins = Math.max(1, Math.floor(diffSec / 60));
+        return lang === 'fr' ? \`Il y a \${mins} min\` : \`\${mins}m ago\`;
+      }
+      if (diffSec < 86400) {
+        const hours = Math.floor(diffSec / 3600);
+        return lang === 'fr' ? \`Il y a \${hours} h\` : \`\${hours}h ago\`;
+      }
+      const days = Math.floor(diffSec / 86400);
+      if (days === 1) return lang === 'fr' ? 'Hier' : 'Yesterday';
+      if (days < 30) return lang === 'fr' ? \`Il y a \${days} j\` : \`\${days}d ago\`;
+      const months = Math.floor(days / 30);
+      return lang === 'fr' ? \`Il y a \${months} mois\` : \`\${months}mo ago\`;
+    }
+
     function cleanSnippet(text) {
       if (!text) return '';
       try {
