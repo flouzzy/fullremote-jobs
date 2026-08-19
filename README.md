@@ -2,12 +2,12 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-SQLite_Serverless-5B21B6?style=for-the-badge&logo=sqlite&logoColor=white)](https://developers.cloudflare.com/d1/)
-[![Cron Trigger](https://img.shields.io/badge/Cron_Trigger-0_6_*_*_*-4F46E5?style=for-the-badge&logo=clock&logoColor=white)](https://fullremote-jobs.edounze.com)
-[![Google Jobs SEO](https://img.shields.io/badge/SEO-Schema.org_JobPosting-10B981?style=for-the-badge&logo=google&logoColor=white)](https://fullremote-jobs.edounze.com)
-[![RSS Feed](https://img.shields.io/badge/RSS-Flux_Officiel-FFA500?style=for-the-badge&logo=rss&logoColor=white)](https://fullremote-jobs.edounze.com/rss)
-[![Site Officiel](https://img.shields.io/badge/Site_Officiel-fullremote--jobs.edounze.com-0284C7?style=for-the-badge&logo=google-chrome&logoColor=white)](https://fullremote-jobs.edounze.com)
+[![Cron Trigger](https://img.shields.io/badge/Cron_Trigger-0_6_*_*_*-4F46E5?style=for-the-badge&logo=clock&logoColor=white)](https://remote-jobs.app)
+[![Google Jobs SEO](https://img.shields.io/badge/SEO-Schema.org_JobPosting-10B981?style=for-the-badge&logo=google&logoColor=white)](https://remote-jobs.app)
+[![RSS Feed](https://img.shields.io/badge/RSS-Flux_Officiel-FFA500?style=for-the-badge&logo=rss&logoColor=white)](https://remote-jobs.app/rss)
+[![Site Officiel](https://img.shields.io/badge/Site_Officiel-fullremote--jobs.edounze.com-0284C7?style=for-the-badge&logo=google-chrome&logoColor=white)](https://remote-jobs.app)
 
-> **Site officiel en production : [https://fullremote-jobs.edounze.com](https://fullremote-jobs.edounze.com)**
+> **Site officiel en production : [https://remote-jobs.app](https://remote-jobs.app)**
 
 Agrégateur intelligent de postes **100% full remote** (CDI, Freelance, CDD, Stage) en **français** et en **anglais**, sans aucune inscription requise. Les offres sont collectées, dédoublonnées et normalisées chaque jour à **6h00 UTC** via un Cloudflare Worker autonome avec persistance SQL **Cloudflare D1**.
 
@@ -96,7 +96,7 @@ Agrégateur intelligent de postes **100% full remote** (CDI, Freelance, CDD, Sta
 
 ### 1. Endpoint JSON des offres
 ```http
-GET https://fullremote-jobs.edounze.com/api/jobs?region=worldwide&contract=cdi_fulltime&min_salary=75000&page=1&limit=30
+GET https://remote-jobs.app/api/jobs?region=worldwide&contract=cdi_fulltime&min_salary=75000&page=1&limit=30
 ```
 
 **Paramètres disponibles :**
@@ -111,17 +111,17 @@ GET https://fullremote-jobs.edounze.com/api/jobs?region=worldwide&contract=cdi_f
 
 ### 2. Flux RSS 2.0 officiel
 ```http
-GET https://fullremote-jobs.edounze.com/rss
+GET https://remote-jobs.app/rss
 ```
 
 ### 3. Fiches SEO individuelles Google Jobs
 ```http
-GET https://fullremote-jobs.edounze.com/jobs/:id
+GET https://remote-jobs.app/jobs/:id
 ```
 ### 4. Alertes Email Personnalisées & Notifications Web Push
 - **Inscription Alerte Email** :
   ```http
-  POST https://fullremote-jobs.edounze.com/api/alerts/subscribe
+  POST https://remote-jobs.app/api/alerts/subscribe
   Content-Type: application/json
 
   {
@@ -135,25 +135,25 @@ GET https://fullremote-jobs.edounze.com/jobs/:id
   ```
 - **Désinscription Alerte (1-clic)** :
   ```http
-  GET https://fullremote-jobs.edounze.com/api/alerts/unsubscribe?token=<TOKEN>
+  GET https://remote-jobs.app/api/alerts/unsubscribe?token=<TOKEN>
   ```
 - **Souscription Web Push (Navigateur)** :
   ```http
-  POST https://fullremote-jobs.edounze.com/api/notifications/subscribe
+  POST https://remote-jobs.app/api/notifications/subscribe
   Content-Type: application/json
   ```
 - **Clé Publique VAPID Web Push** :
   ```http
-  GET https://fullremote-jobs.edounze.com/api/notifications/vapid-public-key
+  GET https://remote-jobs.app/api/notifications/vapid-public-key
   ```
 
 ### 5. Protocole IA, GEO & Serveur MCP (Model Context Protocol)
-- **Index LLM Standard (`/llms.txt`)** : `GET https://fullremote-jobs.edounze.com/llms.txt`
-- **Catalogue Complet Markdown (`/llms-full.txt` ou `/jobs.md`)** : `GET https://fullremote-jobs.edounze.com/llms-full.txt`
-- **Spécification OpenAPI 3.0** : `GET https://fullremote-jobs.edounze.com/openapi.json`
-- **Manifeste OpenAI Plugin** : `GET https://fullremote-jobs.edounze.com/.well-known/ai-plugin.json`
-- **Serveur MCP (Claude Desktop, Cursor, AI Agents)** : `POST https://fullremote-jobs.edounze.com/mcp`
-- **Page Publication Recruteurs B2B** : `GET https://fullremote-jobs.edounze.com/post-a-job`
+- **Index LLM Standard (`/llms.txt`)** : `GET https://remote-jobs.app/llms.txt`
+- **Catalogue Complet Markdown (`/llms-full.txt` ou `/jobs.md`)** : `GET https://remote-jobs.app/llms-full.txt`
+- **Spécification OpenAPI 3.0** : `GET https://remote-jobs.app/openapi.json`
+- **Manifeste OpenAI Plugin** : `GET https://remote-jobs.app/.well-known/ai-plugin.json`
+- **Serveur MCP (Claude Desktop, Cursor, AI Agents)** : `POST https://remote-jobs.app/mcp`
+- **Page Publication Recruteurs B2B** : `GET https://remote-jobs.app/post-a-job`
 
 ---
 

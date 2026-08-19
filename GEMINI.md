@@ -5,12 +5,16 @@
   ```json
   "routes": [
     {
+      "pattern": "remote-jobs.app",
+      "custom_domain": true
+    },
+    {
       "pattern": "remote-jobs.edounze.com",
       "custom_domain": true
     }
   ]
   ```
-  *Sans cette directive, `wrangler deploy` ne met à jour que `workers.dev`, laissant `remote-jobs.edounze.com` sur d'anciennes versions en cache.*
+  *Sans cette directive, `wrangler deploy` ne met à jour que `workers.dev`, laissant les domaines personnalisés sur d'anciennes versions en cache.*
 - **Cache CDN Edge** : Le cache HTTP de production est configuré à `Cache-Control: public, max-age=60, s-maxage=900, stale-while-revalidate=86400`.
 
 ## 2. Emails Transactionnels & Domaine Expéditeur

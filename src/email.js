@@ -3,7 +3,7 @@
  * Templates HTML optimisés pour tous les clients mails (Gmail, Apple Mail, Outlook) avec styles inline 100% lisibles
  */
 
-export const DEFAULT_SITE_URL = "https://remote-jobs.edounze.com";
+export const DEFAULT_SITE_URL = "https://remote-jobs.app";
 
 /**
  * Envoie un email via l'API REST de Resend
@@ -213,7 +213,7 @@ export function buildWelcomeEmailHtml({ alert, siteUrl = DEFAULT_SITE_URL }) {
 
     <!-- Footer -->
     <div style="text-align:center; font-size:12px; color:#64748b; margin-top:28px; line-height:1.6;">
-      Cet email vous a été envoyé car vous avez activé une alerte sur <a href="${canonicalUrl}" style="color:#2563eb; text-decoration:underline;">remote-jobs.edounze.com</a>.<br>
+      Cet email vous a été envoyé car vous avez activé une alerte sur <a href="${canonicalUrl}" style="color:#2563eb; text-decoration:underline;">${new URL(canonicalUrl).hostname}</a>.<br>
       Pour ne plus recevoir ces alertes : <a href="${unsubscribeUrl}" style="color:#64748b; text-decoration:underline;">Se désinscrire en 1 clic</a>.
     </div>
   </div>
@@ -336,7 +336,7 @@ export function buildJobDigestEmailHtml({
 
     <!-- Footer -->
     <div style="text-align:center; font-size:12px; color:#64748b; margin-top:28px; line-height:1.6;">
-      Vous recevez cette alerte pour <strong>${escapeHtml(alert.email)}</strong> sur <a href="${canonicalUrl}" style="color:#2563eb; text-decoration:underline;">remote-jobs.edounze.com</a>.<br>
+      Vous recevez cette alerte pour <strong>${escapeHtml(alert.email)}</strong> sur <a href="${canonicalUrl}" style="color:#2563eb; text-decoration:underline;">${new URL(canonicalUrl).hostname}</a>.<br>
       Pour modifier vos filtres ou vous désinscrire : <a href="${unsubscribeUrl}" style="color:#64748b; text-decoration:underline;">Se désinscrire en 1 clic</a>.
     </div>
   </div>

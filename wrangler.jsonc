@@ -8,6 +8,10 @@
   },
   "routes": [
     {
+      "pattern": "remote-jobs.app",
+      "custom_domain": true
+    },
+    {
       "pattern": "remote-jobs.edounze.com",
       "custom_domain": true
     }

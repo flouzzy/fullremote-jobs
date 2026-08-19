@@ -3,7 +3,7 @@
  * Sources : Remotive, Jobicy, Arbeitnow, RemoteOK, We Work Remotely, Hacker News
  */
 
-const USER_AGENT = "FullRemoteJobsBot/1.0 (+https://fullremote-jobs.edounze.com)";
+const USER_AGENT = "FullRemoteJobsBot/1.0 (+https://remote-jobs.app)";
 
 /**
  * Nettoie et extrait un texte propre à partir d'un fragment HTML ou XML

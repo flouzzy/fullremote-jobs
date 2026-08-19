@@ -17,7 +17,7 @@ function escapeHtml(str = "") {
  * Génère une page HTML dédiée pour une offre avec balises Schema.org JobPosting et OpenGraph
  */
 export function renderJobDetailPage(job, meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const canonicalUrl = `${siteUrl}/jobs/${encodeURIComponent(job.id)}`;
   const cleanSnippet = stripHtml(job.description_snippet || "", true);
   const title = `${job.title} chez ${job.company} (100% Full Remote)`;
@@ -1115,7 +1115,7 @@ export const PROGRAMMATIC_PAGES = {
  * Génère une page landing programmatique dédiée (SEO & Conversion)
  */
 export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs = [], meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const canonicalUrl = `${siteUrl}/${config.slug}`;
   const title = `${config.title_fr} — FullRemote.Jobs`;
   const description = config.desc_fr;
@@ -1627,7 +1627,7 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
 /**
  * Génère le flux RSS 2.0 officiel
  */
-export function generateRssFeed(jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
+export function generateRssFeed(jobs = [], siteUrl = "https://remote-jobs.app") {
   const itemsXml = jobs
     .slice(0, 60)
     .map((j) => {
@@ -1670,7 +1670,7 @@ export function generateRssFeed(jobs = [], siteUrl = "https://remote-jobs.edounz
 /**
  * Génère le sitemap XML (Offres individuelles + Pages d'atterrissage programmatiques SEO)
  */
-export function generateSitemap(jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
+export function generateSitemap(jobs = [], siteUrl = "https://remote-jobs.app") {
   const programmaticUrlsXml = Object.keys(PROGRAMMATIC_PAGES)
     .map(
       (slug) => `

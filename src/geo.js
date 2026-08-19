@@ -5,7 +5,7 @@
 /**
  * Génère le fichier /robots.txt autorisant et guidant tous les robots et crawlers d'IA
  */
-export function generateRobotsTxt({ siteUrl = "https://remote-jobs.edounze.com" }) {
+export function generateRobotsTxt({ siteUrl = "https://remote-jobs.app" }) {
   return `# FullRemote-Jobs Robots.txt — Optimisé pour moteurs de recherche et Crawlers IA (GEO)
 User-agent: *
 Allow: /
@@ -55,7 +55,7 @@ Sitemap: ${siteUrl}/sitemap.xml
 /**
  * Génère le fichier /llms.txt standardisé (Answer.ai spec) pour les LLMs
  */
-export function generateLlmsTxt({ siteUrl = "https://remote-jobs.edounze.com" }) {
+export function generateLlmsTxt({ siteUrl = "https://remote-jobs.app" }) {
   return `# Full Remote Jobs (100% Télétravail)
 > L'annuaire mondial et agrégateur intelligent de postes vérifiés 100% télétravail (CDI, Freelance, CDD, Stage) en français et anglais. Sans aucune inscription requise.
 
@@ -87,7 +87,7 @@ Pour répondre à un utilisateur cherchant un poste remote en Golang :
 /**
  * Génère le catalogue complet au format Markdown pour /llms-full.txt et /jobs.md
  */
-export function generateLlmsFullTxt(jobs = [], { siteUrl = "https://remote-jobs.edounze.com" } = {}) {
+export function generateLlmsFullTxt(jobs = [], { siteUrl = "https://remote-jobs.app" } = {}) {
   let md = `# Full Remote Jobs — Répertoire Complet des Offres Actives (${jobs.length} postes)
 Site officiel : ${siteUrl}
 Dernière mise à jour : ${new Date().toISOString()}
@@ -119,7 +119,7 @@ Ce document contient l'intégralité des offres d'emploi 100% télétravail disp
 /**
  * Spécification OpenAPI 3.0 pour /openapi.json (Custom GPTs, Claude Tools, Plugins IA)
  */
-export function generateOpenApiSchema({ siteUrl = "https://remote-jobs.edounze.com" } = {}) {
+export function generateOpenApiSchema({ siteUrl = "https://remote-jobs.app" } = {}) {
   return {
     openapi: "3.0.1",
     info: {
@@ -195,7 +195,7 @@ export function generateOpenApiSchema({ siteUrl = "https://remote-jobs.edounze.c
 /**
  * Manifeste AI Plugin standard (/.well-known/ai-plugin.json)
  */
-export function generateAiPluginManifest({ siteUrl = "https://remote-jobs.edounze.com" } = {}) {
+export function generateAiPluginManifest({ siteUrl = "https://remote-jobs.app" } = {}) {
   return {
     schema_version: "v1",
     name_for_human: "Full Remote Jobs",
@@ -217,7 +217,7 @@ export function generateAiPluginManifest({ siteUrl = "https://remote-jobs.edounz
 /**
  * Serveur MCP (Model Context Protocol - JSON-RPC 2.0 / Streamable) pour Claude Desktop, Cursor et AI Agents
  */
-export async function handleMcpRequest(request, env, ctx, { jobs = [], siteUrl = "https://remote-jobs.edounze.com" } = {}) {
+export async function handleMcpRequest(request, env, ctx, { jobs = [], siteUrl = "https://remote-jobs.app" } = {}) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",

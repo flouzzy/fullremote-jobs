@@ -105,7 +105,7 @@ self.addEventListener("push", (event) => {
   let data = {
     title: "Full Remote Jobs 🌍",
     body: "✨ De nouvelles offres 100% télétravail viennent d'être publiées !",
-    url: "https://fullremote-jobs.edounze.com",
+    url: "/",
   };
 
   if (event.data) {
@@ -137,7 +137,7 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes("fullremote-jobs.edounze.com") && "focus" in client) {
+        if (client.url.includes(self.location.hostname) && "focus" in client) {
           return client.focus();
         }
       }
@@ -227,7 +227,7 @@ function isAlertEligibleForEmail(alert) {
 /**
  * Traite et distribue les alertes emails et notifications web push
  */
-async function processNotifications(env, jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
+async function processNotifications(env, jobs = [], siteUrl = "https://remote-jobs.app") {
   if (!jobs || jobs.length === 0 || !env || !env.DB) {
     return { emails_sent: 0, pushes_sent: 0 };
   }
@@ -328,7 +328,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const siteUrl = (env && env.SITE_URL) || (url.host.includes("edounze.com") ? `${url.protocol}//${url.host}` : "https://remote-jobs.edounze.com");
+    const siteUrl = ((env && env.SITE_URL) || `${url.protocol}//${url.host}`).replace(/\/+$/, "");
 
     // Headers standards de sécurité et CORS
     const corsHeaders = {
@@ -343,7 +343,7 @@ export default {
 
     // 1. Route CNAME
     if (pathname === "/CNAME") {
-      return new Response("fullremote-jobs.edounze.com", {
+      return new Response(url.host, {
         headers: { "Content-Type": "text/plain; charset=utf-8" },
       });
     }
@@ -946,7 +946,7 @@ export default {
           );
         }
 
-        const canonicalUrl = (env.SITE_URL || (url.host.includes("edounze.com") ? `${url.protocol}//${url.host}` : "https://remote-jobs.edounze.com")).replace(/\/+$/, "");
+        const canonicalUrl = siteUrl;
         const jobId = `b2b-${company.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`.slice(0, 80);
 
         // Appel direct à l'API REST Stripe pour générer la session de paiement
@@ -1469,7 +1469,7 @@ export default {
         });
       }
 
-      const html = renderHTML(jobs, { updated_at });
+      const html = renderHTML(jobs, { updated_at, siteUrl });
 
       return new Response(html, {
         headers: {
@@ -1505,7 +1505,7 @@ export default {
         }
 
         // Traitement et envoi des alertes emails & web push
-        const siteUrl = (env && env.SITE_URL) || "https://remote-jobs.edounze.com";
+        const siteUrl = (env && env.SITE_URL) || "https://remote-jobs.app";
         const notifResults = await processNotifications(env, freshJobs, siteUrl);
 
         const durationMs = Date.now() - startTime;

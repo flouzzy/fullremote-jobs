@@ -12,6 +12,8 @@ export function renderHTML(jobs = [], meta = {}) {
   const jobsJson = JSON.stringify(jobs);
   const totalCount = jobs.length;
   const lastUpdated = meta.updated_at || new Date().toISOString();
+  const siteUrl = (meta.siteUrl || "https://remote-jobs.app").replace(/\/+$/, "");
+  const domainName = new URL(siteUrl).hostname;
   const dateFormatted = new Date(lastUpdated).toLocaleString("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -27,9 +29,9 @@ export function renderHTML(jobs = [], meta = {}) {
   <meta name="description" content="L'annuaire mondial et agrégateur intelligent de postes vérifiés 100% télétravail (CDI, Freelance, CDD, Stage). Accès direct, libre et sans inscription." />
   <meta property="og:title" content="Full Remote Jobs — 100% Télétravail vérifié (CDI / Freelance / CDD)" />
   <meta property="og:description" content="Trouvez votre prochain job 100% remote en CDI, Freelance ou CDD en France, Europe et Worldwide." />
-  <meta property="og:url" content="https://remote-jobs.edounze.com" />
+  <meta property="og:url" content="${siteUrl}" />
   <meta property="og:type" content="website" />
-  <link rel="canonical" href="https://remote-jobs.edounze.com" />
+  <link rel="canonical" href="${siteUrl}" />
   <link rel="alternate" type="application/rss+xml" title="Flux RSS FullRemote.Jobs" href="/rss" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1277,7 +1279,7 @@ export function renderHTML(jobs = [], meta = {}) {
             <a href="/rss" target="_blank">Flux RSS 2.0</a>
             <a href="/sitemap.xml" target="_blank">Sitemap XML</a>
             <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank">Code Source GitHub</a>
-            <a href="https://remote-jobs.edounze.com">remote-jobs.edounze.com</a>
+            <a href="${siteUrl}">${domainName}</a>
           </div>
         </div>
       <div class="footer-seo-tags" style="border-top:1px solid var(--border); padding-top:1.25rem; margin-top:1.5rem; display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center;">
@@ -1911,7 +1913,7 @@ export function renderHTML(jobs = [], meta = {}) {
         });
       };
 
-      const detailsUrl = \`https://remote-jobs.edounze.com/jobs/\${encodeURIComponent(job.id)}\`;
+      const detailsUrl = \`\${window.location.origin}/jobs/\${encodeURIComponent(job.id)}\`;
       document.getElementById('modalSeoLink').href = detailsUrl;
       document.getElementById('modalApplyBtn').href = job.url || detailsUrl;
 
@@ -2433,7 +2435,7 @@ export function renderHTML(jobs = [], meta = {}) {
 /**
  * Page de confirmation de désinscription
  */
-export function renderUnsubscribePage({ success, email, siteUrl = "https://remote-jobs.edounze.com" }) {
+export function renderUnsubscribePage({ success, email, siteUrl = "https://remote-jobs.app" }) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>

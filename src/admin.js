@@ -22,7 +22,7 @@ function escapeAttr(text = "") {
  * 1. Page de Connexion Administrateur (Magic Link) : /admin/login
  */
 export function renderAdminLoginPage(meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
 
   return `<!DOCTYPE html>
 <html lang="fr" class="light">
@@ -134,7 +134,7 @@ export function renderAdminLoginPage(meta = {}) {
  * 2. Executive Admin Dashboard : /admin
  */
 export function renderAdminDashboardPage(metrics = {}, allTalents = [], adminUser = {}, meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const token = adminUser.token || "";
   const jobs = metrics.jobs || {};
   const talents = metrics.talents || {};

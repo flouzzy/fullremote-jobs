@@ -40,7 +40,7 @@ const AVAILABILITY_MAP = {
  * 1. Vitrine de l'Annuaire des Talents : /talents
  */
 export function renderTalentsDirectoryPage(talents = [], meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const canonicalUrl = `${siteUrl}/talents`;
   const count = talents.length;
 
@@ -474,7 +474,7 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
  * 2. Formulaire d'inscription Candidat au Vivier : /talents/join
  */
 export function renderJoinTalentPoolPage(meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
 
   return `<!DOCTYPE html>
 <html lang="fr" class="light">
@@ -813,7 +813,7 @@ export function renderJoinTalentPoolPage(meta = {}) {
  * 3. Page de Gestion Candidat & Tableau de Bord Privé : /talents/manage?token=...
  */
 export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const isWelcome = meta.welcome || false;
   const seniority = SENIORITY_MAP[talent.seniority] || SENIORITY_MAP.senior;
   const availability = AVAILABILITY_MAP[talent.availability] || AVAILABILITY_MAP["30_days"];
@@ -1288,7 +1288,7 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
  * 4. Page de Connexion par Magic Link : /talents/login
  */
 export function renderTalentLoginPage(meta = {}) {
-  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const siteUrl = meta.siteUrl || "https://remote-jobs.app";
 
   return `<!DOCTYPE html>
 <html lang="fr" class="light">
