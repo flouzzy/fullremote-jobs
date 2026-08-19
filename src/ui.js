@@ -146,7 +146,8 @@ export function renderHTML(jobs = [], meta = {}) {
       gap: 0.5rem;
       font-weight: 800;
       font-size: 1.15rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.025em;
+      white-space: nowrap;
     }
     .brand-accent { color: var(--primary); }
 
@@ -155,12 +156,13 @@ export function renderHTML(jobs = [], meta = {}) {
       align-items: center;
       gap: 0.35rem;
       font-size: 0.75rem;
-      font-weight: 600;
-      padding: 3px 9px;
+      font-weight: 700;
+      padding: 2px 8px;
       border-radius: 999px;
       background: var(--emerald-subtle);
       color: var(--emerald);
       border: 1px solid rgba(16, 185, 129, 0.25);
+      white-space: nowrap;
     }
     .live-dot {
       width: 6px;
@@ -178,6 +180,7 @@ export function renderHTML(jobs = [], meta = {}) {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      white-space: nowrap;
     }
     .nav-link {
       font-size: 0.88rem;
@@ -186,6 +189,7 @@ export function renderHTML(jobs = [], meta = {}) {
       padding: 0.4rem 0.75rem;
       border-radius: 8px;
       transition: all 0.15s ease;
+      white-space: nowrap;
     }
     .nav-link:hover {
       color: var(--text);
@@ -199,21 +203,23 @@ export function renderHTML(jobs = [], meta = {}) {
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
+      white-space: nowrap;
     }
 
     .btn-fav-header {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
       font-size: 0.85rem;
-      font-weight: 600;
-      padding: 0.45rem 0.8rem;
+      font-weight: 700;
+      padding: 0.45rem 0.75rem;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--bg-card);
       color: var(--text-muted);
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.15s ease;
     }
     .btn-fav-header:hover {
@@ -230,13 +236,14 @@ export function renderHTML(jobs = [], meta = {}) {
     .btn-post-header {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
       font-size: 0.85rem;
       font-weight: 700;
-      padding: 0.45rem 0.95rem;
+      padding: 0.45rem 0.9rem;
       border-radius: 8px;
       background: var(--primary);
       color: #ffffff !important;
+      white-space: nowrap;
       transition: all 0.15s ease;
       box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
@@ -257,6 +264,7 @@ export function renderHTML(jobs = [], meta = {}) {
       color: var(--text);
       cursor: pointer;
       font-size: 0.95rem;
+      white-space: nowrap;
       transition: all 0.15s ease;
     }
     .btn-icon-header:hover {
@@ -924,24 +932,23 @@ export function renderHTML(jobs = [], meta = {}) {
       </div>
 
       <!-- Center: Clean Navigation Links -->
-      <nav class="header-nav">
+      <nav class="header-nav hide-mobile">
         <a href="/" class="nav-link active" data-i18n="nav_explore">Explorer</a>
         <a href="/talents" class="nav-link" style="color:var(--primary); font-weight:700;">🚀 Talents</a>
         <a href="/simulateur-salaire-remote" class="nav-link" data-i18n="nav_calc">💶 Simulateur</a>
-        <button class="nav-link" style="border:none; background:transparent; cursor:pointer;" onclick="openAlertModal()" data-i18n="nav_alerts">🔔 Alertes</button>
       </nav>
 
       <!-- Right: Action CTA & Utilities -->
       <div class="header-right">
         <button id="favHeaderBtn" class="btn-fav-header" title="Afficher mes offres sauvegardées">
-          <span>❤️</span> <span class="hide-mobile" data-i18n="nav_favs">Favoris</span> (<span id="favCount">0</span>)
+          <span>❤️</span> <span id="favCount">0</span>
         </button>
 
         <a href="/post-a-job" class="btn-post-header">
-          <span>+</span> <span data-i18n="nav_post">Publier</span> <span class="hide-mobile">(49€)</span>
+          <span>+</span> <span data-i18n="nav_post">Publier</span>
         </a>
 
-        <button id="langToggleBtn" class="btn-icon-header" onclick="toggleLanguage()" title="Changer de langue / Switch Language" style="font-size:0.75rem; font-weight:700; padding:0 0.5rem; min-width:54px;">
+        <button id="langToggleBtn" class="btn-icon-header" onclick="toggleLanguage()" title="Changer de langue / Switch Language" style="font-size:0.75rem; font-weight:700; width:auto; padding:0 0.45rem;">
           🇬🇧 EN
         </button>
 
@@ -951,16 +958,19 @@ export function renderHTML(jobs = [], meta = {}) {
 
         <!-- Dropdown "···" for secondary developer resources -->
         <div class="dropdown-container">
-          <button id="moreDropdownBtn" class="btn-icon-header" title="Plus d'outils (API, RSS, Docs)">
+          <button id="moreDropdownBtn" class="btn-icon-header" title="Plus d'outils">
             ···
           </button>
           <div id="moreDropdownMenu" class="dropdown-menu">
+            <button onclick="openAlertModal()" class="dropdown-item" style="background:none; border:none; width:100%; text-align:left; cursor:pointer; font-family:inherit;">
+              🔔 <span data-i18n="nav_alerts">Créer une alerte email</span>
+            </button>
+            <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+            <a href="/talents" class="dropdown-item">🚀 Vivier Talents</a>
             <a href="/simulateur-salaire-remote" class="dropdown-item" data-i18n="nav_calc">💶 Simulateur Salaire</a>
             <a href="/llms.txt" class="dropdown-item">🤖 Index llms.txt</a>
             <a href="/rss" target="_blank" class="dropdown-item">📡 Flux RSS 2.0</a>
             <a href="/api/jobs" target="_blank" class="dropdown-item">⚡ API REST JSON</a>
-            <a href="/openapi.json" target="_blank" class="dropdown-item">📑 Schéma OpenAPI</a>
-            <a href="https://github.com/flouzzy/fullremote-jobs" target="_blank" class="dropdown-item">★ GitHub Repo</a>
           </div>
         </div>
       </div>
