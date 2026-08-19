@@ -205,15 +205,16 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
       <a href="/" style="font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 0.4rem; color: var(--text);">
         <span>🌍</span> FullRemote<span style="color: var(--primary);">.Jobs</span>
       </a>
-      <div style="display:flex; align-items:center; gap:1rem;">
-        <a href="/" style="font-size:0.88rem; font-weight:600; color:var(--text-muted);">← Annuaire des offres</a>
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <a href="/" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">← Annuaire des offres</a>
+        <a href="/talents/login" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none; padding:0.4rem 0.6rem; border-radius:6px;">Connexion</a>
         ${meta.talentToken ? `
-          <a href="/talents/manage?token=${encodeURIComponent(meta.talentToken)}" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:rgba(37,99,235,0.1); color:var(--primary); border:1px solid var(--primary); padding:0.5rem 1rem; border-radius:8px; text-decoration:none;">
+          <a href="/talents/manage?token=${encodeURIComponent(meta.talentToken)}" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:rgba(37,99,235,0.1); color:var(--primary); border:1px solid var(--primary); padding:0.45rem 0.9rem; border-radius:8px; text-decoration:none;">
             ⚙️ Mon Espace Talent
           </a>
         ` : `
-          <a href="/talents/join" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.5rem 1rem; border-radius:8px; text-decoration:none;">
-            🚀 Rejoindre le Vivier (Gratuit)
+          <a href="/talents/join" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.45rem 0.9rem; border-radius:8px; text-decoration:none;">
+            ✨ S'inscrire au Vivier (Gratuit)
           </a>
         `}
       </div>

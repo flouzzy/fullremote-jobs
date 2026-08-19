@@ -254,6 +254,68 @@ export function renderHTML(jobs = [], meta = {}) {
       transform: translateY(-1px);
     }
 
+    .btn-auth-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn-auth-link:hover {
+      color: var(--primary);
+      background: var(--bg-card-hover);
+    }
+
+    .btn-auth-join {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary) !important;
+      background: var(--primary-subtle);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn-auth-join:hover {
+      background: var(--primary);
+      color: #ffffff !important;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-auth-user {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text) !important;
+      background: var(--meta-bg);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-auth-user:hover {
+      border-color: var(--primary);
+      color: var(--primary) !important;
+      background: var(--bg-card-hover);
+    }
+
     .btn-icon-header {
       display: inline-flex;
       align-items: center;
@@ -946,7 +1008,18 @@ export function renderHTML(jobs = [], meta = {}) {
           <span>❤️</span> <span id="favCount">0</span>
         </button>
 
-        <a href="/post-a-job" class="btn-post-header">
+        <!-- Auth Zone (Dynamic: Guest vs Connected Talent) -->
+        <a href="/talents/login" id="headerLoginBtn" class="btn-auth-link hide-mobile" data-i18n="nav_login">
+          Connexion
+        </a>
+        <a href="/talents/join" id="headerRegisterBtn" class="btn-auth-join" data-i18n="nav_register">
+          <span>✨</span> <span data-i18n="nav_register_text">S'inscrire</span>
+        </a>
+        <a href="/talents/manage" id="headerUserBtn" class="btn-auth-user" style="display:none;" title="Accéder à mon espace Talent">
+          <span style="color:var(--primary);">👤</span> <span data-i18n="nav_my_space">Mon Espace</span>
+        </a>
+
+        <a href="/post-a-job" class="btn-post-header hide-mobile">
           <span>+</span> <span data-i18n="nav_post">Publier</span>
         </a>
 
@@ -964,11 +1037,14 @@ export function renderHTML(jobs = [], meta = {}) {
             ···
           </button>
           <div id="moreDropdownMenu" class="dropdown-menu">
+            <a href="/talents/login" id="menuLoginLink" class="dropdown-item">🔑 <span data-i18n="nav_login_full">Se connecter (Espace Talent)</span></a>
+            <a href="/talents/join" id="menuTalentLink" class="dropdown-item">✨ <span data-i18n="nav_register_pool">Créer mon profil (Gratuit)</span></a>
+            <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+            <a href="/post-a-job" class="dropdown-item">📢 <span data-i18n="nav_post_long">Publier une offre de recrutement</span></a>
             <button onclick="openAlertModal()" class="dropdown-item" style="background:none; border:none; width:100%; text-align:left; cursor:pointer; font-family:inherit;">
               🔔 <span data-i18n="nav_alerts">Créer une alerte email</span>
             </button>
             <div style="height:1px; background:var(--border); margin:4px 0;"></div>
-            <a href="/talents/join" id="menuTalentLink" class="dropdown-item">🚀 Rejoindre le Vivier (Gratuit)</a>
             <a href="/talents" class="dropdown-item">👥 Annuaire des Talents</a>
             <a href="/simulateur-salaire-remote" class="dropdown-item" data-i18n="nav_calc">💶 Simulateur Salaire</a>
             <a href="/llms.txt" class="dropdown-item">🤖 Index llms.txt</a>
@@ -1388,6 +1464,13 @@ export function renderHTML(jobs = [], meta = {}) {
         nav_alerts: "🔔 Alertes",
         nav_favs: "Favoris",
         nav_post: "Publier",
+        nav_login: "Connexion",
+        nav_register: "S'inscrire",
+        nav_register_text: "S'inscrire",
+        nav_register_pool: "Créer mon profil (Gratuit)",
+        nav_login_full: "Se connecter (Espace Talent)",
+        nav_my_space: "Mon Espace",
+        nav_post_long: "Publier une offre de recrutement",
         hero_title: "Trouvez votre prochain job <span class='brand-accent'>100% télétravail</span>.",
         hero_sub: "Le répertoire vérifié des meilleures opportunités sans restriction géographique (CDI, Freelance, CDD, Stage). Accès direct et sans intermédiaire.",
         search_ph: "Rechercher par titre, stack techno, entreprise (ex: Go, React, Python, Stripe, DevOps...)",
@@ -1475,6 +1558,13 @@ export function renderHTML(jobs = [], meta = {}) {
         nav_alerts: "🔔 Alerts",
         nav_favs: "Favorites",
         nav_post: "Post a Job",
+        nav_login: "Sign In",
+        nav_register: "Sign Up",
+        nav_register_text: "Sign Up",
+        nav_register_pool: "Join Talent Pool (Free)",
+        nav_login_full: "Sign In (Talent Space)",
+        nav_my_space: "My Profile",
+        nav_post_long: "Post a Remote Job",
         hero_title: "Find your next <span class='brand-accent'>100% remote job</span>.",
         hero_sub: "The verified global directory of top full-remote opportunities (Full-time, Contract, Freelance, Intern). Direct access, zero fluff.",
         search_ph: "Search by title, tech stack, company (e.g. Go, React, Python, Stripe, DevOps...)",
@@ -1671,8 +1761,41 @@ export function renderHTML(jobs = [], meta = {}) {
       const qEmail = document.getElementById('quickEmail');
       if (qEmail) qEmail.placeholder = dict.digest_input_ph;
 
+      checkTalentSession();
       renderDynamicQuickChips();
       renderActiveView();
+    }
+
+    function checkTalentSession() {
+      try {
+        const token = localStorage.getItem('fullremote_talent_token');
+        const loginBtn = document.getElementById('headerLoginBtn');
+        const registerBtn = document.getElementById('headerRegisterBtn');
+        const userBtn = document.getElementById('headerUserBtn');
+        const menuLoginLink = document.getElementById('menuLoginLink');
+        const menuTalentLink = document.getElementById('menuTalentLink');
+
+        if (token) {
+          if (loginBtn) loginBtn.style.display = 'none';
+          if (registerBtn) registerBtn.style.display = 'none';
+          if (userBtn) {
+            userBtn.style.display = 'inline-flex';
+            userBtn.href = '/talents/manage?token=' + encodeURIComponent(token);
+          }
+          if (menuLoginLink) {
+            menuLoginLink.href = '/talents/manage?token=' + encodeURIComponent(token);
+            menuLoginLink.innerHTML = '👤 ' + (currentLang === 'fr' ? 'Mon Espace Talent' : 'My Talent Space');
+          }
+          if (menuTalentLink) {
+            menuTalentLink.style.display = 'none';
+          }
+        } else {
+          if (loginBtn) loginBtn.style.display = '';
+          if (registerBtn) registerBtn.style.display = 'inline-flex';
+          if (userBtn) userBtn.style.display = 'none';
+          if (menuTalentLink) menuTalentLink.style.display = '';
+        }
+      } catch (e) {}
     }
 
     window.toggleLanguage = function() {

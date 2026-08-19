@@ -305,9 +305,11 @@ export function renderSalaryCalculatorPage(meta = {}) {
         <span>🌍</span>
         <span>FullRemote<span style="color:var(--primary);">.Jobs</span></span>
       </a>
-      <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div style="display:flex; align-items:center; gap:0.6rem;">
         <a href="/" class="nav-btn">← Annuaire des offres</a>
-        <a href="/post-a-job" class="nav-btn" style="background:var(--primary); color:white; border:none;">Publier (49€)</a>
+        <a href="/talents/login" class="nav-btn">Connexion</a>
+        <a href="/talents/join" class="nav-btn" style="font-weight:700; color:var(--primary);">✨ S'inscrire</a>
+        <a href="/post-a-job" class="nav-btn" style="background:var(--primary); color:white; border:none;">Publier</a>
         <button id="themeToggleBtn" class="nav-btn" title="Changer de thème">🌙</button>
       </div>
     </div>
