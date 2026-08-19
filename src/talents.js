@@ -1394,7 +1394,7 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
       const currentToken = '${escapeAttr(talent.manage_token)}';
       if (currentToken) {
         localStorage.setItem('fullremote_talent_token', currentToken);
-        document.cookie = 'talent_token=' + encodeURIComponent(currentToken) + '; path=/; max-age=31536000; SameSite=Lax';
+        document.cookie = 'talent_token=' + encodeURIComponent(currentToken) + '; path=/; max-age=31536000; SameSite=Lax; Secure';
       }
     } catch (_) {}
   </script>

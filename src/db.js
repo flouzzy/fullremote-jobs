@@ -1288,7 +1288,7 @@ export async function deleteTalentApplication(db, talentId, jobId) {
 }
 
 /**
- * Signale un lien mort ou expiré
+ * Signale un lien mort ou expiré et auto-désactive les offres multi-signalées
  */
 export async function reportDeadJob(db, { jobId, reason = "expired", details = "" }) {
   if (!db || !jobId) return false;
@@ -1296,6 +1296,13 @@ export async function reportDeadJob(db, { jobId, reason = "expired", details = "
     await db.prepare(`
       INSERT INTO job_reports (job_id, reason, details) VALUES (?, ?, ?)
     `).bind(jobId, reason, details).run();
+
+    // Auto-désactivation dès 2 signalements distincts pour protéger l'expérience candidat
+    const countRes = await db.prepare("SELECT COUNT(*) as count FROM job_reports WHERE job_id = ?").bind(jobId).first();
+    if (countRes && countRes.count >= 2) {
+      await db.prepare("UPDATE jobs SET is_active = 0 WHERE id = ?").bind(jobId).run();
+    }
+
     return true;
   } catch (err) {
     console.error("Erreur reportDeadJob D1 :", err);
