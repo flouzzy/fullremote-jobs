@@ -19,7 +19,20 @@ function escapeHtml(str = "") {
 export function renderJobDetailPage(job, meta = {}) {
   const siteUrl = meta.siteUrl || "https://remote-jobs.app";
   const canonicalUrl = `${siteUrl}/jobs/${encodeURIComponent(job.id)}`;
-  const cleanSnippet = stripHtml(job.description_snippet || "", true);
+  let cleanSnippet = stripHtml(job.description_snippet || "", true);
+  if (!cleanSnippet || cleanSnippet.length < 120 || cleanSnippet.endsWith("...")) {
+    const cleanTitle = (job.title || "").replace(/\.\.\.$/, "").trim();
+    const company = job.company || "Entreprise";
+    const region = job.region || "Worldwide";
+    const contract = job.contractType || "CDI";
+    const tagsStr = (job.tags && job.tags.length > 0) ? job.tags.join(", ") : "";
+
+    cleanSnippet = `Opportunité 100% télétravail : ${cleanTitle} chez ${company} (${region}).\n\n` +
+      `• Type de contrat : ${contract}\n` +
+      (tagsStr ? `• Stack & Compétences clés : ${tagsStr}\n` : "") +
+      (job.salary ? `• Rémunération indicative : ${job.salary}\n` : "") +
+      `\nL'employeur recrute activement sur cette position 100% remote. Pour consulter le cahier des charges complet, les critères d'éligibilité et postuler, accédez directement à l'annonce officielle via le lien ci-dessous.`;
+  }
   const title = `${job.title} chez ${job.company} (100% Full Remote)`;
   const description = `${job.title} — ${job.company} recrute en 100% télétravail (${job.region}). Contrat : ${job.contractType || "CDI / Full-time"}.${job.salary ? ` Salaire : ${job.salary}.` : ""} Postulez directement sans inscription.`;
 

@@ -1113,19 +1113,19 @@ export async function scrapeNoDesk() {
 
     const xml = await res.text();
     const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-    const matches = [...xml.matchAll(itemRegex)];
     const jobs = [];
+    let match;
 
-    for (const match of matches.slice(0, 60)) {
+    while ((match = itemRegex.exec(xml)) !== null) {
       const item = match[1];
-      const titleMatch = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/);
-      const linkMatch = item.match(/<link>(.*?)<\/link>/);
-      const pubDateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
-      const descMatch = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/);
+      const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i) || item.match(/<title>([\s\S]*?)<\/title>/i);
+      const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/i);
+      const pubDateMatch = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i);
+      const descMatch = item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i) || item.match(/<description>([\s\S]*?)<\/description>/i);
 
-      const fullTitle = titleMatch ? titleMatch[1] : "";
-      const url = linkMatch ? linkMatch[1] : "";
-      const pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
+      const fullTitle = titleMatch ? titleMatch[1].trim() : "";
+      const url = linkMatch ? linkMatch[1].trim() : "";
+      const pubDate = pubDateMatch ? new Date(pubDateMatch[1].trim()).toISOString() : new Date().toISOString();
       const rawDesc = descMatch ? descMatch[1] : "";
       const desc = stripHtml(rawDesc, true);
 
@@ -1177,7 +1177,7 @@ export async function scrapeNoDesk() {
         salary_max_usd: salaryObj.max_usd,
         currency: salaryObj.currency,
         published_at: pubDate,
-        description_snippet: desc.slice(0, 4000),
+        description_snippet: (desc || `${title} chez ${company} (100% Remote).`).slice(0, 4000),
         source: "NoDesk",
         language: lang,
         is_verified: 1,
@@ -1208,24 +1208,25 @@ export async function scrapeJobicyFrance() {
     return data.jobs
       .filter((j) => isStrictlyRemote(j.jobTitle, j.jobDescription))
       .map((j) => {
-        const title = j.jobTitle || "Poste Remote";
-        const company = j.companyName || "Entreprise";
-        const rawTags = Array.isArray(j.jobCategories) ? j.jobCategories : [];
-        const tags = extractTechStack(title, j.jobDescription || j.jobExcerpt || "", rawTags);
+        const title = j.jobTitle || "Poste Remote FR";
+        const company = j.companyName || "Entreprise Tech";
+        const tags = extractTechStack(title, j.jobDescription || "", []);
         const category = categorizeJob(title, j.jobCategory || "", tags);
-        const region = detectRegion("France", title, tags);
+        const region = detectRegion(j.jobGeo || "France", title, tags);
         const contract = detectContractType(title, j.jobType || "", j.jobDescription || "", tags);
-        const salaryObj = parseSalaryDetails(j.annualSalaryMin ? `${j.annualSalaryMin} - ${j.annualSalaryMax} EUR` : "");
-        const lang = detectLanguage(title, j.jobDescription, tags);
-
-        const id = `jobicy-fr-${j.id || Math.random().toString(36).substring(2, 8)}`;
+        const salaryObj = parseSalaryDetails(
+          j.annualSalaryMin
+            ? `${j.annualSalaryMin} - ${j.annualSalaryMax} ${j.salaryCurrency || "EUR"}`
+            : j.jobExcerpt || ""
+        );
+        const lang = detectLanguage(title, j.jobDescription || "", tags);
 
         return {
-          id,
+          id: `jobicy-fr-${j.id}`,
           title,
           company,
           company_logo: j.companyLogo || "",
-          url: j.url || "https://jobicy.com",
+          url: j.url || `https://jobicy.com/jobs/${j.id}`,
           category: category.label,
           categoryId: category.id,
           categoryIcon: category.icon,
@@ -1234,17 +1235,17 @@ export async function scrapeJobicyFrance() {
           contractIcon: contract.icon,
           tags,
           job_type: contract.label,
-          location: "France & Francophonie",
-          region: "France & Francophonie",
-          regionId: "france",
-          regionFlag: "🇫🇷",
+          location: j.jobGeo || "France (100% Remote)",
+          region: region.label,
+          regionId: region.id,
+          regionFlag: region.flag,
           salary: salaryObj.raw,
           salary_min_eur: salaryObj.min_eur,
           salary_max_eur: salaryObj.max_eur,
           salary_min_usd: salaryObj.min_usd,
           salary_max_usd: salaryObj.max_usd,
           currency: salaryObj.currency,
-          published_at: j.pubDate ? new Date(j.pubDate).toISOString() : new Date().toISOString(),
+          published_at: j.pubDate || new Date().toISOString(),
           description_snippet: stripHtml(j.jobDescription || j.jobExcerpt || "", true).slice(0, 4000),
           source: "JobicyFR",
           language: lang,
@@ -1252,7 +1253,7 @@ export async function scrapeJobicyFrance() {
         };
       });
   } catch (err) {
-    console.warn("Source JobicyFR erreur:", err.message);
+    console.warn("Source Jobicy France erreur:", err.message);
     return [];
   }
 }
@@ -1452,9 +1453,9 @@ export async function scrapeGreenhouseRemote() {
 
   const results = await Promise.allSettled(
     companies.map(async ({ slug, name }) => {
-      const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs`, {
+      const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs?content=true`, {
         headers: { "User-Agent": USER_AGENT },
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(6000),
       });
       if (!res.ok) return [];
       const data = await res.json();
@@ -1473,10 +1474,10 @@ export async function scrapeGreenhouseRemote() {
         .map((j) => {
           const title = j.title || "Poste Remote";
           const loc = (j.location && j.location.name) || "Worldwide";
-          const tags = extractTechStack(title, "", []);
+          const tags = extractTechStack(title, j.content || "", []);
           const category = categorizeJob(title, "", tags);
           const region = detectRegion(loc, title, tags);
-          const contract = detectContractType(title, "", "", tags);
+          const contract = detectContractType(title, "", j.content || "", tags);
 
           return {
             id: `gh-${slug}-${j.id}`,
@@ -1503,9 +1504,9 @@ export async function scrapeGreenhouseRemote() {
             salary_max_usd: 0,
             currency: "EUR",
             published_at: j.updated_at || new Date().toISOString(),
-            description_snippet: `${title} chez ${name} (100% Remote / ${loc}).`,
+            description_snippet: stripHtml(j.content || `${title} chez ${name} (100% Remote / ${loc}).`, true).slice(0, 4000),
             source: name,
-            language: detectLanguage(title, "", tags),
+            language: detectLanguage(title, j.content || "", tags),
             is_verified: 1,
           };
         });
@@ -1578,7 +1579,10 @@ export async function scrapeLaraJobs() {
           salary_max_usd: 0,
           currency: "USD",
           published_at: pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString(),
-          description_snippet: stripHtml(desc, true).slice(0, 4000),
+          description_snippet: stripHtml(
+            desc || `${title} chez ${company} (${location}). Opportunité 100% télétravail spécialisée dans l'écosystème Laravel, PHP et développement web moderne. Retrouvez les missions détaillées, stack technique et postulez directement sur l'offre officielle.`,
+            true
+          ).slice(0, 4000),
           source: "LaraJobs",
           language: "en",
           is_verified: 1,

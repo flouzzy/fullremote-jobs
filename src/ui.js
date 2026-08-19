@@ -1755,13 +1755,35 @@ export function renderHTML(jobs = [], meta = {}) {
       if (job.company_logo) {
         avatar.innerHTML = \`<img src="\${escapeAttr(job.company_logo)}" alt="\${escapeAttr(job.company)}" onerror="this.parentElement.textContent='\${escapeAttr(initial)}'" />\`;
       } else {
-        avatar.textContent = initial;
+      avatar.textContent = initial;
       }
 
       const body = document.getElementById('modalBody');
       const salaryHtml = job.salary ? \`<div class="tag-badge tag-salary" style="display:inline-block; margin-bottom:0.75rem;">💰 \${escapeHtml(job.salary)}</div>\` : '';
       const tagsHtml = (job.tags || []).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join(' ');
-      const cleanDesc = cleanSnippet(job.description_snippet);
+      const rawCleanDesc = cleanSnippet(job.description_snippet);
+      let cleanDesc = rawCleanDesc;
+      if (!cleanDesc || cleanDesc.length < 120 || cleanDesc.endsWith('...')) {
+        const cleanTitle = (job.title || '').replace(/\.\.\.$/, '').trim();
+        const company = job.company || 'Entreprise';
+        const region = job.region || 'Worldwide';
+        const contract = job.contractType || 'CDI';
+        const tagsStr = (job.tags && job.tags.length > 0) ? job.tags.join(', ') : '';
+
+        if (currentLang === 'fr') {
+          cleanDesc = "Opportunité 100% télétravail : " + cleanTitle + " chez " + company + " (" + region + ")." + String.fromCharCode(10) + String.fromCharCode(10) +
+            "• Type de contrat : " + contract + String.fromCharCode(10) +
+            (tagsStr ? "• Stack & Compétences clés : " + tagsStr + String.fromCharCode(10) : "") +
+            (job.salary ? "• Rémunération indicative : " + job.salary + String.fromCharCode(10) : "") +
+            String.fromCharCode(10) + "L'employeur recrute activement sur cette position 100% remote. Pour consulter le cahier des charges complet, les critères d'éligibilité et postuler, accédez directement à l'annonce officielle via le lien ci-dessous.";
+        } else {
+          cleanDesc = "100% Remote Opportunity: " + cleanTitle + " at " + company + " (" + region + ")." + String.fromCharCode(10) + String.fromCharCode(10) +
+            "• Contract Type: " + contract + String.fromCharCode(10) +
+            (tagsStr ? "• Key Skills & Tech Stack: " + tagsStr + String.fromCharCode(10) : "") +
+            (job.salary ? "• Compensation: " + job.salary + String.fromCharCode(10) : "") +
+            String.fromCharCode(10) + "The employer is actively hiring for this 100% telecommute position. To view the complete requirements, key responsibilities, and apply, access the official job posting via the link below.";
+        }
+      }
 
       // Geo-Arbitrage values
       const salaryStr = (job.salary || '').trim();
