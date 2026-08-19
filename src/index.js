@@ -38,6 +38,8 @@ import {
   getAdminDashboardMetrics,
   getAllTalentsForAdmin,
   updateTalentStatus,
+  updateTalentProfileByToken,
+  deleteTalentProfileByToken,
   recordTalentContact,
 } from "./db.js";
 import {
@@ -691,7 +693,7 @@ export default {
           apiKey: resendApiKey,
           from: fromEmail,
           to: email,
-          subject: "🚀 Confirmation : Votre profil Talent 100% Remote est activé !",
+          subject: "Confirmation d'activation de votre profil Talent — FullRemote.Jobs",
           html: welcomeHtml,
         });
 
@@ -741,7 +743,7 @@ export default {
             apiKey: resendApiKey,
             from: fromEmail,
             to: talent.email,
-            subject: `💼 Opportunité Remote de ${recruiter_company} pour votre profil`,
+            subject: `Opportunité de ${recruiter_company} pour votre profil — FullRemote.Jobs`,
             html: notifHtml,
           });
         }
@@ -866,6 +868,47 @@ export default {
       }
 
       return Response.redirect(new URL(`/talents/manage?token=${encodeURIComponent(token)}&success=Préférences d'alertes enregistrées avec succès.`, request.url).toString(), 302);
+    }
+
+    // API Mise à jour Profil Talent : POST /api/talents/manage/profile
+    if (pathname === "/api/talents/manage/profile" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const token = body.token || "";
+        if (!token) {
+          return new Response(JSON.stringify({ success: false, error: "Token manquant." }), { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+        }
+        if (env && env.DB) {
+          await initDb(env.DB);
+          const updated = await updateTalentProfileByToken(env.DB, token, body);
+          if (updated) {
+            return new Response(JSON.stringify({ success: true, talent: updated }), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+          }
+        }
+        return new Response(JSON.stringify({ success: false, error: "Impossible de mettre à jour le profil." }), { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } });
+      }
+    }
+
+    // API Suppression Définitive Profil Talent (RGPD) : POST /api/talents/manage/delete
+    if (pathname === "/api/talents/manage/delete" && request.method === "POST") {
+      let token = "";
+      const contentType = request.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const body = await request.json().catch(() => ({}));
+        token = body.token || "";
+      } else {
+        const formData = await request.formData();
+        token = formData.get("token") || "";
+      }
+
+      if (token && env && env.DB) {
+        await initDb(env.DB);
+        await deleteTalentProfileByToken(env.DB, token);
+      }
+
+      return Response.redirect(new URL("/talents?success=Votre profil et vos données ont été définitivement supprimés.", request.url).toString(), 302);
     }
 
     // 9. API Création de Session Stripe Checkout (49 €) : POST /api/checkout/create-session ou /api/jobs/draft

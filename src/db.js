@@ -868,6 +868,31 @@ export async function updateTalentProfileByToken(db, token, data = {}) {
 }
 
 /**
+ * Supprime définitivement un profil talent (Droit à l'oubli / RGPD)
+ */
+export async function deleteTalentProfileByToken(db, token) {
+  if (!db || !token) return false;
+  try {
+    const talent = await getTalentByToken(db, token);
+    if (talent && talent.id) {
+      try {
+        await db.prepare("DELETE FROM talent_contacts WHERE talent_id = ?").bind(talent.id).run();
+      } catch (_) {}
+      try {
+        await db.prepare("DELETE FROM email_alerts WHERE email = ?").bind(talent.email.toLowerCase().trim()).run();
+      } catch (_) {}
+      const res = await db.prepare("DELETE FROM talents WHERE manage_token = ?").bind(token).run();
+      return res.success;
+    }
+    return false;
+  } catch (err) {
+    console.error("Erreur deleteTalentProfileByToken D1 :", err);
+    return false;
+  }
+}
+
+
+/**
  * Initialise ou récupère un administrateur par token
  */
 export async function getAdminByToken(db, token) {

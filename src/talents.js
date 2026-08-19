@@ -652,8 +652,12 @@ export function renderJoinTalentPoolPage(meta = {}) {
         <div class="form-group" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:1.25rem; margin-top:1.5rem;">
           <label class="form-label" style="color:#1e40af;">Votre Adresse Email Réelle (Privée & Protégée) *</label>
           <input type="email" id="talentEmail" name="email" required class="form-input" style="background:white;" placeholder="votre.email@domaine.com" />
-          <div class="form-hint" style="color:#3b82f6;">
+          <div class="form-hint" style="color:#3b82f6; line-height:1.5;">
             🔒 Jamais rendue publique. Utilisée exclusivement pour vous envoyer les sollicitations d'entreprises et votre lien privé de gestion.
+          </div>
+          <div style="margin-top:0.6rem; font-size:0.78rem; color:#1e40af; background:rgba(255,255,255,0.7); padding:0.5rem 0.75rem; border-radius:6px; border:1px solid #dbeafe; display:flex; align-items:center; gap:0.4rem;">
+            <span>📬</span>
+            <span><strong>Anti-Spam :</strong> Lors du premier email, pensez à vérifier votre dossier <em>Courrier indésirable / Spams</em> et cliquez sur <strong>"Non-spam"</strong> pour recevoir toutes les opportunités.</span>
           </div>
         </div>
 
@@ -911,17 +915,117 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
       </div>
     </div>
 
-    <!-- 2. Aperçu de votre Fiche Candidat -->
+    <!-- 2. Aperçu & Édition de votre Fiche Candidat -->
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-        <h3 style="font-size:1.15rem; font-weight:800; color:var(--text);">
-          📋 Votre Fiche Talent (Telle que vue par les recruteurs)
-        </h3>
-        <span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:${seniority.bg}; color:${seniority.color};">
-          ${escapeHtml(seniority.label_fr)}
-        </span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <h3 style="font-size:1.15rem; font-weight:800; color:var(--text);">
+            📋 Votre Fiche Talent (Vue Recruteurs)
+          </h3>
+          <span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:${seniority.bg}; color:${seniority.color};">
+            ${escapeHtml(seniority.label_fr)}
+          </span>
+        </div>
+        <button class="btn btn-primary" onclick="toggleEditProfile()" id="toggleEditBtn" style="font-size:0.8rem; padding:0.45rem 0.9rem;">
+          ✏️ Modifier ma fiche & CV
+        </button>
       </div>
 
+      <!-- Formulaire d'Édition Profil Inline (Masqué par défaut) -->
+      <div id="editProfileBox" style="display:none; background:var(--meta-bg); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;">
+        <h4 style="font-size:1.05rem; font-weight:800; color:var(--text); margin-bottom:1rem;">
+          ✏️ Mettre à jour vos informations candidat
+        </h4>
+        <form id="profileEditForm" onsubmit="submitProfileEdit(event)">
+          <input type="hidden" id="editToken" value="${escapeAttr(talent.manage_token)}" />
+
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Titre professionnel *</label>
+            <input type="text" id="editTitle" required class="form-select" value="${escapeAttr(talent.title)}" style="background:#ffffff;" />
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Séniorité *</label>
+              <select id="editSeniority" class="form-select" style="background:#ffffff;">
+                <option value="junior" ${talent.seniority === 'junior' ? 'selected' : ''}>Junior (1-2 ans)</option>
+                <option value="mid" ${talent.seniority === 'mid' ? 'selected' : ''}>Confirmé (3-5 ans)</option>
+                <option value="senior" ${talent.seniority === 'senior' ? 'selected' : ''}>Senior (5-8 ans)</option>
+                <option value="lead" ${talent.seniority === 'lead' ? 'selected' : ''}>Lead / Staff (8+ ans)</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Disponibilité *</label>
+              <select id="editAvailability" class="form-select" style="background:#ffffff;">
+                <option value="immediate" ${talent.availability === 'immediate' ? 'selected' : ''}>🟢 Immédiate (Disponible)</option>
+                <option value="15_days" ${talent.availability === '15_days' ? 'selected' : ''}>🟡 Sous 15 jours</option>
+                <option value="30_days" ${talent.availability === '30_days' ? 'selected' : ''}>🟡 Sous 30 jours (Préavis court)</option>
+                <option value="60_days" ${talent.availability === '60_days' ? 'selected' : ''}>🟠 Sous 2 à 3 mois (Préavis standard)</option>
+                <option value="discreet" ${talent.availability === 'discreet' ? 'selected' : ''}>🟣 À l'écoute discrète</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Zone géographique & Fuseau</label>
+              <select id="editLocation" class="form-select" style="background:#ffffff;">
+                <option value="🇫🇷 France & Francophonie (UTC+1 / CET)" ${talent.location && talent.location.includes('France') ? 'selected' : ''}>🇫🇷 France & Francophonie (UTC+1 / CET)</option>
+                <option value="🇪🇺 Europe & UK (CET / GMT)" ${talent.location && talent.location.includes('Europe') ? 'selected' : ''}>🇪🇺 Europe & UK (CET / GMT)</option>
+                <option value="🌍 Worldwide (100% télétravail mondial)" ${talent.location && talent.location.includes('Worldwide') ? 'selected' : ''}>🌍 Worldwide (100% télétravail mondial)</option>
+                <option value="🇺🇸 Amériques (EST / PST / UTC-5 à UTC-8)" ${talent.location && talent.location.includes('Amériques') ? 'selected' : ''}>🇺🇸 Amériques (EST / PST / UTC-5 à UTC-8)</option>
+                <option value="🏝️ Nomade Digital (Fuseaux flexibles)" ${talent.location && talent.location.includes('Nomade') ? 'selected' : ''}>🏝️ Nomade Digital (Fuseaux flexibles)</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Prétentions salariales ou TJM</label>
+              <input type="text" id="editSalary" class="form-select" value="${escapeAttr(talent.salary_expectation || '')}" placeholder="ex: CDI : 65k - 80k € / an ou TJM : 550€" style="background:#ffffff;" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Stack technique principale *</label>
+            <input type="text" id="editStack" required class="form-select" value="${escapeAttr(talent.primary_stack || '')}" placeholder="ex: Symfony, PHP, React, Docker, IA/LLM" style="background:#ffffff;" />
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Bio synthétique & Réalisations (Proof-of-Work)</label>
+            <textarea id="editBio" rows="4" class="form-select" style="background:#ffffff; resize:vertical;">${escapeHtml(talent.bio_snippet || '')}</textarea>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Lien GitHub</label>
+              <input type="url" id="editGithub" class="form-select" value="${escapeAttr(talent.github_url || '')}" placeholder="https://github.com/..." style="background:#ffffff;" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Lien Portfolio / LinkedIn</label>
+              <input type="url" id="editPortfolio" class="form-select" value="${escapeAttr(talent.portfolio_url || '')}" placeholder="https://linkedin.com/in/..." style="background:#ffffff;" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:1.25rem;">
+            <label style="display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Remplacer mon CV (Fichier PDF/Word ou URL)</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <input type="file" id="editCvFile" accept=".pdf,.docx,.doc" onchange="handleEditCvFile(event)" class="form-select" style="background:#ffffff; padding:0.45rem;" />
+              <input type="url" id="editCvUrl" class="form-select" value="${escapeAttr(talent.cv_url || '')}" placeholder="Lien CV web (Drive, Notion...)" style="background:#ffffff;" />
+            </div>
+            <div id="editCvFilePreview" style="font-size:0.78rem; color:var(--emerald); font-weight:700; margin-top:0.35rem;"></div>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            <button type="submit" id="saveProfileBtn" class="btn btn-primary">
+              💾 Enregistrer les modifications
+            </button>
+            <button type="button" class="btn btn-outline" onclick="toggleEditProfile()">
+              Annuler
+            </button>
+          </div>
+          <div id="editFeedback" style="display:none; margin-top:0.75rem; padding:0.65rem; border-radius:8px; font-weight:700; font-size:0.85rem;"></div>
+        </form>
+      </div>
+
+      <!-- Fiche en lecture seule -->
       <div style="background:var(--meta-bg); border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
         <h4 style="font-size:1.2rem; font-weight:800; color:var(--text); margin-bottom:0.5rem;">
           ${escapeHtml(talent.title)}
@@ -1012,7 +1116,127 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
         </div>
       </div>
     </div>
+
+    <!-- 5. Zone de Danger : Suppression Définitive du Compte (RGPD) -->
+    <div class="card" style="border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.02);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h4 style="font-size:1rem; font-weight:800; color:#b91c1c; margin-bottom:0.25rem;">
+            🗑️ Supprimer définitivement mon profil talent
+          </h4>
+          <p style="font-size:0.82rem; color:var(--text-muted);">
+            Cette action effacera irréversiblement votre profil de l'annuaire, vos alertes d'offres et toutes vos données personnelles.
+          </p>
+        </div>
+        <form method="POST" action="/api/talents/manage/delete" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement votre profil talent et toutes vos alertes ? Cette action est irréversible.');">
+          <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
+          <button type="submit" class="btn" style="background:#ef4444; color:white; font-size:0.8rem;">
+            🗑️ Supprimer mon compte
+          </button>
+        </form>
+      </div>
+    </div>
   </main>
+
+  <script>
+    let editCvBase64 = null;
+    let editCvFilename = null;
+
+    function toggleEditProfile() {
+      const box = document.getElementById('editProfileBox');
+      const btn = document.getElementById('toggleEditBtn');
+      if (box.style.display === 'none') {
+        box.style.display = 'block';
+        btn.textContent = '✖ Fermer l\\'édition';
+      } else {
+        box.style.display = 'none';
+        btn.textContent = '✏️ Modifier ma fiche & CV';
+      }
+    }
+
+    function handleEditCvFile(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('editCvFilePreview');
+      if (!file) {
+        editCvBase64 = null;
+        editCvFilename = null;
+        preview.textContent = '';
+        return;
+      }
+      if (file.size > 3 * 1024 * 1024) {
+        alert('Le fichier est trop volumineux (max 3 Mo).');
+        e.target.value = '';
+        return;
+      }
+      editCvFilename = file.name;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        editCvBase64 = evt.target.result;
+        preview.textContent = '✅ Nouveau fichier prêt : ' + file.name + ' (' + Math.round(file.size / 1024) + ' Ko)';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function submitProfileEdit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('saveProfileBtn');
+      const feedback = document.getElementById('editFeedback');
+      const token = document.getElementById('editToken').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement en cours...';
+
+      const stackRaw = document.getElementById('editStack').value;
+      const tags = stackRaw.split(',').map(s => s.trim()).filter(Boolean);
+
+      const payload = {
+        token,
+        title: document.getElementById('editTitle').value,
+        seniority: document.getElementById('editSeniority').value,
+        availability: document.getElementById('editAvailability').value,
+        location: document.getElementById('editLocation').value,
+        salary_expectation: document.getElementById('editSalary').value,
+        primary_stack: stackRaw,
+        tags,
+        bio_snippet: document.getElementById('editBio').value,
+        github_url: document.getElementById('editGithub').value,
+        portfolio_url: document.getElementById('editPortfolio').value,
+        cv_url: document.getElementById('editCvUrl').value,
+        cv_data: editCvBase64 || '',
+        cv_filename: editCvFilename || '',
+      };
+
+      try {
+        const res = await fetch('/api/talents/manage/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          feedback.style.display = 'block';
+          feedback.style.background = 'rgba(16,185,129,0.15)';
+          feedback.style.color = '#047857';
+          feedback.textContent = '✅ Profil mis à jour avec succès ! Rechargement...';
+          setTimeout(() => { window.location.reload(); }, 1000);
+        } else {
+          feedback.style.display = 'block';
+          feedback.style.background = 'rgba(239,68,68,0.15)';
+          feedback.style.color = '#b91c1c';
+          feedback.textContent = '❌ Erreur : ' + (data.error || 'Impossible de mettre à jour le profil.');
+        }
+      } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239,68,68,0.15)';
+        feedback.style.color = '#b91c1c';
+        feedback.textContent = '❌ Erreur réseau. Veuillez réessayer.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Enregistrer les modifications';
+      }
+    }
+  </script>
 </body>
 </html>`;
 }
@@ -1095,6 +1319,9 @@ export function renderTalentLoginPage(meta = {}) {
         </button>
 
         <div id="loginFeedback" style="display:none; margin-top:1.25rem; font-size:0.88rem; font-weight:600; text-align:center; padding:0.85rem; border-radius:8px;"></div>
+        <div style="margin-top:1rem; font-size:0.75rem; color:var(--text-muted); text-align:center; line-height:1.4;">
+          📬 Pensez à vérifier votre dossier <em>Courrier indésirable / Spams</em> si l'email tarde à arriver et signalez-le comme <strong>"Non-spam"</strong>.
+        </div>
       </form>
 
       <div style="text-align:center; margin-top:1.75rem; padding-top:1.25rem; border-top:1px solid var(--border); font-size:0.85rem; color:var(--text-muted);">
