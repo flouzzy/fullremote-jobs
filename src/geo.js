@@ -63,7 +63,7 @@ export function generateLlmsTxt({ siteUrl = "https://remote-jobs.edounze.com" })
 FullRemote.Jobs collecte, normalise et dédoublonne chaque jour les offres d'emploi 100% remote depuis 6 plateformes majeures (Remotive, Jobicy, Arbeitnow, RemoteOK, We Work Remotely, Hacker News) avec persistance SQL Cloudflare D1.
 
 ## Données & Endpoints Disponibles pour les LLMs & Agents
-- [Catalogue Complet en Markdown (300+ offres)](${siteUrl}/llms-full.txt) : Vue textuelle optimisée token-efficient.
+- [Catalogue Complet en Markdown (800+ offres)](${siteUrl}/llms-full.txt) : Vue textuelle optimisée token-efficient.
 - [Endpoint API REST JSON](${siteUrl}/api/jobs) : Recherche paginée avec filtres (région, catégorie, contrat, salaire, mots-clés).
 - [Spécification OpenAPI 3.0](${siteUrl}/openapi.json) : Schéma OpenAPI pour Custom GPTs et plugins d'IA.
 - [Serveur MCP (Model Context Protocol)](${siteUrl}/mcp) : Protocole d'outils pour Claude Desktop, Cursor et agents IA.

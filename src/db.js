@@ -196,7 +196,7 @@ export async function queryJobsFromDb(db, options = {}) {
     language = "all",
     search = "",
     hasSalary = false,
-    limit = 100,
+    limit = 2000,
     offset = 0,
   } = options;
 

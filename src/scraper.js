@@ -360,7 +360,7 @@ function parseRssItems(xmlText = "") {
  */
 async function scrapeRemotive() {
   try {
-    const res = await fetchWithTimeout("https://remotive.com/api/remote-jobs?limit=70");
+    const res = await fetchWithTimeout("https://remotive.com/api/remote-jobs?limit=150");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return (data.jobs || [])
@@ -414,7 +414,7 @@ async function scrapeRemotive() {
  */
 async function scrapeJobicy() {
   try {
-    const res = await fetchWithTimeout("https://jobicy.com/api/v2/remote-jobs?count=60");
+    const res = await fetchWithTimeout("https://jobicy.com/api/v2/remote-jobs?count=100");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return (data.jobs || [])
@@ -475,7 +475,7 @@ async function scrapeArbeitnow() {
     const data = await res.json();
     return (data.data || [])
       .filter((j) => (j.remote === true || (j.tags && j.tags.some((t) => t.toLowerCase().includes("remote")))) && isStrictlyRemote(j.title, j.description))
-      .slice(0, 40)
+      .slice(0, 100)
       .map((j) => {
         const rawTags = j.tags || [];
         const rawJobType = (j.job_types && j.job_types[0]) || "";
@@ -534,7 +534,7 @@ async function scrapeRemoteOk() {
     const jobsList = Array.isArray(data) ? data.filter((j) => j.id && j.position) : [];
     return jobsList
       .filter((j) => isStrictlyRemote(j.position, j.description))
-      .slice(0, 50)
+      .slice(0, 120)
       .map((j) => {
         const rawTags = Array.isArray(j.tags) ? j.tags : [];
         const region = detectRegion(j.location || "Worldwide", j.position, rawTags);
@@ -588,13 +588,19 @@ async function scrapeRemoteOk() {
 }
 
 /**
- * 5. Collecteur We Work Remotely
+ * 5. Collecteur We Work Remotely (Multi-Catégories)
  */
 async function scrapeWeWorkRemotely() {
   const feeds = [
-    "https://weworkremotely.com/categories/remote-programming-jobs.rss",
+    "https://weworkremotely.com/categories/remote-full-stack-programming-jobs.rss",
+    "https://weworkremotely.com/categories/remote-front-end-programming-jobs.rss",
+    "https://weworkremotely.com/categories/remote-back-end-programming-jobs.rss",
     "https://weworkremotely.com/categories/remote-devops-sysadmin-jobs.rss",
     "https://weworkremotely.com/categories/remote-product-jobs.rss",
+    "https://weworkremotely.com/categories/remote-design-jobs.rss",
+    "https://weworkremotely.com/categories/remote-sales-and-marketing-jobs.rss",
+    "https://weworkremotely.com/categories/remote-customer-support-jobs.rss",
+    "https://weworkremotely.com/categories/remote-management-and-finance-jobs.rss",
   ];
 
   const results = await Promise.allSettled(
@@ -834,7 +840,7 @@ export async function scrapeNoDesk() {
     const matches = [...xml.matchAll(itemRegex)];
     const jobs = [];
 
-    for (const match of matches.slice(0, 30)) {
+    for (const match of matches.slice(0, 60)) {
       const item = match[1];
       const titleMatch = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/);
       const linkMatch = item.match(/<link>(.*?)<\/link>/);
@@ -911,7 +917,7 @@ export async function scrapeNoDesk() {
  */
 export async function scrapeJobicyFrance() {
   try {
-    const res = await fetch("https://jobicy.com/api/v2/remote-jobs?count=40&geo=france", {
+    const res = await fetch("https://jobicy.com/api/v2/remote-jobs?count=60&geo=france", {
       headers: { "User-Agent": USER_AGENT },
       signal: AbortSignal.timeout(6000),
     });
@@ -971,7 +977,7 @@ export async function scrapeJobicyFrance() {
 }
 
 /**
- * Pipeline d'agrégation globale avec purge des offres obsolètes (> 35 jours)
+ * Pipeline d'agrégation globale avec purge des offres obsolètes (> 30 jours / 1 mois)
  */
 export async function scrapeAllJobs() {
   const tasks = [
@@ -996,7 +1002,7 @@ export async function scrapeAllJobs() {
   });
 
   const nowMs = Date.now();
-  const maxAgeMs = 35 * 24 * 60 * 60 * 1000; // 35 jours max
+  const maxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 jours max (< 1 mois)
 
   const seen = new Set();
   const uniqueJobs = [];
@@ -1004,7 +1010,7 @@ export async function scrapeAllJobs() {
   for (const job of combined) {
     if (!job.title || !job.company) continue;
 
-    // Purge des annonces de plus de 35 jours
+    // Purge des annonces de plus de 30 jours (fraîcheur garantie)
     const pubMs = new Date(job.published_at).getTime();
     if (!isNaN(pubMs) && nowMs - pubMs > maxAgeMs) continue;
 

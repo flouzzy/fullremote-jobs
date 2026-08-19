@@ -124,7 +124,7 @@ async function getOrFetchJobs(env) {
   if (env && env.DB) {
     try {
       await initDb(env.DB);
-      const dbJobs = await queryJobsFromDb(env.DB, { limit: 300 });
+      const dbJobs = await queryJobsFromDb(env.DB, { limit: 2000 });
       if (dbJobs && dbJobs.length > 0) {
         cachedJobs = dbJobs;
         lastIngestionTime = dbJobs[0].published_at || new Date().toISOString();
