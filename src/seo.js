@@ -1005,6 +1005,110 @@ export const PROGRAMMATIC_PAGES = {
       return (j.regionId || "").toLowerCase() === "worldwide" || (j.location || "").toLowerCase().includes("worldwide");
     },
   },
+  "remote-intern-jobs": {
+    slug: "remote-intern-jobs",
+    tech: "Stages & Internships",
+    icon: "🎓",
+    title_fr: "Stages 100% Télétravail (Remote Internships Tech, Dév & Data)",
+    title_en: "100% Remote Internships & Student Jobs",
+    desc_fr: "Trouvez votre stage en 100% télétravail dans les meilleures startups et scale-ups tech. Postulez directement sans filtre d'adresse postale.",
+    desc_en: "Discover verified 100% remote tech internships, software development, data and design positions. Work and learn from home.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.contractType || ""} ${j.description_snippet || ""}`.toLowerCase();
+      return j.contractTypeId === "internship" || /\b(intern|internship|stage|stagiaire|trainee)\b/i.test(text);
+    },
+  },
+  "remote-stage-jobs": {
+    slug: "remote-stage-jobs",
+    tech: "Stages 100% Télétravail",
+    icon: "🎓",
+    title_fr: "Offres de Stage 100% Télétravail en France & International",
+    title_en: "Remote Internship Positions in France & Worldwide",
+    desc_fr: "Toutes les offres de stage en pur télétravail (Dév, DevOps, Web, Marketing, IA). Démarrez votre carrière sans contrainte géographique.",
+    desc_en: "All 100% work-from-home internship offers for students and juniors in tech, development and design.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.contractType || ""} ${j.description_snippet || ""}`.toLowerCase();
+      return j.contractTypeId === "internship" || /\b(stage|stagiaire|intern|internship)\b/i.test(text);
+    },
+  },
+  "remote-alternance-jobs": {
+    slug: "remote-alternance-jobs",
+    tech: "Alternance & Apprentissage",
+    icon: "📚",
+    title_fr: "Alternances & Apprentissage 100% Télétravail (Tech, Dév, Web)",
+    title_en: "Remote Apprenticeships & Work-Study Jobs",
+    desc_fr: "Les offres d'alternance et contrats d'apprentissage en télétravail intégral. Entreprises bienveillantes avec encadrement à distance.",
+    desc_en: "Find remote apprenticeships and work-study contracts in software engineering, cloud, and product management.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.contractType || ""} ${j.description_snippet || ""}`.toLowerCase();
+      return /\b(alternan|apprentissage|apprentice|work-study|contrat pro)\b/i.test(text) || (j.contractTypeId === "internship" && text.includes("altern"));
+    },
+  },
+  "remote-senior-jobs": {
+    slug: "remote-senior-jobs",
+    tech: "Seniors, Staff & Lead",
+    icon: "👑",
+    title_fr: "Postes Senior, Staff Engineer, Principal & Lead 100% Télétravail",
+    title_en: "Senior, Staff & Lead Remote Engineering Jobs",
+    desc_fr: "Les meilleures opportunités full remote pour développeurs seniors, architectes, Staff Engineers et Tech Leads. Valorisez votre expertise et votre autonomie.",
+    desc_en: "High-impact remote leadership and senior engineering roles (Staff, Principal, Lead Architect, CTO). Transparent high salaries.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.description_snippet || ""}`.toLowerCase();
+      return /\b(senior|staff|principal|lead|architect|architecte|head of|director|vp|directeur|50\+)\b/i.test(text);
+    },
+  },
+  "remote-fractional-jobs": {
+    slug: "remote-fractional-jobs",
+    tech: "Fractional CTO & Temps Partagé",
+    icon: "⚡",
+    title_fr: "Missions Fractional CTO, Expert Partagé & Advisory 100% Télétravail",
+    title_en: "Fractional CTO & Part-Time Executive Remote Jobs",
+    desc_fr: "Opportunités de direction technique à temps partagé (Fractional CTO, VP Eng), advisory et mentorat pour profils très expérimentés.",
+    desc_en: "Fractional CTO, part-time leadership, and high-level advisory remote roles for experienced veterans and executives.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.description_snippet || ""}`.toLowerCase();
+      return /\b(fractional|partagé|partage|advisory|advisor|temps partiel|part-time|interim cto)\b/i.test(text);
+    },
+  },
+  "remote-freelance-jobs": {
+    slug: "remote-freelance-jobs",
+    tech: "Freelance & Missions TJM",
+    icon: "⚡",
+    title_fr: "Missions Freelance 100% Télétravail & TJM Élevés",
+    title_en: "100% Remote Freelance & Contract Tech Jobs",
+    desc_fr: "Trouvez vos prochaines missions freelance en pur télétravail. TJM transparents, contrats directs avec les clients.",
+    desc_en: "Discover high-paying freelance and contractor tech missions with 100% remote flexibility and direct client contact.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.contractType || ""} ${j.description_snippet || ""}`.toLowerCase();
+      return j.contractTypeId === "freelance_contract" || /\b(freelance|contract|tjm|mission|indépendant|independant|contractor)\b/i.test(text);
+    },
+  },
+  "remote-ai-jobs": {
+    slug: "remote-ai-jobs",
+    tech: "IA, Machine Learning & LLM",
+    icon: "🤖",
+    title_fr: "Offres d'Emploi 100% Télétravail IA, LLM & Machine Learning",
+    title_en: "100% Remote AI, LLM & Machine Learning Engineering Jobs",
+    desc_fr: "Postes en télétravail IA générative, ingénierie LLM, RAG, PyTorch, LangChain et architectures d'agents autonomes.",
+    desc_en: "Explore remote AI engineer, GenAI, LLMs, RAG pipelines, PyTorch, Machine Learning and autonomous agents opportunities.",
+    filterFn: (j) => {
+      const text = `${j.title} ${(j.tags || []).join(" ")} ${j.description_snippet || ""}`.toLowerCase();
+      return /\b(ai\b|ia\b|machine learning|llm|deep learning|genai|gpt|rag|langchain|pytorch|tensorflow|computer vision|nlp)\b/i.test(text);
+    },
+  },
+  "remote-part-time-jobs": {
+    slug: "remote-part-time-jobs",
+    tech: "Temps Partiel & Semaine 4 Jours",
+    icon: "⏱️",
+    title_fr: "Offres 100% Télétravail à Temps Partiel & Semaine de 4 Jours",
+    title_en: "Remote Part-Time & 4-Day Workweek Jobs",
+    desc_fr: "Conciliez vie personnelle et carrière avec des postes 100% télétravail à temps partiel (28h-32h) ou semaine de 4 jours.",
+    desc_en: "Work-life balance focused remote jobs: part-time, 4-day workweek, 32h/week flexible arrangements.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.contractType || ""} ${j.description_snippet || ""}`.toLowerCase();
+      return j.contractTypeId === "cdd_parttime" || /\b(part-time|temps partiel|4-day|4 day|semaine 4|32h|28h)\b/i.test(text);
+    },
+  },
 };
 
 /**
@@ -1226,8 +1330,6 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
               </div>
 
               ${cleanDesc ? `<p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; margin-bottom:0.85rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(cleanDesc)}</p>` : ""}
-            </div>
-
             </div>
 
             <div>

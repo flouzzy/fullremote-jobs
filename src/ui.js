@@ -1270,21 +1270,25 @@ export function renderHTML(jobs = [], meta = {}) {
           </div>
         </div>
       <div class="footer-seo-tags" style="border-top:1px solid var(--border); padding-top:1.25rem; margin-top:1.5rem; display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center;">
-        <span style="font-size:0.72rem; color:var(--text-dim); font-weight:700; width:100%; text-align:center; margin-bottom:0.25rem; letter-spacing:0.05em;">SPÉCIALITÉS 100% TÉLÉTRAVAIL (TOP TIOBE) :</span>
+        <span style="font-size:0.72rem; color:var(--text-dim); font-weight:700; width:100%; text-align:center; margin-bottom:0.25rem; letter-spacing:0.05em;">SPÉCIALITÉS 100% TÉLÉTRAVAIL (PÉPITES & TOP TIOBE) :</span>
+        <a href="/remote-intern-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🎓 Stages Remote</a>
+        <a href="/remote-alternance-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">📚 Alternance Remote</a>
+        <a href="/remote-senior-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">👑 Seniors & Staff</a>
+        <a href="/remote-fractional-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">⚡ Fractional CTO</a>
+        <a href="/remote-freelance-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">⚡ Freelance & TJM</a>
+        <a href="/remote-ai-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🤖 IA & LLM Remote</a>
         <a href="/remote-laravel-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🔴 Laravel Remote</a>
         <a href="/remote-symfony-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🎼 Symfony Remote</a>
         <a href="/remote-php-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐘 PHP Remote</a>
-        <a href="/remote-python-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐍 Python & IA Remote</a>
-        <a href="/remote-react-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">⚛️ React & TS Remote</a>
+        <a href="/remote-python-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐍 Python & IA</a>
+        <a href="/remote-react-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">⚛️ React & TS</a>
         <a href="/remote-rust-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🦀 Rust Remote</a>
         <a href="/remote-golang-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐹 Go Remote</a>
         <a href="/remote-java-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">☕ Java Remote</a>
-        <a href="/remote-csharp-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🎯 C# .NET Remote</a>
-        <a href="/remote-ruby-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">💎 Ruby on Rails Remote</a>
+        <a href="/remote-csharp-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🎯 C# .NET</a>
         <a href="/remote-devops-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">☁️ DevOps & Cloud</a>
         <a href="/remote-jobs-france" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🇫🇷 Remote France</a>
-        <a href="/remote-jobs-europe" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🇪🇺 Remote Europe</a>
-        <a href="/remote-jobs-worldwide" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🌍 Remote Worldwide</a>
+        <a href="/remote-jobs-worldwide" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🌍 Worldwide</a>
       </div>
 
       <div class="footer-bottom">
