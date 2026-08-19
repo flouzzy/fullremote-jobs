@@ -454,6 +454,7 @@ export default {
       const token = url.searchParams.get("token") || "";
       const successMsg = url.searchParams.get("success") || "";
       const errorMsg = url.searchParams.get("error") || "";
+      const welcome = url.searchParams.get("welcome") === "1";
       let talent = null;
       if (token && env && env.DB) {
         await initDb(env.DB);
@@ -462,7 +463,7 @@ export default {
       if (!talent) {
         return Response.redirect(new URL("/talents/join", request.url).toString(), 302);
       }
-      const html = renderManageTalentPage(talent, successMsg, errorMsg, { siteUrl });
+      const html = renderManageTalentPage(talent, successMsg, errorMsg, { siteUrl, welcome });
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
@@ -490,6 +491,18 @@ export default {
         if (env && env.DB) {
           await initDb(env.DB);
           savedTalent = await saveTalentProfile(env.DB, body);
+
+          // Synchronisation automatique de l'alerte email pour les offres personnalisées
+          try {
+            await saveEmailAlert(env.DB, {
+              email,
+              keywords: primaryStack,
+              frequency: body.alert_frequency || "weekly",
+              region_id: "all",
+            });
+          } catch (alertErr) {
+            console.warn("Alerte auto-creation notice:", alertErr.message);
+          }
         } else {
           savedTalent = { id: `talent_${Date.now()}`, manage_token: `token_${Date.now()}`, ...body };
         }
@@ -638,6 +651,46 @@ export default {
       }
 
       return Response.redirect(new URL(`/talents/manage?token=${encodeURIComponent(token)}&success=Statut mis à jour avec succès.`, request.url).toString(), 302);
+    }
+
+    // API Mise à jour Préférences Alertes Talent : POST /api/talents/manage/alert
+    if (pathname === "/api/talents/manage/alert" && request.method === "POST") {
+      let token = "";
+      let frequency = "weekly";
+      const contentType = request.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        const body = await request.json();
+        token = body.token || "";
+        frequency = body.frequency || "weekly";
+      } else {
+        const formData = await request.formData();
+        token = formData.get("token") || "";
+        frequency = formData.get("frequency") || "weekly";
+      }
+
+      if (token && env && env.DB) {
+        await initDb(env.DB);
+        const talent = await getTalentByToken(env.DB, token);
+        if (talent && talent.email) {
+          if (frequency === "off") {
+            try {
+              await env.DB.prepare("UPDATE email_alerts SET is_active = 0 WHERE email = ?").bind(talent.email.toLowerCase().trim()).run();
+            } catch (_) {}
+          } else {
+            try {
+              await saveEmailAlert(env.DB, {
+                email: talent.email.toLowerCase().trim(),
+                keywords: talent.primary_stack || "",
+                frequency,
+                region_id: "all",
+              });
+            } catch (_) {}
+          }
+        }
+      }
+
+      return Response.redirect(new URL(`/talents/manage?token=${encodeURIComponent(token)}&success=Préférences d'alertes enregistrées avec succès.`, request.url).toString(), 302);
     }
 
     // 9. API Création de Session Stripe Checkout (49 €) : POST /api/checkout/create-session ou /api/jobs/draft

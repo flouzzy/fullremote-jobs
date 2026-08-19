@@ -387,18 +387,27 @@ export function buildTalentWelcomeEmailHtml({ talent = {}, siteUrl = DEFAULT_SIT
         </div>
       </div>
 
-      <div style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:24px;">
+      <div style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:20px;">
         🔒 <strong>Votre anonymat est protégé</strong> : Vos coordonnées réelles ne sont jamais affichées publiquement. Lorsqu'une entreprise souhaite vous contacter, vous recevrez une notification détaillée par email et vous restez 100% libre d'y répondre.
       </div>
 
+      <div style="background-color:#eff6ff; border-left:4px solid #2563eb; padding:16px; border-radius:0 8px 8px 0; margin-bottom:24px;">
+        <div style="font-size:13px; font-weight:700; color:#1e40af; margin-bottom:6px;">💡 3 Conseils pour décrocher les meilleures opportunités :</div>
+        <ul style="margin:0; padding-left:18px; font-size:13px; color:#1e293b; line-height:1.5;">
+          <li><strong>Proof-of-Work :</strong> Les liens vers vos repos GitHub ou projets en production multiplient par 4 l'intérêt des recruteurs.</li>
+          <li><strong>Alertes personnalisées :</strong> Vous recevrez automatiquement un digest hebdomadaire des nouvelles offres correspondant à votre stack.</li>
+          <li><strong>Réactivité :</strong> Répondre sous 24h valorise immédiatement votre autonomie asynchrone.</li>
+        </ul>
+      </div>
+
       <div style="text-align:center; margin:28px 0;">
-        <a href="${manageUrl}" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; font-weight:700; font-size:14px; padding:12px 24px; border-radius:8px; text-decoration:none;">
-          ⚙️ Gérer mon profil ou mettre en pause ↗
+        <a href="${manageUrl}" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; font-weight:700; font-size:15px; padding:14px 28px; border-radius:8px; text-decoration:none; box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+          ⚙️ Accéder à mon Espace Privé Talent ↗
         </a>
       </div>
 
-      <p style="font-size:12px; color:#94a3b8; text-align:center; margin:0;">
-        Conservez cet email précieusement pour modifier vos informations à tout moment.
+      <p style="font-size:12px; color:#94a3b8; text-align:center; margin:0; line-height:1.5;">
+        Conservez cet email précieusement : le bouton ci-dessus contient votre lien d'accès secret pour modifier vos préférences, vos alertes d'emploi et votre visibilité à tout moment sans mot de passe.
       </p>
     </div>
   </div>

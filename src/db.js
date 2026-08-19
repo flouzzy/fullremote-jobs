@@ -797,4 +797,57 @@ export async function incrementTalentViews(db, id) {
   } catch (e) {}
 }
 
+/**
+ * Met à jour les informations d'un talent depuis son espace privé
+ */
+export async function updateTalentProfileByToken(db, token, data = {}) {
+  if (!db || !token) return null;
+  try {
+    const tagsJson = JSON.stringify(data.tags || []);
+    let sql = `UPDATE talents SET
+      title = COALESCE(?, title),
+      seniority = COALESCE(?, seniority),
+      availability = COALESCE(?, availability),
+      primary_stack = COALESCE(?, primary_stack),
+      tags_json = COALESCE(?, tags_json),
+      salary_expectation = COALESCE(?, salary_expectation),
+      location = COALESCE(?, location),
+      bio_snippet = COALESCE(?, bio_snippet),
+      github_url = COALESCE(?, github_url),
+      portfolio_url = COALESCE(?, portfolio_url),
+      updated_at = CURRENT_TIMESTAMP`;
+    const params = [
+      data.title || null,
+      data.seniority || null,
+      data.availability || null,
+      data.primary_stack || null,
+      tagsJson,
+      data.salary_expectation || null,
+      data.location || null,
+      data.bio_snippet || null,
+      data.github_url || null,
+      data.portfolio_url || null,
+    ];
+
+    if (data.cv_data) {
+      sql += `, cv_data = ?, cv_filename = ?`;
+      params.push(data.cv_data, data.cv_filename || "CV.pdf");
+    }
+    if (data.cv_url) {
+      sql += `, cv_url = ?`;
+      params.push(data.cv_url);
+    }
+
+    sql += ` WHERE manage_token = ?`;
+    params.push(token);
+
+    await db.prepare(sql).bind(...params).run();
+    return await getTalentByToken(db, token);
+  } catch (err) {
+    console.error("Erreur updateTalentProfileByToken D1 :", err);
+    return null;
+  }
+}
+
+
 

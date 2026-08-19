@@ -737,12 +737,13 @@ export function renderJoinTalentPoolPage(meta = {}) {
         const data = await res.json();
 
         if (data.success) {
+          const manageUrl = data.manage_token ? '/talents/manage?token=' + encodeURIComponent(data.manage_token) + '&welcome=1' : '/talents';
           feedback.style.display = 'block';
           feedback.style.background = 'rgba(16,185,129,0.12)';
           feedback.style.color = '#047857';
-          feedback.textContent = '🎉 Félicitations ! Votre profil est activé. Un email de confirmation contenant votre lien de gestion vous a été envoyé.';
+          feedback.textContent = '🎉 Félicitations ! Votre profil est activé. Redirection vers votre espace privé...';
           document.getElementById('talentJoinForm').reset();
-          setTimeout(() => { window.location.href = '/talents'; }, 3000);
+          setTimeout(() => { window.location.href = manageUrl; }, 1200);
         } else {
           feedback.style.display = 'block';
           feedback.style.background = 'rgba(239,68,68,0.12)';
@@ -765,80 +766,248 @@ export function renderJoinTalentPoolPage(meta = {}) {
 }
 
 /**
- * 3. Page de Gestion Candidat (Mettre en pause ou réactiver) : /talents/manage?token=...
+ * 3. Page de Gestion Candidat & Tableau de Bord Privé : /talents/manage?token=...
  */
 export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", meta = {}) {
   const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const isWelcome = meta.welcome || false;
+  const seniority = SENIORITY_MAP[talent.seniority] || SENIORITY_MAP.senior;
+  const availability = AVAILABILITY_MAP[talent.availability] || AVAILABILITY_MAP["30_days"];
+  const tags = Array.isArray(talent.tags) ? talent.tags : [];
+  const tagsHtml = tags.map(tag => `<span style="font-size:0.75rem; color:var(--text); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:6px; font-weight:600;">#${escapeHtml(tag)}</span>`).join(" ");
 
   return `<!DOCTYPE html>
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestion de Profil Talent — FullRemote.Jobs</title>
+  <title>Espace Privé Talent — FullRemote.Jobs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
   <style>
     :root {
-      --bg: #f8fafc; --bg-card: #ffffff; --border: #e2e8f0; --text: #0f172a; --text-muted: #64748b;
-      --primary: #2563eb; --emerald: #10b981; --font-sans: 'Inter', system-ui, sans-serif;
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.1);
+      --meta-bg: #f1f5f9;
+      --font-sans: 'Inter', system-ui, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); padding: 2rem 1rem; }
-    .card { max-width: 600px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; }
-    .btn { padding: 0.65rem 1.25rem; font-size: 0.9rem; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-pause { background: #f59e0b; color: white; }
-    .btn-hired { background: #10b981; color: white; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; min-height: 100vh; }
+    .container { max-width: 840px; margin: 0 auto; padding: 2rem 1.5rem; }
+    header { border-bottom: 1px solid var(--border); background: var(--bg-card); padding: 1rem 0; }
+    .header-inner { max-width: 840px; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    .btn { padding: 0.65rem 1.25rem; font-size: 0.88rem; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; transition: all 0.15s ease; }
+    .btn-primary { background: var(--primary); color: white !important; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-pause { background: #f59e0b; color: white !important; }
+    .btn-pause:hover { background: #d97706; }
+    .btn-hired { background: #10b981; color: white !important; }
+    .btn-hired:hover { background: #059669; }
+    .form-select { width: 100%; background: var(--meta-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.9rem; color: var(--text); font-family: inherit; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div style="text-align:center; margin-bottom:1.5rem;">
-      <div style="font-size:2.5rem;">⚙️</div>
-      <h1 style="font-size:1.5rem; font-weight:800; margin-top:0.25rem;">Espace Gestion Talent</h1>
-      <p style="font-size:0.88rem; color:var(--text-muted);">Gérez la visibilité de votre profil sur FullRemote.Jobs</p>
-    </div>
-
-    ${successMsg ? `<div style="background:rgba(16,185,129,0.12); color:#047857; padding:0.75rem; border-radius:8px; font-weight:700; margin-bottom:1.5rem; text-align:center;">${escapeHtml(successMsg)}</div>` : ""}
-    ${errorMsg ? `<div style="background:rgba(239,68,68,0.12); color:#b91c1c; padding:0.75rem; border-radius:8px; font-weight:700; margin-bottom:1.5rem; text-align:center;">${escapeHtml(errorMsg)}</div>` : ""}
-
-    <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
-      <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Statut Actuel</div>
-      <div style="font-size:1.15rem; font-weight:800; color:${talent.status === 'active' ? '#10b981' : '#f59e0b'}; margin-top:0.25rem;">
-        ${talent.status === 'active' ? '🟢 Actif (Visible par les recruteurs)' : (talent.status === 'hired' ? '🎉 Recruté / Hired' : '⏸️ En pause')}
-      </div>
-      <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">
-        Poste : <strong>${escapeHtml(talent.title)}</strong><br>
-        Email : <strong>${escapeHtml(talent.email)}</strong><br>
-        Sollicitations reçues : <strong>${talent.contact_count || 0}</strong>
-      </div>
-    </div>
-
-    <div style="display:flex; flex-direction:column; gap:0.75rem;">
-      ${talent.status !== 'active' ? `
-        <form method="POST" action="/api/talents/manage/status">
-          <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
-          <input type="hidden" name="status" value="active" />
-          <button type="submit" class="btn btn-primary" style="width:100%;">▶️ Réactiver mon profil</button>
-        </form>
-      ` : `
-        <form method="POST" action="/api/talents/manage/status">
-          <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
-          <input type="hidden" name="status" value="paused" />
-          <button type="submit" class="btn btn-pause" style="width:100%;">⏸️ Mettre mon profil en pause</button>
-        </form>
-        <form method="POST" action="/api/talents/manage/status">
-          <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
-          <input type="hidden" name="status" value="hired" />
-          <button type="submit" class="btn btn-hired" style="width:100%;">🎉 J'ai trouvé un job (Retirer du vivier)</button>
-        </form>
-      `}
-      <a href="/talents" style="text-align:center; font-size:0.85rem; color:var(--primary); font-weight:600; margin-top:0.5rem;">
-        ← Retour à l'annuaire des talents
+  <header>
+    <div class="header-inner">
+      <a href="/" style="font-weight:800; font-size:1.15rem; color:var(--text); text-decoration:none; display:flex; align-items:center; gap:0.4rem;">
+        <span>🌍</span> FullRemote<span style="color:var(--primary);">.Jobs</span>
       </a>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <a href="/talents" style="font-size:0.85rem; font-weight:600; color:var(--primary); text-decoration:none;">
+          ← Annuaire des Talents
+        </a>
+      </div>
     </div>
-  </div>
+  </header>
+
+  <main class="container">
+    ${isWelcome ? `
+      <div style="background:linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(37,99,235,0.1) 100%); border:1px solid rgba(16,185,129,0.3); border-radius:16px; padding:1.75rem; margin-bottom:1.5rem; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.25rem;">🎉</div>
+        <h2 style="font-size:1.4rem; font-weight:800; color:#047857; margin-bottom:0.35rem;">Votre profil Talent est en ligne !</h2>
+        <p style="font-size:0.92rem; color:var(--text); max-width:600px; margin:0 auto;">
+          Bienvenue dans le vivier. Conservez cette page dans vos favoris : c'est votre lien privé et sécurisé pour gérer vos préférences, vos alertes d'offres et votre disponibilité.
+        </p>
+      </div>
+    ` : ""}
+
+    ${successMsg ? `
+      <div style="background:rgba(16,185,129,0.12); color:#047857; border:1px solid rgba(16,185,129,0.25); padding:0.85rem 1.25rem; border-radius:12px; font-weight:700; margin-bottom:1.5rem; text-align:center;">
+        ✅ ${escapeHtml(successMsg)}
+      </div>
+    ` : ""}
+
+    ${errorMsg ? `
+      <div style="background:rgba(239,68,68,0.12); color:#b91c1c; border:1px solid rgba(239,68,68,0.25); padding:0.85rem 1.25rem; border-radius:12px; font-weight:700; margin-bottom:1.5rem; text-align:center;">
+        ❌ ${escapeHtml(errorMsg)}
+      </div>
+    ` : ""}
+
+    <!-- 1. Statut & Visibilité en direct -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Statut & Visibilité</div>
+          <h2 style="font-size:1.35rem; font-weight:800; color:var(--text); margin-top:0.2rem;">
+            ${talent.status === 'active' ? '🟢 Profil Actif & Visible' : (talent.status === 'hired' ? '🎉 Recruté / Hired' : '⏸️ Profil en Pause')}
+          </h2>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.25rem;">
+            ${talent.status === 'active' ? 'Les entreprises et recruteurs vérifiés peuvent vous envoyer des propositions par email.' : 'Votre profil est actuellement masqué de l\'annuaire public.'}
+          </p>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          ${talent.status !== 'active' ? `
+            <form method="POST" action="/api/talents/manage/status">
+              <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
+              <input type="hidden" name="status" value="active" />
+              <button type="submit" class="btn btn-primary">▶️ Réactiver mon profil</button>
+            </form>
+          ` : `
+            <form method="POST" action="/api/talents/manage/status">
+              <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
+              <input type="hidden" name="status" value="paused" />
+              <button type="submit" class="btn btn-pause">⏸️ Mettre en pause</button>
+            </form>
+            <form method="POST" action="/api/talents/manage/status">
+              <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
+              <input type="hidden" name="status" value="hired" />
+              <button type="submit" class="btn btn-hired">🎉 J'ai été recruté</button>
+            </form>
+          `}
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:0.75rem; padding-top:1rem; border-top:1px solid var(--border);">
+        <div style="background:var(--meta-bg); padding:0.75rem 1rem; border-radius:10px;">
+          <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Sollicitations</div>
+          <div style="font-size:1.25rem; font-weight:800; color:var(--primary);">${talent.contact_count || 0} reçue(s)</div>
+        </div>
+        <div style="background:var(--meta-bg); padding:0.75rem 1rem; border-radius:10px;">
+          <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Vues profil</div>
+          <div style="font-size:1.25rem; font-weight:800; color:var(--text);">${talent.view_count || 0}</div>
+        </div>
+        <div style="background:var(--meta-bg); padding:0.75rem 1rem; border-radius:10px;">
+          <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Email Protégé</div>
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(talent.email)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Aperçu de votre Fiche Candidat -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+        <h3 style="font-size:1.15rem; font-weight:800; color:var(--text);">
+          📋 Votre Fiche Talent (Telle que vue par les recruteurs)
+        </h3>
+        <span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:${seniority.bg}; color:${seniority.color};">
+          ${escapeHtml(seniority.label_fr)}
+        </span>
+      </div>
+
+      <div style="background:var(--meta-bg); border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
+        <h4 style="font-size:1.2rem; font-weight:800; color:var(--text); margin-bottom:0.5rem;">
+          ${escapeHtml(talent.title)}
+        </h4>
+
+        <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.85rem;">
+          <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:6px; background:rgba(37,99,235,0.08); color:var(--primary);">
+            🌍 ${escapeHtml(talent.location || "France / Europe")}
+          </span>
+          <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:6px; background:rgba(16,185,129,0.08); color:var(--emerald);">
+            ${escapeHtml(availability.label_fr)}
+          </span>
+          ${talent.salary_expectation ? `<span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(245,158,11,0.08); color:#d97706;">💰 ${escapeHtml(talent.salary_expectation)}</span>` : ""}
+          ${(talent.cv_data || talent.cv_url) ? `<span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(16,185,129,0.1); color:var(--emerald); border:1px solid rgba(16,185,129,0.25);">📄 CV vérifié</span>` : ""}
+        </div>
+
+        ${talent.bio_snippet ? `<p style="font-size:0.9rem; color:var(--text); line-height:1.6; margin-bottom:1rem; white-space:pre-line;">${escapeHtml(talent.bio_snippet)}</p>` : ""}
+
+        <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:1rem;">
+          ${tagsHtml}
+        </div>
+
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; padding-top:0.75rem; border-top:1px solid var(--border); font-size:0.82rem;">
+          ${(talent.cv_data || talent.cv_url) ? `
+            <a href="/api/talents/${encodeURIComponent(talent.id)}/cv" target="_blank" style="color:var(--primary); font-weight:700; text-decoration:none;">
+              📄 Consulter mon CV rattaché ↗
+            </a>
+          ` : `<span style="color:var(--text-dim);">Aucun CV rattaché</span>`}
+          ${talent.github_url ? `<a href="${escapeHtml(talent.github_url)}" target="_blank" style="color:var(--text-muted); font-weight:600; text-decoration:none;">★ GitHub ↗</a>` : ""}
+          ${talent.portfolio_url ? `<a href="${escapeHtml(talent.portfolio_url)}" target="_blank" style="color:var(--text-muted); font-weight:600; text-decoration:none;">🔗 Portfolio / LinkedIn ↗</a>` : ""}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Préférences d'Alertes Offres d'Emploi (Job Drops) -->
+    <div class="card">
+      <div style="margin-bottom:1.25rem;">
+        <h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin-bottom:0.25rem;">
+          🔔 Alertes Offres d'Emploi Personnalisées
+        </h3>
+        <p style="font-size:0.85rem; color:var(--text-muted);">
+          Recevez automatiquement les opportunités 100% télétravail correspondant à votre stack (${escapeHtml(talent.primary_stack || "votre profil")}).
+        </p>
+      </div>
+
+      <form method="POST" action="/api/talents/manage/alert">
+        <input type="hidden" name="token" value="${escapeAttr(talent.manage_token)}" />
+        <div style="display:grid; grid-template-columns:1fr auto; gap:0.75rem; align-items:center;">
+          <select name="frequency" class="form-select">
+            <option value="weekly" selected>📬 Hebdomadaire (Recommandé — Le digest chaque lundi matin)</option>
+            <option value="daily">⚡ Quotidien (Les nouvelles opportunités chaque matin)</option>
+            <option value="monthly">📅 Mensuel (Le récapitulatif du mois)</option>
+            <option value="off">🚫 Désactiver les alertes d'offres (Conserver uniquement les contacts recruteurs)</option>
+          </select>
+          <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 4. Guide & Tutoriel d'Onboarding Remote 10x -->
+    <div class="card" style="background:linear-gradient(135deg, rgba(37,99,235,0.04) 0%, rgba(139,92,246,0.04) 100%); border:1px solid rgba(37,99,235,0.18);">
+      <h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.4rem;">
+        <span>💡</span> Guide : 3 conseils pour maximiser vos prises de contact
+      </h3>
+      <div style="display:grid; gap:0.85rem; font-size:0.88rem; color:var(--text);">
+        <div style="display:flex; gap:0.6rem; align-items:flex-start;">
+          <span style="font-size:1.1rem; flex-shrink:0;">📌</span>
+          <div>
+            <strong>1. Mettez en avant votre Proof-of-Work :</strong>
+            <span style="color:var(--text-muted);"> Les startups recrutant en remote recherchent des preuves d'exécution (dépôts GitHub publics, projets en production, architectures modulaires).</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; align-items:flex-start;">
+          <span style="font-size:1.1rem; flex-shrink:0;">📌</span>
+          <div>
+            <strong>2. Rémunération & TJM transparents :</strong>
+            <span style="color:var(--text-muted);"> Indiquer une fourchette réaliste dès le départ filtre 100% des entretiens hors budget et vous fait gagner un temps précieux.</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:0.6rem; align-items:flex-start;">
+          <span style="font-size:1.1rem; flex-shrink:0;">📌</span>
+          <div>
+            <strong>3. Réactivité asynchrone :</strong>
+            <span style="color:var(--text-muted);"> Lorsqu'une entreprise vous sollicite, une réponse courtoise sous 24h démontre immédiatement votre professionnalisme et votre autonomie.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 </body>
 </html>`;
 }
+
