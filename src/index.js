@@ -40,7 +40,13 @@ import {
   DEFAULT_VAPID_PRIVATE_KEY,
   sendWebPushNotification,
 } from "./push.js";
-import { renderJobDetailPage, generateRssFeed, generateSitemap } from "./seo.js";
+import {
+  renderJobDetailPage,
+  generateRssFeed,
+  generateSitemap,
+  PROGRAMMATIC_PAGES,
+  renderProgrammaticLandingPage,
+} from "./seo.js";
 import {
   generateRobotsTxt,
   generateLlmsTxt,
@@ -744,6 +750,23 @@ export default {
         });
       }
       return Response.redirect(new URL("/", request.url).toString(), 302);
+    }
+
+    // 9.bis Routes d'Atterrissage Programmatiques SEO (Stacks TIOBE & Régions)
+    const cleanSlug = pathname.replace(/^\//, "").toLowerCase();
+    if (PROGRAMMATIC_PAGES[cleanSlug]) {
+      const pageConfig = PROGRAMMATIC_PAGES[cleanSlug];
+      const { jobs } = await getOrFetchJobs(env);
+      const matchingJobs = jobs.filter(pageConfig.filterFn);
+      const html = renderProgrammaticLandingPage(pageConfig, matchingJobs, jobs, { siteUrl });
+
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=120, s-maxage=1800, stale-while-revalidate=86400",
+          ...corsHeaders,
+        },
+      });
     }
 
     // 10. Route API : /api/jobs

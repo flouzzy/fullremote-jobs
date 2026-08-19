@@ -295,16 +295,121 @@ export function renderJobDetailPage(job, meta = {}) {
         </div>
       </div>
 
-      <div style="margin-bottom: 2.5rem;">
+      <!-- Radar de Pouvoir d'Achat & Geo-Arbitrage -->
+      ${(() => {
+        const hasSalary = job.salary_min_eur > 0 || (job.salary && job.salary.length > 2);
+        const eurVal = job.salary_min_eur || (job.salary_max_eur ? Math.round((job.salary_min_eur + job.salary_max_eur)/2) : 65000);
+        const usdVal = job.salary_min_usd || Math.round(eurVal * 1.09);
+        const isUsd = (job.currency === "USD" || (job.salary && job.salary.includes("$")));
+        
+        // Pouvoir d'achat équivalent en France (Arbitrage US/EU)
+        const livingMultiplier = isUsd ? 1.35 : 1.15;
+        const equivalentPpp = Math.round(eurVal * livingMultiplier);
+        const netSalariedMonthly = Math.round((eurVal * 0.77) / 12);
+        const netFreelanceMonthly = Math.round((eurVal * 0.88) / 12);
+        const tjmEquivalent = Math.round(eurVal / 210);
+
+        return `
+        <section class="geo-radar-card" style="background: linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(16,185,129,0.06) 100%); border: 1px solid rgba(37,99,235,0.25); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="font-size:1.25rem;">💶</span>
+              <h3 style="font-size:1.1rem; font-weight:800; color:var(--text);" data-i18n="radar_title">Radar Geo-Arbitrage & Pouvoir d'Achat</h3>
+            </div>
+            <a href="/simulateur-salaire-remote" style="font-size:0.8rem; font-weight:700; color:var(--primary); text-decoration:underline;" data-i18n="radar_open_sim">
+              Ouvrir le simulateur complet →
+            </a>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
+            <div style="background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;" data-i18n="radar_base_salary">Rémunération Brute</div>
+              <div style="font-size:1.25rem; font-weight:800; color:var(--emerald); margin-top:0.25rem;">
+                ${job.salary ? escapeHtml(job.salary) : `~${eurVal.toLocaleString('fr-FR')} € / an`}
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.15rem;">
+                ${isUsd ? `≈ ${eurVal.toLocaleString('fr-FR')} € (taux de change direct)` : `≈ ${usdVal.toLocaleString('en-US')} $ USD`}
+              </div>
+            </div>
+
+            <div style="background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;" data-i18n="radar_ppp_equiv">Équivalent Niveau de Vie (France)</div>
+              <div style="font-size:1.25rem; font-weight:800; color:var(--primary); margin-top:0.25rem;">
+                ≈ ${equivalentPpp.toLocaleString('fr-FR')} € / an
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.15rem;" data-i18n="radar_ppp_desc">
+                Pouvoir d'achat réel ajusté au coût de la vie
+              </div>
+            </div>
+
+            <div style="background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:10px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;" data-i18n="radar_net_est">Net Estimé en France</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--text); margin-top:0.25rem;">
+                ≈ ${netSalariedMonthly.toLocaleString('fr-FR')} € <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">/ mois (CDI)</span>
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.15rem;">
+                Freelance TJM équivalent : <strong>~${tjmEquivalent} € / jour</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
+            💡 <em>En télétravail international depuis la France, un contrat US ou UK à <strong>${isUsd ? '$' + usdVal.toLocaleString('en-US') : eurVal.toLocaleString('fr-FR') + ' €'}</strong> offre un niveau de vie nettement supérieur à la moyenne locale.</em>
+          </div>
+        </section>
+        `;
+      })()}
+
+      <div style="margin-bottom: 2rem;">
         <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text);" data-i18n="overview_title">Aperçu du poste</h2>
         <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.7;">
           ${escapeHtml(cleanSnippet || "Aucune description détaillée disponible.")}
         </p>
       </div>
 
+      <!-- Module 10x : AI Direct-to-Hiring-Manager Pitch Generator -->
+      <section class="ai-pitch-box" style="background: var(--bg-card); border: 2px solid var(--primary); border-radius: 14px; padding: 1.75rem; margin-bottom: 2.25rem; box-shadow: 0 8px 24px rgba(37,99,235,0.08);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+          <div>
+            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(37,99,235,0.12); color:var(--primary); font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.05em;">
+              ⚡ Avantage Candidat 10x
+            </div>
+            <h3 style="font-size:1.25rem; font-weight:800; color:var(--text); margin-top:0.35rem;" data-i18n="pitch_title">
+              Postulez directement auprès du Décideur (Direct-to-DM)
+            </h3>
+            <p style="font-size:0.88rem; color:var(--text-muted); margin-top:0.2rem;" data-i18n="pitch_subtitle">
+              Court-circuitez les robots ATS en envoyant un pitch technique sur-mesure au CTO ou Talent Lead.
+            </p>
+          </div>
+
+          <a href="https://www.google.com/search?q=site:linkedin.com/in+%22${encodeURIComponent(job.company)}%22+(CTO+OR+%22VP+Engineering%22+OR+%22Head+of+Talent%22+OR+Recruiter+OR+Founder)" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:0.4rem; background:#0a66c2; color:white; font-size:0.83rem; font-weight:700; padding:0.6rem 1rem; border-radius:8px; text-decoration:none;" data-i18n="pitch_find_linkedin">
+            🔍 Trouver le CTO sur LinkedIn ↗
+          </a>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+          <button id="pitchBtnShort" class="pitch-tab-btn active" onclick="switchPitchMode('short')" style="padding:0.45rem 0.9rem; font-size:0.8rem; font-weight:700; border-radius:6px; border:1px solid var(--border); background:var(--primary); color:white; cursor:pointer;" data-i18n="pitch_tab_short">
+            📨 Email Direct (Court & Percutant)
+          </button>
+          <button id="pitchBtnLinkedin" class="pitch-tab-btn" onclick="switchPitchMode('linkedin')" style="padding:0.45rem 0.9rem; font-size:0.8rem; font-weight:700; border-radius:6px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer;" data-i18n="pitch_tab_linkedin">
+            💼 Message InMail LinkedIn (< 300 car.)
+          </button>
+          <button id="pitchBtnTech" class="pitch-tab-btn" onclick="switchPitchMode('tech')" style="padding:0.45rem 0.9rem; font-size:0.8rem; font-weight:700; border-radius:6px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer;" data-i18n="pitch_tab_tech">
+            🛠️ Pitch Technique Approfondi
+          </button>
+        </div>
+
+        <div style="position:relative;">
+          <textarea id="pitchTextarea" readonly style="width:100%; min-height:160px; background:var(--meta-bg); border:1px solid var(--border); border-radius:8px; padding:1rem; font-family:var(--font-sans); font-size:0.9rem; color:var(--text); line-height:1.6; resize:vertical;"></textarea>
+          <button id="copyPitchBtn" onclick="copyPitchToClipboard()" style="position:absolute; top:10px; right:10px; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:0.45rem 0.85rem; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.05); display:inline-flex; align-items:center; gap:0.35rem;" data-i18n="pitch_copy_btn">
+            📋 Copier le pitch
+          </button>
+        </div>
+      </section>
+
       <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
         <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply" data-i18n="btn_apply_direct">
-          Postuler directement sur l'offre ↗
+          Postuler sur le site officiel ↗
         </a>
         <button id="shareOfferBtn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.85rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer;" data-i18n="btn_share">
           🔗 Partager cette offre
@@ -409,6 +514,17 @@ export function renderJobDetailPage(job, meta = {}) {
     })()}
   </main>
   <script>
+    const JOB_CURRENT = ${JSON.stringify({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      tags: job.tags || [],
+      salary: job.salary || "",
+      salary_min_eur: job.salary_min_eur || 0,
+      currency: job.currency || "EUR",
+      url: job.url
+    })};
+
     const I18N_SEO = {
       fr: {
         back_home: "← Retour à l'annuaire FullRemote.Jobs",
@@ -419,12 +535,26 @@ export function renderJobDetailPage(job, meta = {}) {
         lbl_region: "Zone géographique",
         lbl_date: "Date de parution",
         overview_title: "Aperçu du poste",
-        btn_apply_direct: "Postuler directement sur l'offre ↗",
+        btn_apply_direct: "Postuler sur le site officiel ↗",
         btn_share: "🔗 Partager cette offre",
         sim_title: "💼 Offres similaires 100% Télétravail",
         sim_see_all: "Voir tout l'annuaire →",
         sim_view_btn: "Consulter ↗",
-        toast_copied: "Lien copié dans le presse-papiers ! 🔗"
+        toast_copied: "Lien copié dans le presse-papiers ! 🔗",
+        radar_title: "Radar Geo-Arbitrage & Pouvoir d'Achat",
+        radar_open_sim: "Ouvrir le simulateur complet →",
+        radar_base_salary: "Rémunération Brute",
+        radar_ppp_equiv: "Équivalent Niveau de Vie (France)",
+        radar_ppp_desc: "Pouvoir d'achat réel ajusté au coût de la vie",
+        radar_net_est: "Net Estimé en France",
+        pitch_title: "Postulez directement auprès du Décideur (Direct-to-DM)",
+        pitch_subtitle: "Court-circuitez les robots ATS en envoyant un pitch technique sur-mesure au CTO ou Talent Lead.",
+        pitch_find_linkedin: "🔍 Trouver le CTO sur LinkedIn ↗",
+        pitch_tab_short: "📨 Email Direct (Court)",
+        pitch_tab_linkedin: "💼 InMail LinkedIn",
+        pitch_tab_tech: "🛠️ Pitch Technique Approfondi",
+        pitch_copy_btn: "📋 Copier le pitch",
+        toast_pitch_copied: "Pitch copié dans le presse-papiers ! Prêt à être envoyé 🚀"
       },
       en: {
         back_home: "← Back to FullRemote.Jobs Directory",
@@ -435,16 +565,32 @@ export function renderJobDetailPage(job, meta = {}) {
         lbl_region: "Location",
         lbl_date: "Published Date",
         overview_title: "Job Overview",
-        btn_apply_direct: "Apply directly on site ↗",
+        btn_apply_direct: "Apply directly on official site ↗",
         btn_share: "🔗 Share this Job",
         sim_title: "💼 Similar 100% Remote Jobs",
         sim_see_all: "View all remote jobs →",
         sim_view_btn: "View Details ↗",
-        toast_copied: "Link copied to clipboard! 🔗"
+        toast_copied: "Link copied to clipboard! 🔗",
+        radar_title: "Geo-Arbitrage & Purchasing Power Radar",
+        radar_open_sim: "Open full salary simulator →",
+        radar_base_salary: "Gross Compensation",
+        radar_ppp_equiv: "Living Standard Equiv. (France)",
+        radar_ppp_desc: "Real purchasing power adjusted to cost of living",
+        radar_net_est: "Estimated Net in France",
+        pitch_title: "Apply directly to the Decision Maker (Direct-to-DM)",
+        pitch_subtitle: "Bypass ATS screening bots with a high-impact technical pitch sent directly to the CTO or Talent Lead.",
+        pitch_find_linkedin: "🔍 Find CTO on LinkedIn ↗",
+        pitch_tab_short: "📨 Direct Email (Short)",
+        pitch_tab_linkedin: "💼 LinkedIn InMail",
+        pitch_tab_tech: "🛠️ In-Depth Technical Pitch",
+        pitch_copy_btn: "📋 Copy pitch",
+        toast_pitch_copied: "Pitch copied to clipboard! Ready to send 🚀"
       }
     };
 
     let currentLang = 'fr';
+    let currentPitchMode = 'short';
+
     try {
       const savedLang = localStorage.getItem('lang');
       if (savedLang === 'fr' || savedLang === 'en') {
@@ -454,6 +600,129 @@ export function renderJobDetailPage(job, meta = {}) {
         currentLang = bLang.startsWith('fr') ? 'fr' : 'en';
       }
     } catch(e) { currentLang = 'fr'; }
+
+    function getPitchContent(mode, lang) {
+      const comp = JOB_CURRENT.company || 'l\\'équipe';
+      const title = JOB_CURRENT.title || 'ce poste';
+      const tags = (JOB_CURRENT.tags || []).filter(t => !['Remote', 'Worldwide', 'Full-time', 'CDI'].includes(t));
+      const stack = tags.slice(0, 3).join(', ') || 'votre stack technique';
+
+      if (lang === 'fr') {
+        if (mode === 'short') {
+          return [
+            'Bonjour,',
+            '',
+            'J\\'ai vu que ' + comp + ' recherche un(e) ' + title + ' en 100% télétravail.',
+            'Fort d\\'une solide expertise sur ' + stack + ', j\\'ai conçu des systèmes scalables et délivré des fonctionnalités critiques en totale autonomie à distance.',
+            '',
+            'Seriez-vous ouvert(e) à un bref échange informel de 10 minutes cette semaine pour faire connaissance ?',
+            '',
+            'Bien à vous,',
+            '[Votre Prénom] [Votre Nom] — [Lien Portfolio / GitHub]'
+          ].join(String.fromCharCode(10));
+        } else if (mode === 'linkedin') {
+          return [
+            'Bonjour ! J\\'ai repéré votre ouverture pour le poste de ' + title + ' chez ' + comp + '.',
+            'Expert(e) sur ' + stack + ' et habitué(e) au full remote, j\\'aimerais échanger 5 min sur vos enjeux techniques du moment. Disponible cette semaine si vous avez un créneau !',
+            '[Lien GitHub / Profil]'
+          ].join(String.fromCharCode(10));
+        } else {
+          return [
+            'Bonjour,',
+            '',
+            'Je vous contacte concernant l\\'opportunité de ' + title + ' au sein de ' + comp + '.',
+            'Au cours de mes précédents projets, j\\'ai approfondi ' + stack + ' en production avec des contraintes élevées de performance, de testabilité et d\\'architecture clean.',
+            '',
+            'Ce que je peux apporter immédiatement :',
+            '1. Maîtrise éprouvée des bonnes pratiques ' + stack + '.',
+            '2. Rigueur de communication asynchrone et autonomie totale en remote.',
+            '3. Capacité à itérer vite et fiabiliser les déploiements.',
+            '',
+            'Quel serait le meilleur moment pour une courte discussion de cadrage ?',
+            '',
+            'Cordialement,',
+            '[Votre Prénom] [Votre Nom]',
+            '[Lien Portfolio / LinkedIn / GitHub]'
+          ].join(String.fromCharCode(10));
+        }
+      } else {
+        if (mode === 'short') {
+          return [
+            'Hi,',
+            '',
+            'I noticed that ' + comp + ' is looking for a ' + title + ' (100% Remote).',
+            'With proven expertise in ' + stack + ', I have architected resilient systems and shipped mission-critical features in fully distributed async environments.',
+            '',
+            'Would you be open for a quick 10-minute intro chat this week to see if my background matches your current priorities?',
+            '',
+            'Best regards,',
+            '[Your Name] — [GitHub / Portfolio / LinkedIn URL]'
+          ].join(String.fromCharCode(10));
+        } else if (mode === 'linkedin') {
+          return [
+            'Hi! I saw ' + comp + ' is hiring a ' + title + '.',
+            'With strong expertise in ' + stack + ' and extensive remote experience, I\\'d love to connect and briefly chat about your engineering roadmap.',
+            '[Your Portfolio / GitHub URL]'
+          ].join(String.fromCharCode(10));
+        } else {
+          return [
+            'Hi,',
+            '',
+            'I am reaching out regarding the ' + title + ' role at ' + comp + '.',
+            'Throughout my career, I\\'ve focused on ' + stack + ' in production, delivering scalable backends and reliable user-facing features under strict performance benchmarks.',
+            '',
+            'Key value I can bring from Day 1:',
+            '1. Battle-tested hands-on experience in ' + stack + '.',
+            '2. Autonomous, proactive async communication in remote-first cultures.',
+            '3. Fast execution and strong engineering hygiene (CI/CD, automated testing).',
+            '',
+            'Let me know if you have 10 minutes available for a brief conversation this week.',
+            '',
+            'Best regards,',
+            '[Your Name]',
+            '[GitHub / Portfolio URL]'
+          ].join(String.fromCharCode(10));
+        }
+      }
+    }
+
+    window.switchPitchMode = function(mode) {
+      currentPitchMode = mode;
+      document.querySelectorAll('.pitch-tab-btn').forEach(b => {
+        b.style.background = 'var(--bg-card)';
+        b.style.color = 'var(--text)';
+      });
+      const activeBtnId = mode === 'short' ? 'pitchBtnShort' : (mode === 'linkedin' ? 'pitchBtnLinkedin' : 'pitchBtnTech');
+      const activeBtn = document.getElementById(activeBtnId);
+      if (activeBtn) {
+        activeBtn.style.background = 'var(--primary)';
+        activeBtn.style.color = 'white';
+      }
+      updatePitchDisplay();
+    };
+
+    function updatePitchDisplay() {
+      const textarea = document.getElementById('pitchTextarea');
+      if (textarea) {
+        textarea.value = getPitchContent(currentPitchMode, currentLang);
+      }
+    }
+
+    window.copyPitchToClipboard = function() {
+      const textarea = document.getElementById('pitchTextarea');
+      if (!textarea) return;
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        const dict = I18N_SEO[currentLang] || I18N_SEO.fr;
+        const copyBtn = document.getElementById('copyPitchBtn');
+        if (copyBtn) {
+          copyBtn.textContent = '✅ ' + (currentLang === 'fr' ? 'Copié !' : 'Copied!');
+          setTimeout(() => {
+            copyBtn.textContent = '📋 ' + (currentLang === 'fr' ? 'Copier le pitch' : 'Copy pitch');
+          }, 2500);
+        }
+        alert(dict.toast_pitch_copied);
+      });
+    };
 
     function applyLanguage(lang) {
       currentLang = lang === 'en' ? 'en' : 'fr';
@@ -468,6 +737,8 @@ export function renderJobDetailPage(job, meta = {}) {
         const key = el.getAttribute('data-i18n');
         if (dict[key]) el.textContent = dict[key];
       });
+
+      updatePitchDisplay();
     }
 
     window.toggleLanguage = function() {
@@ -475,6 +746,7 @@ export function renderJobDetailPage(job, meta = {}) {
     };
 
     applyLanguage(currentLang);
+    updatePitchDisplay();
 
     const shareBtn = document.getElementById('shareOfferBtn');
     if (shareBtn) {
@@ -510,6 +782,451 @@ export function renderJobDetailPage(job, meta = {}) {
       };
     }
   </script>
+</body>
+</html>`;
+}
+
+/**
+ * Dictionnaire des pages programmatiques ciblées pour le SEO (Stacks TIOBE & Régions)
+ */
+export const PROGRAMMATIC_PAGES = {
+  "remote-laravel-jobs": {
+    slug: "remote-laravel-jobs",
+    tech: "Laravel",
+    icon: "🔴",
+    title_fr: "Offres d'Emploi 100% Télétravail Laravel (CDI & Freelance)",
+    title_en: "100% Remote Laravel Jobs (Full-Time & Contract)",
+    desc_fr: "Trouvez les meilleures opportunités 100% télétravail Laravel, PHP, Livewire et Vue.js. Postulez directement sans intermédiaire.",
+    desc_en: "Find verified 100% remote Laravel developer jobs, PHP, Livewire and Vue. Direct apply with no recruiter middlemen.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("laravel") || (j.tags || []).includes("Laravel");
+    },
+  },
+  "remote-symfony-jobs": {
+    slug: "remote-symfony-jobs",
+    tech: "Symfony",
+    icon: "🎼",
+    title_fr: "Offres d'Emploi 100% Télétravail Symfony (CDI & Freelance)",
+    title_en: "100% Remote Symfony Developer Jobs",
+    desc_fr: "Découvrez les postes en pur télétravail Symfony, PHP, Doctrine et API Platform. Salaires transparents et contact direct.",
+    desc_en: "Explore verified remote Symfony engineering positions, PHP, Doctrine and API Platform. Transparent salaries and direct apply.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("symfony") || (j.tags || []).includes("Symfony");
+    },
+  },
+  "remote-php-jobs": {
+    slug: "remote-php-jobs",
+    tech: "PHP",
+    icon: "🐘",
+    title_fr: "Offres d'Emploi 100% Télétravail PHP (Laravel, Symfony, WordPress)",
+    title_en: "100% Remote PHP Developer Jobs",
+    desc_fr: "Toutes les offres full remote pour développeurs PHP, architectures modernes, Laravel, Symfony, WordPress et APIs.",
+    desc_en: "All 100% remote job opportunities for PHP engineers, modern architectures, Laravel, Symfony and high-scale APIs.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("php") || (j.tags || []).includes("PHP") || text.includes("laravel") || text.includes("symfony");
+    },
+  },
+  "remote-python-jobs": {
+    slug: "remote-python-jobs",
+    tech: "Python & IA",
+    icon: "🐍",
+    title_fr: "Offres d'Emploi 100% Télétravail Python, IA & Data",
+    title_en: "100% Remote Python, AI & Data Engineering Jobs",
+    desc_fr: "Postes en pur télétravail Python, Django, FastAPI, Machine Learning, LLM et Data Science. Contact direct avec les recruteurs.",
+    desc_en: "Remote Python developer, Django, FastAPI, Machine Learning, LLMs and Data Engineering roles worldwide.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("python") || (j.tags || []).includes("Python") || text.includes("django") || text.includes("fastapi") || text.includes("ai");
+    },
+  },
+  "remote-react-jobs": {
+    slug: "remote-react-jobs",
+    tech: "React & TypeScript",
+    icon: "⚛️",
+    title_fr: "Offres d'Emploi 100% Télétravail React, Next.js & TypeScript",
+    title_en: "100% Remote React & TypeScript Jobs",
+    desc_fr: "Opportunités full remote pour ingénieurs Frontend et Fullstack React, Next.js, TypeScript et Node.js.",
+    desc_en: "Verified 100% remote jobs for React, Next.js, TypeScript and Frontend/Fullstack developers.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("react") || (j.tags || []).includes("React") || text.includes("typescript") || text.includes("next.js");
+    },
+  },
+  "remote-rust-jobs": {
+    slug: "remote-rust-jobs",
+    tech: "Rust",
+    icon: "🦀",
+    title_fr: "Offres d'Emploi 100% Télétravail Rust & Systèmes",
+    title_en: "100% Remote Rust Developer Jobs",
+    desc_fr: "Postes en télétravail pour développeurs Rust, architectures distribuées, backend haute performance, Tokio et Web3.",
+    desc_en: "Remote Rust engineering roles, high performance systems, distributed backends, Tokio and Web3.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("rust") || (j.tags || []).includes("Rust");
+    },
+  },
+  "remote-golang-jobs": {
+    slug: "remote-golang-jobs",
+    tech: "Go / Golang",
+    icon: "🐹",
+    title_fr: "Offres d'Emploi 100% Télétravail Go / Golang",
+    title_en: "100% Remote Go (Golang) Developer Jobs",
+    desc_fr: "Opportunités 100% télétravail Go / Golang pour ingénieurs backend, microservices, cloud et infrastructure.",
+    desc_en: "Explore 100% remote Go (Golang) engineering roles, cloud native, distributed systems and microservices.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("go") || (j.tags || []).includes("Go") || text.includes("golang");
+    },
+  },
+  "remote-java-jobs": {
+    slug: "remote-java-jobs",
+    tech: "Java & JVM",
+    icon: "☕",
+    title_fr: "Offres d'Emploi 100% Télétravail Java & Spring Boot",
+    title_en: "100% Remote Java Developer Jobs",
+    desc_fr: "Offres full remote pour développeurs Java, Spring Boot, Kotlin, Quarkus et architectures d'entreprise.",
+    desc_en: "Verified 100% remote Java, Spring Boot, Kotlin and JVM engineering opportunities worldwide.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("java") || (j.tags || []).includes("Java") || text.includes("spring") || text.includes("kotlin");
+    },
+  },
+  "remote-csharp-jobs": {
+    slug: "remote-csharp-jobs",
+    tech: "C# & .NET",
+    icon: "🎯",
+    title_fr: "Offres d'Emploi 100% Télétravail C# & .NET Core",
+    title_en: "100% Remote C# & .NET Jobs",
+    desc_fr: "Postes en pur télétravail pour développeurs C#, .NET Core, Azure et applications d'entreprise modernes.",
+    desc_en: "Remote C#, .NET Core, Azure and modern enterprise software engineering positions.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("c#") || (j.tags || []).includes("C#") || text.includes(".net") || text.includes("dotnet");
+    },
+  },
+  "remote-ruby-jobs": {
+    slug: "remote-ruby-jobs",
+    tech: "Ruby & Rails",
+    icon: "💎",
+    title_fr: "Offres d'Emploi 100% Télétravail Ruby on Rails",
+    title_en: "100% Remote Ruby on Rails Jobs",
+    desc_fr: "Les meilleures offres en 100% remote pour développeurs Ruby, Rails, Hotwire et architectures SaaS.",
+    desc_en: "Verified remote Ruby on Rails opportunities, Hotwire, SaaS architectures and full-stack positions.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("ruby") || (j.tags || []).includes("Ruby") || text.includes("rails");
+    },
+  },
+  "remote-devops-jobs": {
+    slug: "remote-devops-jobs",
+    tech: "DevOps & Cloud",
+    icon: "☁️",
+    title_fr: "Offres d'Emploi 100% Télétravail DevOps, Kubernetes & Cloud",
+    title_en: "100% Remote DevOps & Cloud Infrastructure Jobs",
+    desc_fr: "Postes en télétravail pour ingénieurs DevOps, SRE, Kubernetes, Docker, AWS, GCP, Azure et Terraform.",
+    desc_en: "Remote DevOps, SRE, Kubernetes, Docker, AWS, GCP and Terraform infrastructure opportunities.",
+    filterFn: (j) => {
+      const text = `${j.title} ${j.company} ${(j.tags || []).join(" ")}`.toLowerCase();
+      return text.includes("devops") || (j.tags || []).includes("DevOps") || text.includes("kubernetes") || text.includes("aws") || text.includes("terraform");
+    },
+  },
+  "remote-jobs-france": {
+    slug: "remote-jobs-france",
+    tech: "France & Francophonie",
+    icon: "🇫🇷",
+    title_fr: "Offres d'Emploi 100% Télétravail Éligibles France & Francophonie",
+    title_en: "100% Remote Jobs Eligible for France & Francophonie",
+    desc_fr: "Répertoire vérifié des postes en 100% télétravail (CDI et Freelance) ouverts aux résidents en France et en Europe.",
+    desc_en: "Verified 100% remote jobs (Full-time & Contract) available for candidates in France and French-speaking regions.",
+    filterFn: (j) => {
+      const region = (j.regionId || "").toLowerCase();
+      return region === "france" || region === "europe" || region === "worldwide" || j.language === "fr";
+    },
+  },
+  "remote-jobs-europe": {
+    slug: "remote-jobs-europe",
+    tech: "Europe (UTC±2)",
+    icon: "🇪🇺",
+    title_fr: "Offres d'Emploi 100% Télétravail Europe (Fuseau Horaire UTC±2)",
+    title_en: "100% Remote Jobs in Europe (Timezone UTC±2)",
+    desc_fr: "Postes en pur télétravail compatibles avec les fuseaux horaires européens. Entreprises européennes et internationales.",
+    desc_en: "100% remote positions matching European timezones (UTC-1 to UTC+3). Direct apply without middlemen.",
+    filterFn: (j) => {
+      const region = (j.regionId || "").toLowerCase();
+      return region === "europe" || region === "france" || region === "worldwide";
+    },
+  },
+  "remote-jobs-worldwide": {
+    slug: "remote-jobs-worldwide",
+    tech: "Worldwide (Anywhere)",
+    icon: "🌍",
+    title_fr: "Offres d'Emploi 100% Télétravail Sans Restriction Géographique (Worldwide)",
+    title_en: "100% Remote Jobs Worldwide (Work from Anywhere)",
+    desc_fr: "Les meilleures opportunités mondiales 100% remote ouvertes à tous les pays sans restriction de localisation.",
+    desc_en: "Global 100% remote opportunities hiring anywhere in the world. Work from anywhere with transparent compensation.",
+    filterFn: (j) => {
+      return (j.regionId || "").toLowerCase() === "worldwide" || (j.location || "").toLowerCase().includes("worldwide");
+    },
+  },
+};
+
+/**
+ * Génère une page landing programmatique dédiée (SEO & Conversion)
+ */
+export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs = [], meta = {}) {
+  const siteUrl = meta.siteUrl || "https://remote-jobs.edounze.com";
+  const canonicalUrl = `${siteUrl}/${config.slug}`;
+  const title = `${config.title_fr} — FullRemote.Jobs`;
+  const description = config.desc_fr;
+
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: config.title_fr,
+    description,
+    url: canonicalUrl,
+    numberOfItems: matchingJobs.length,
+    itemListElement: matchingJobs.slice(0, 30).map((j, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "JobPosting",
+        title: j.title,
+        url: `${siteUrl}/jobs/${encodeURIComponent(j.id)}`,
+        datePosted: j.published_at,
+        hiringOrganization: {
+          "@type": "Organization",
+          name: j.company,
+        },
+        jobLocationType: "TELECOMMUTE",
+      },
+    })),
+  };
+
+  return `<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  <link rel="canonical" href="${canonicalUrl}" />
+
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${canonicalUrl}" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <script type="application/ld+json">
+    ${JSON.stringify(itemListLd, null, 2)}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${config.icon || "💼"}</text></svg>">
+  <style>
+    :root, html.light {
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.1);
+      --meta-bg: #f1f5f9;
+      --radius: 12px;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+    html.dark {
+      --bg: #090d16;
+      --bg-card: #111726;
+      --border: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.12);
+      --meta-bg: rgba(0, 0, 0, 0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 2rem 1.5rem; width: 100%; }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      padding: 1rem 0;
+    }
+    .header-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hero-box {
+      background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(16,185,129,0.05) 100%);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2.5rem;
+    }
+    .job-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+    .job-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: all 0.18s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .job-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.08);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a href="/" style="font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 0.4rem; color: var(--text);">
+        <span>🌍</span> FullRemote<span style="color: var(--primary);">.Jobs</span>
+      </a>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <a href="/" style="font-size:0.88rem; font-weight:600; color:var(--primary);">← Tout l'annuaire</a>
+        <a href="/simulateur-salaire-remote" style="font-size:0.88rem; font-weight:600; color:var(--text-muted);">💶 Simulateur</a>
+        <a href="/post-a-job" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.5rem 1rem; border-radius:6px;">+ Publier</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero-box">
+      <div style="display:inline-flex; align-items:center; gap:0.4rem; background:var(--bg-card); border:1px solid var(--border); padding:4px 12px; border-radius:999px; font-size:0.8rem; font-weight:700; color:var(--primary); margin-bottom:1rem;">
+        <span>${config.icon || "💼"}</span> ${escapeHtml(config.tech)} 100% Remote
+      </div>
+      <h1 style="font-size:2.2rem; font-weight:800; line-height:1.2; color:var(--text); letter-spacing:-0.03em; margin-bottom:0.75rem;">
+        ${escapeHtml(config.title_fr)}
+      </h1>
+      <p style="font-size:1.05rem; color:var(--text-muted); max-width:780px; line-height:1.6; margin-bottom:1.5rem;">
+        ${escapeHtml(config.desc_fr)}
+      </p>
+
+      <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+        <div style="background:var(--bg-card); border:1px solid var(--border); padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; font-weight:700; color:var(--emerald);">
+          🔥 ${matchingJobs.length} opportunité(s) vérifiée(s) (< 30 jours)
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-dim);">
+          ⚡ Purge automatique des offres obsolètes & Candidature directe sans intermédiaire.
+        </div>
+      </div>
+    </section>
+
+    <!-- Liste des opportunités ciblées -->
+    <section>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text);">
+          Dernières offres 100% télétravail ${escapeHtml(config.tech)}
+        </h2>
+        <span style="font-size:0.85rem; color:var(--text-dim);">
+          Triées par fraîcheur
+        </span>
+      </div>
+
+      <div class="job-grid">
+        ${matchingJobs.map((j) => {
+          const detailUrl = `${siteUrl}/jobs/${encodeURIComponent(j.id)}`;
+          const initial = (j.company || "C").charAt(0).toUpperCase();
+          const avatar = j.company_logo
+            ? `<img src="${escapeHtml(j.company_logo)}" alt="${escapeHtml(j.company)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.textContent='${initial}'" />`
+            : initial;
+          const cleanDesc = stripHtml(j.description_snippet || "").replace(/\\s+/g, ' ').trim();
+          const tagsHtml = (j.tags || []).slice(0, 4).map(t => `<span style="font-size:0.72rem; color:var(--text-dim); background:var(--meta-bg); border:1px solid var(--border); padding:2px 6px; border-radius:4px;">#${escapeHtml(t)}</span>`).join(' ');
+
+          return `
+          <div class="job-card">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:0.85rem;">
+                <div style="width:44px; height:44px; border-radius:10px; background:var(--meta-bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.15rem; color:var(--primary); flex-shrink:0; overflow:hidden;">
+                  ${avatar}
+                </div>
+                <div style="min-width:0;">
+                  <div style="font-size:0.83rem; font-weight:600; color:var(--text-muted);">${escapeHtml(j.company)}</div>
+                  <h3 style="font-size:1.05rem; font-weight:700; color:var(--text); line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(j.title)}</h3>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.85rem;">
+                <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:6px; background:rgba(99,102,241,0.1); color:#6366f1;">${j.contractIcon || "💼"} ${escapeHtml(j.contractType || "CDI")}</span>
+                <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:6px; background:rgba(37,99,235,0.1); color:#2563eb;">${j.regionFlag || "🌍"} ${escapeHtml(j.region || "Worldwide")}</span>
+                ${j.salary ? `<span style="font-size:0.75rem; font-weight:700; color:var(--emerald); background:var(--emerald-bg); padding:3px 8px; border-radius:6px; border:1px solid rgba(16,185,129,0.25);">💰 ${escapeHtml(j.salary)}</span>` : ""}
+              </div>
+
+              ${cleanDesc ? `<p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; margin-bottom:0.85rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(cleanDesc)}</p>` : ""}
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); padding-top:0.85rem;">
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">${tagsHtml}</div>
+              <div style="display:flex; gap:0.5rem;">
+                <a href="${detailUrl}" style="font-size:0.82rem; font-weight:700; color:var(--primary); padding:4px 8px; border-radius:6px; border:1px solid rgba(37,99,235,0.2);">
+                  Détails & Pitch IA
+                </a>
+                <a href="${escapeHtml(j.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem; font-weight:700; background:var(--primary); color:white; padding:4px 10px; border-radius:6px;">
+                  Postuler ↗
+                </a>
+              </div>
+            </div>
+          </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+
+    <!-- Navigation Programmatique SEO Cross-linking -->
+    <section style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:2rem; margin-top:2rem;">
+      <h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin-bottom:1rem;">
+        Explorer d'autres technologies et régions 100% télétravail
+      </h3>
+      <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+        ${Object.entries(PROGRAMMATIC_PAGES)
+          .filter(([slug]) => slug !== config.slug)
+          .map(([slug, p]) => `
+            <a href="/${slug}" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.82rem; font-weight:600; color:var(--text); background:var(--meta-bg); border:1px solid var(--border); padding:6px 12px; border-radius:8px; transition:all 0.15s ease;" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text)';">
+              <span>${p.icon || "💼"}</span> <span>${escapeHtml(p.tech)}</span>
+            </a>
+          `).join("")}
+      </div>
+    </section>
+  </main>
 </body>
 </html>`;
 }
@@ -558,19 +1275,33 @@ export function generateRssFeed(jobs = [], siteUrl = "https://remote-jobs.edounz
 }
 
 /**
- * Génère le sitemap XML
+ * Génère le sitemap XML (Offres individuelles + Pages d'atterrissage programmatiques SEO)
  */
 export function generateSitemap(jobs = [], siteUrl = "https://remote-jobs.edounze.com") {
-  const urlsXml = jobs
+  const programmaticUrlsXml = Object.keys(PROGRAMMATIC_PAGES)
     .map(
-      (j) => `
+      (slug) => `
   <url>
-    <loc>${siteUrl}/jobs/${encodeURIComponent(j.id)}</loc>
-    <lastmod>${new Date(j.published_at).toISOString().split("T")[0]}</lastmod>
+    <loc>${siteUrl}/${slug}</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>`
     )
+    .join("");
+
+  const urlsXml = jobs
+    .map((j) => {
+      const pubDate = j.published_at ? new Date(j.published_at) : new Date();
+      const lastmod = !isNaN(pubDate.getTime()) ? pubDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+      return `
+  <url>
+    <loc>${siteUrl}/jobs/${encodeURIComponent(j.id)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+    })
     .join("");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -580,6 +1311,17 @@ export function generateSitemap(jobs = [], siteUrl = "https://remote-jobs.edounz
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>${siteUrl}/simulateur-salaire-remote</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${siteUrl}/post-a-job</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  ${programmaticUrlsXml}
   ${urlsXml}
 </urlset>`;
 }

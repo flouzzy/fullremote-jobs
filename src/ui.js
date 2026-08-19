@@ -1266,11 +1266,27 @@ export function renderHTML(jobs = [], meta = {}) {
             <a href="https://remote-jobs.edounze.com">remote-jobs.edounze.com</a>
           </div>
         </div>
+      <div class="footer-seo-tags" style="border-top:1px solid var(--border); padding-top:1.25rem; margin-top:1.5rem; display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center;">
+        <span style="font-size:0.72rem; color:var(--text-dim); font-weight:700; width:100%; text-align:center; margin-bottom:0.25rem; letter-spacing:0.05em;">SPÉCIALITÉS 100% TÉLÉTRAVAIL (TOP TIOBE) :</span>
+        <a href="/remote-laravel-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🔴 Laravel Remote</a>
+        <a href="/remote-symfony-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🎼 Symfony Remote</a>
+        <a href="/remote-php-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐘 PHP Remote</a>
+        <a href="/remote-python-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐍 Python & IA Remote</a>
+        <a href="/remote-react-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">⚛️ React & TS Remote</a>
+        <a href="/remote-rust-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🦀 Rust Remote</a>
+        <a href="/remote-golang-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🐹 Go Remote</a>
+        <a href="/remote-java-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">☕ Java Remote</a>
+        <a href="/remote-csharp-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🎯 C# .NET Remote</a>
+        <a href="/remote-ruby-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">💎 Ruby on Rails Remote</a>
+        <a href="/remote-devops-jobs" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">☁️ DevOps & Cloud</a>
+        <a href="/remote-jobs-france" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🇫🇷 Remote France</a>
+        <a href="/remote-jobs-europe" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🇪🇺 Remote Europe</a>
+        <a href="/remote-jobs-worldwide" style="font-size:0.78rem; color:var(--text-muted); background:var(--meta-bg); border:1px solid var(--border); padding:3px 8px; border-radius:4px;">🌍 Remote Worldwide</a>
       </div>
 
       <div class="footer-bottom">
         <div data-i18n="footer_rights">© 2026 FullRemote.Jobs — Tous droits réservés.</div>
-        <div data-i18n="footer_sources">Indexation continue • 9 sources mondiales agrégées</div>
+        <div data-i18n="footer_sources">Indexation continue • 13 sources mondiales agrégées</div>
       </div>
     </div>
   </footer>
@@ -1631,8 +1647,7 @@ export function renderHTML(jobs = [], meta = {}) {
         applyTheme(currentTheme);
       };
     }
-
-    // Dropdown "···"
+        // Dropdown "···"
     const moreDropdownBtn = document.getElementById('moreDropdownBtn');
     const moreDropdownMenu = document.getElementById('moreDropdownMenu');
     if (moreDropdownBtn && moreDropdownMenu) {
@@ -1706,8 +1721,15 @@ export function renderHTML(jobs = [], meta = {}) {
       const body = document.getElementById('modalBody');
       const salaryHtml = job.salary ? \`<div class="tag-badge tag-salary" style="display:inline-block; margin-bottom:0.75rem;">💰 \${escapeHtml(job.salary)}</div>\` : '';
       const tagsHtml = (job.tags || []).map(t => \`<span class="tag-badge">#\${escapeHtml(t)}</span>\`).join(' ');
-
       const cleanDesc = cleanSnippet(job.description_snippet);
+
+      // Geo-Arbitrage values
+      const eurVal = job.salary_min_eur || (job.salary_max_eur ? Math.round((job.salary_min_eur + job.salary_max_eur)/2) : 65000);
+      const isUsd = (job.currency === "USD" || (job.salary && job.salary.includes("$")));
+      const usdVal = job.salary_min_usd || Math.round(eurVal * 1.09);
+      const pppEquiv = Math.round(eurVal * (isUsd ? 1.35 : 1.15));
+      const netSalariedMonthly = Math.round((eurVal * 0.77) / 12);
+      const tjmEquiv = Math.round(eurVal / 210);
 
       body.innerHTML = \`
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
@@ -1715,13 +1737,102 @@ export function renderHTML(jobs = [], meta = {}) {
           <span class="tag-badge">\${job.regionFlag || '🌍'} \${escapeHtml(job.region || 'Worldwide')}</span>
           \${salaryHtml}
         </div>
+
+        <!-- Radar Geo-Arbitrage -->
+        <div style="background:linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(16,185,129,0.06) 100%); border:1px solid rgba(37,99,235,0.2); border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <div style="font-size:0.85rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:0.35rem;">
+              <span>💶</span> <span>\${currentLang === 'fr' ? 'Radar Geo-Arbitrage & Pouvoir d\\'Achat' : 'Geo-Arbitrage & Living Standard'}</span>
+            </div>
+            <a href="/simulateur-salaire-remote" target="_blank" style="font-size:0.75rem; font-weight:700; color:var(--primary);">\${currentLang === 'fr' ? 'Simulateur →' : 'Simulator →'}</a>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.6rem; font-size:0.8rem;">
+            <div style="background:var(--bg-card); border:1px solid var(--border); padding:0.6rem; border-radius:6px;">
+              <div style="color:var(--text-muted); font-size:0.7rem; text-transform:uppercase;">\${currentLang === 'fr' ? 'Niveau de vie FR' : 'Living Equiv. (FR)'}</div>
+              <div style="font-size:0.95rem; font-weight:800; color:var(--primary);">≈ \${pppEquiv.toLocaleString('fr-FR')} €</div>
+            </div>
+            <div style="background:var(--bg-card); border:1px solid var(--border); padding:0.6rem; border-radius:6px;">
+              <div style="color:var(--text-muted); font-size:0.7rem; text-transform:uppercase;">\${currentLang === 'fr' ? 'Net Estimé' : 'Estimated Net'}</div>
+              <div style="font-size:0.95rem; font-weight:800; color:var(--emerald);">≈ \${netSalariedMonthly.toLocaleString('fr-FR')} €/m</div>
+            </div>
+            <div style="background:var(--bg-card); border:1px solid var(--border); padding:0.6rem; border-radius:6px;">
+              <div style="color:var(--text-muted); font-size:0.7rem; text-transform:uppercase;">\${currentLang === 'fr' ? 'TJM Freelance' : 'Freelance Day Rate'}</div>
+              <div style="font-size:0.95rem; font-weight:800; color:var(--text);">~\${tjmEquiv} € / j</div>
+            </div>
+          </div>
+        </div>
+
         <div style="font-size:0.92rem; line-height:1.6; color:var(--text); margin-bottom:1.25rem;">
           \${cleanDesc ? escapeHtml(cleanDesc) : (currentLang === 'fr' ? "Consultez l'offre complète sur le site de l'employeur." : "View full job details directly on the employer's website.")}
         </div>
-        <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1rem;">
+
+        <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:1.25rem;">
           \${tagsHtml}
         </div>
+
+        <!-- AI Direct-to-DM Pitch Generator -->
+        <div style="background:var(--bg-card); border:2px solid var(--primary); border-radius:10px; padding:1rem; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.65rem;">
+            <div style="font-size:0.85rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:0.35rem;">
+              <span>⚡</span> <span>\${currentLang === 'fr' ? 'Postuler en Direct (Court-circuitez les ATS)' : 'Direct-to-DM Pitch (Bypass ATS)'}</span>
+            </div>
+            <a href="https://www.google.com/search?q=site:linkedin.com/in+%22\${encodeURIComponent(job.company)}%22+(CTO+OR+%22VP+Engineering%22+OR+%22Head+of+Talent%22+OR+Recruiter+OR+Founder)" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem; font-weight:700; background:#0a66c2; color:white; padding:4px 8px; border-radius:4px; text-decoration:none;">
+              🔍 \${currentLang === 'fr' ? 'CTO sur LinkedIn ↗' : 'CTO on LinkedIn ↗'}
+            </a>
+          </div>
+          <div style="position:relative;">
+            <textarea id="modalPitchTextarea" readonly style="width:100%; min-height:120px; background:var(--meta-bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem; font-size:0.83rem; color:var(--text); line-height:1.5; font-family:var(--font-sans); resize:vertical;"></textarea>
+            <button id="modalCopyPitchBtn" onclick="copyModalPitch()" style="position:absolute; top:6px; right:6px; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+              📋 \${currentLang === 'fr' ? 'Copier' : 'Copy'}
+            </button>
+          </div>
+        </div>
       \`;
+
+      // Pre-fill modal pitch
+      setTimeout(() => {
+        const pText = document.getElementById('modalPitchTextarea');
+        if (pText) {
+          const comp = job.company || (currentLang === 'fr' ? "l'équipe" : "the team");
+          const title = job.title || (currentLang === 'fr' ? "ce poste" : "this role");
+          const tags = (job.tags || []).filter(t => !['Remote', 'Worldwide', 'Full-time', 'CDI'].includes(t));
+          const stack = tags.slice(0, 3).join(', ') || (currentLang === 'fr' ? "votre stack technique" : "your tech stack");
+
+          if (currentLang === 'fr') {
+            pText.value = [
+              'Bonjour,',
+              '',
+              'J\\'ai vu que ' + comp + ' recrute un(e) ' + title + ' en 100% télétravail.',
+              'Fort(e) d\\'une solide expertise sur ' + stack + ', j\\'ai développé des architectures scalables et livré des features critiques en totale autonomie à distance.',
+              '',
+              'Seriez-vous ouvert(e) à un bref échange informel de 10 min cette semaine ?',
+              '',
+              'Bien à vous,',
+              '[Votre Prénom] [Votre Nom] — [Lien GitHub / Portfolio]'
+            ].join(String.fromCharCode(10));
+          } else {
+            pText.value = [
+              'Hi,',
+              '',
+              'I noticed that ' + comp + ' is looking for a ' + title + ' (100% Remote).',
+              'With strong hands-on expertise in ' + stack + ', I have designed scalable architectures and shipped mission-critical features in fully distributed async setups.',
+              '',
+              'Would you be open for a quick 10-minute intro chat this week?',
+              '',
+              'Best regards,',
+              '[Your Name] — [GitHub / Portfolio URL]'
+            ].join(String.fromCharCode(10));
+          }
+        }
+      }, 20);
+
+      window.copyModalPitch = function() {
+        const pText = document.getElementById('modalPitchTextarea');
+        if (!pText) return;
+        navigator.clipboard.writeText(pText.value).then(() => {
+          showToast(currentLang === 'fr' ? 'Pitch copié ! Prêt à envoyer au Hiring Manager 🚀' : 'Pitch copied! Ready to send 🚀');
+        });
+      };
 
       const detailsUrl = \`https://remote-jobs.edounze.com/jobs/\${encodeURIComponent(job.id)}\`;
       document.getElementById('modalSeoLink').href = detailsUrl;
