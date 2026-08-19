@@ -207,9 +207,15 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
       </a>
       <div style="display:flex; align-items:center; gap:1rem;">
         <a href="/" style="font-size:0.88rem; font-weight:600; color:var(--text-muted);">← Annuaire des offres</a>
-        <a href="/talents/join" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.5rem 1rem; border-radius:8px;">
-          🚀 Rejoindre le Vivier (Gratuit)
-        </a>
+        ${meta.talentToken ? `
+          <a href="/talents/manage?token=${encodeURIComponent(meta.talentToken)}" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:rgba(37,99,235,0.1); color:var(--primary); border:1px solid var(--primary); padding:0.5rem 1rem; border-radius:8px; text-decoration:none;">
+            ⚙️ Mon Espace Talent
+          </a>
+        ` : `
+          <a href="/talents/join" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.5rem 1rem; border-radius:8px; text-decoration:none;">
+            🚀 Rejoindre le Vivier (Gratuit)
+          </a>
+        `}
       </div>
     </div>
   </header>
@@ -230,9 +236,15 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
         <div style="background:var(--bg-card); border:1px solid var(--border); padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; font-weight:700; color:var(--emerald);">
           ✨ ${count} profil(s) vérifié(s) disponible(s)
         </div>
-        <a href="/talents/join" style="font-size:0.88rem; font-weight:700; color:var(--primary); text-decoration:underline;">
-          Vous cherchez un job remote ? Créez votre profil anonyme en 2 minutes →
-        </a>
+        ${meta.talentToken ? `
+          <a href="/talents/manage?token=${encodeURIComponent(meta.talentToken)}" id="talentHeroAuthLink" style="font-size:0.88rem; font-weight:700; color:var(--primary); text-decoration:underline;">
+            Accéder à votre espace privé Talent →
+          </a>
+        ` : `
+          <a href="/talents/join" id="talentHeroAuthLink" style="font-size:0.88rem; font-weight:700; color:var(--primary); text-decoration:underline;">
+            Vous cherchez un job remote ? Créez votre profil anonyme en 2 minutes →
+          </a>
+        `}
       </div>
     </section>
 
@@ -431,6 +443,28 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
         btn.textContent = '🚀 Envoyer ma proposition au Talent';
       }
     }
+
+    // Vérification de la session Talent locale
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const savedTalentToken = localStorage.getItem('fullremote_talent_token');
+        if (savedTalentToken) {
+          const btn = document.getElementById('talentHeaderAuthBtn');
+          if (btn) {
+            btn.href = '/talents/manage?token=' + encodeURIComponent(savedTalentToken);
+            btn.innerHTML = '⚙️ Mon Espace Talent';
+            btn.style.background = 'rgba(37,99,235,0.12)';
+            btn.style.color = 'var(--primary)';
+            btn.style.border = '1px solid rgba(37,99,235,0.3)';
+          }
+          const heroLink = document.getElementById('talentHeroAuthLink');
+          if (heroLink) {
+            heroLink.href = '/talents/manage?token=' + encodeURIComponent(savedTalentToken);
+            heroLink.innerHTML = 'Accéder à votre espace privé Talent →';
+          }
+        }
+      } catch (_) {}
+    });
   </script>
 </body>
 </html>`;
@@ -1236,6 +1270,15 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
         btn.textContent = '💾 Enregistrer les modifications';
       }
     }
+
+    // Persistance de la session Talent
+    try {
+      const currentToken = '${escapeAttr(talent.manage_token)}';
+      if (currentToken) {
+        localStorage.setItem('fullremote_talent_token', currentToken);
+        document.cookie = 'talent_token=' + encodeURIComponent(currentToken) + '; path=/; max-age=31536000; SameSite=Lax';
+      }
+    } catch (_) {}
   </script>
 </body>
 </html>`;

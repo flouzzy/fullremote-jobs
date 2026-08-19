@@ -555,12 +555,15 @@ export default {
     // 9.ter Routes Talent Drops & Reverse Recruiting
     if (pathname === "/talents") {
       if (env && env.DB) await initDb(env.DB);
+      const cookieHeader = request.headers.get("cookie") || "";
+      const match = cookieHeader.match(/talent_token=([^;]+)/);
+      const talentToken = match ? decodeURIComponent(match[1]) : "";
       const talents = env && env.DB ? await queryTalentsFromDb(env.DB) : [];
-      const html = renderTalentsDirectoryPage(talents, { siteUrl });
+      const html = renderTalentsDirectoryPage(talents, { siteUrl, talentToken });
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=60, s-maxage=300",
+          "Cache-Control": "private, max-age=0",
           ...corsHeaders,
         },
       });

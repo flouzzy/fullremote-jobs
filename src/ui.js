@@ -1254,7 +1254,7 @@ export function renderHTML(jobs = [], meta = {}) {
           <div class="footer-col-links">
             <a href="/" data-i18n="footer_link_explore">Explorer les offres</a>
             <a href="/talents" style="color:var(--primary); font-weight:700;">🚀 Vivier Talents (Reverse)</a>
-            <a href="/talents/join">Rejoindre le Vivier (Gratuit)</a>
+            <a href="/talents/join" id="footerTalentLink">Rejoindre le Vivier (Gratuit)</a>
             <a href="/simulateur-salaire-remote" data-i18n="footer_link_calc">Simulateur Salaire</a>
             <a href="/post-a-job" data-i18n="footer_link_post">Publier une offre (49€)</a>
             <a href="javascript:void(0);" onclick="openAlertModal()" data-i18n="footer_link_alert">Créer une alerte email</a>
@@ -2403,6 +2403,17 @@ export function renderHTML(jobs = [], meta = {}) {
     function escapeAttr(str = '') {
       return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
+
+    try {
+      const tTok = localStorage.getItem('fullremote_talent_token');
+      if (tTok) {
+        const fLink = document.getElementById('footerTalentLink');
+        if (fLink) {
+          fLink.href = '/talents/manage?token=' + encodeURIComponent(tTok);
+          fLink.textContent = '⚙️ Mon Espace Talent';
+        }
+      }
+    } catch (_) {}
 
     // Initial render & i18n boot
     applyLanguage(currentLang);
