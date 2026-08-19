@@ -1816,7 +1816,7 @@ export function renderHTML(jobs = [], meta = {}) {
         <div style="background:linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(16,185,129,0.06) 100%); border:1px solid rgba(37,99,235,0.2); border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
             <div style="font-size:0.85rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:0.35rem;">
-              <span>💶</span> <span>\${currentLang === 'fr' ? 'Radar Geo-Arbitrage & Pouvoir d\\'Achat' : 'Geo-Arbitrage & Living Standard'}</span>
+              <span>💶</span> <span>\${currentLang === 'fr' ? 'Estimation Pouvoir d\\'Achat & Salaire Net' : 'Purchasing Power & Net Salary Estimator'}</span>
             </div>
             <a href="/simulateur-salaire-remote" target="_blank" style="font-size:0.75rem; font-weight:700; color:var(--primary);">\${currentLang === 'fr' ? 'Simulateur →' : 'Simulator →'}</a>
           </div>

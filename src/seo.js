@@ -343,7 +343,7 @@ export function renderJobDetailPage(job, meta = {}) {
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
             <div style="display:flex; align-items:center; gap:0.5rem;">
               <span style="font-size:1.25rem;">💶</span>
-              <h3 style="font-size:1.1rem; font-weight:800; color:var(--text);" data-i18n="radar_title">Radar Geo-Arbitrage & Pouvoir d'Achat</h3>
+              <h3 style="font-size:1.1rem; font-weight:800; color:var(--text);" data-i18n="radar_title">Estimation Pouvoir d'Achat & Salaire Net</h3>
             </div>
             <a href="/simulateur-salaire-remote" style="font-size:0.8rem; font-weight:700; color:var(--primary); text-decoration:underline;" data-i18n="radar_open_sim">
               Ouvrir le simulateur complet →
@@ -367,7 +367,7 @@ export function renderJobDetailPage(job, meta = {}) {
                 ≈ ${equivalentPpp.toLocaleString('fr-FR')} € / an
               </div>
               <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.15rem;" data-i18n="radar_ppp_desc">
-                ${isUsd ? "Arbitrage US/FR (+30% pouvoir d'achat)" : "Gain province/remote (+15% vs Paris)"}
+                ${isUsd ? "Gain de pouvoir d'achat US/FR (+30%)" : "Gain télétravail vs grandes métropoles (+15%)"}
               </div>
             </div>
 
@@ -575,7 +575,7 @@ export function renderJobDetailPage(job, meta = {}) {
         sim_see_all: "Voir tout l'annuaire →",
         sim_view_btn: "Consulter ↗",
         toast_copied: "Lien copié dans le presse-papiers ! 🔗",
-        radar_title: "Radar Geo-Arbitrage & Pouvoir d'Achat",
+        radar_title: "Estimation Pouvoir d'Achat & Salaire Net",
         radar_open_sim: "Ouvrir le simulateur complet →",
         radar_base_salary: "Rémunération Brute",
         radar_ppp_equiv: "Équivalent Niveau de Vie (France)",
@@ -605,7 +605,7 @@ export function renderJobDetailPage(job, meta = {}) {
         sim_see_all: "View all remote jobs →",
         sim_view_btn: "View Details ↗",
         toast_copied: "Link copied to clipboard! 🔗",
-        radar_title: "Geo-Arbitrage & Purchasing Power Radar",
+        radar_title: "Purchasing Power & Net Salary Estimator",
         radar_open_sim: "Open full salary simulator →",
         radar_base_salary: "Gross Compensation",
         radar_ppp_equiv: "Living Standard Equiv. (France)",
