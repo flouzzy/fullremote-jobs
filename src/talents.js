@@ -287,6 +287,7 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
                     ${escapeHtml(availability.label_fr)}
                   </span>
                   ${t.salary_expectation ? `<span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(245,158,11,0.08); color:#d97706;">💰 ${escapeHtml(t.salary_expectation)}</span>` : ""}
+                  ${(t.cv_data || t.cv_url) ? `<span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(16,185,129,0.1); color:var(--emerald); border:1px solid rgba(16,185,129,0.25);">📄 CV vérifié</span>` : ""}
                 </div>
 
                 ${t.bio_snippet ? `<p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; margin-bottom:0.85rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(t.bio_snippet)}</p>` : ""}
@@ -297,8 +298,14 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
                   ${tagsHtml}
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:0.85rem;">
-                  <span style="font-size:0.75rem; color:var(--text-dim);">🔒 Coordonnées protégées</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+                  ${(t.cv_data || t.cv_url) ? `
+                    <a href="/api/talents/${encodeURIComponent(t.id)}/cv" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem;">
+                      📄 Voir le CV ↗
+                    </a>
+                  ` : `
+                    <span style="font-size:0.75rem; color:var(--text-dim);">🔒 Contact protégé</span>
+                  `}
                   <button class="btn-contact" onclick="openContactModal('${escapeAttr(t.id)}', '${escapeAttr(t.title)}')">
                     ✉️ Contacter en direct ↗
                   </button>
@@ -599,7 +606,33 @@ export function renderJoinTalentPoolPage(meta = {}) {
           <textarea id="talentBio" name="bio_snippet" required class="form-textarea" rows="4" placeholder="Décrivez en 3-4 phrases votre valeur ajoutée : ex-entreprises, défis d'échelle résolus, autonomie en remote, architecture conçue..."></textarea>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <!-- CV Upload / Lien CV -->
+        <div class="form-group" style="border: 2px dashed var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; background: var(--meta-bg); margin-top: 1rem;">
+          <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">📄</div>
+          <label class="form-label" style="font-size: 0.92rem; margin-bottom: 0.25rem;">
+            Curriculum Vitae / CV (Optionnel mais fortement valorisé)
+          </label>
+          <p style="font-size: 0.78rem; color: var(--text-muted); max-width: 520px; margin: 0 auto 0.75rem auto;">
+            Téléversez votre CV au format PDF ou Word (max 3 Mo) ou renseignez un lien public (Google Drive, Notion, Portfolio).
+          </p>
+
+          <input type="file" id="talentCvFile" accept=".pdf,.docx,.doc" style="display:none;" onchange="handleCvFileSelect(event)" />
+          
+          <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+            <button type="button" onclick="document.getElementById('talentCvFile').click()" style="background:var(--bg-card); border:1px solid var(--border); color:var(--text); font-weight:700; font-size:0.82rem; padding:0.5rem 1rem; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem;">
+              📁 Déposer un fichier PDF / Word
+            </button>
+            <span style="font-size:0.8rem; color:var(--text-dim);">ou</span>
+            <input type="url" id="talentCvUrl" name="cv_url" placeholder="Lien CV web (Drive, Notion...)" class="form-input" style="max-width:280px; font-size:0.82rem; padding:0.45rem 0.75rem;" />
+          </div>
+
+          <div id="cvFilePreview" style="display:none; margin-top:0.75rem; font-size:0.85rem; color:var(--emerald); font-weight:700; align-items:center; justify-content:center; gap:0.5rem;">
+            <span>✅ <span id="cvFileNameDisplay">mon_cv.pdf</span> (<span id="cvFileSizeDisplay">120 Ko</span>)</span>
+            <button type="button" onclick="removeCvFile()" style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer; font-weight:600; text-decoration:underline;">Supprimer</button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
           <div class="form-group">
             <label class="form-label">Lien GitHub (optionnel mais recommandé)</label>
             <input type="url" id="talentGithub" name="github_url" class="form-input" placeholder="https://github.com/votreprofil" />
@@ -628,6 +661,35 @@ export function renderJoinTalentPoolPage(meta = {}) {
   </main>
 
   <script>
+    let cvBase64 = null;
+    let cvFilename = null;
+
+    function handleCvFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 3 * 1024 * 1024) {
+        alert('Le fichier est trop volumineux (maximum 3 Mo).');
+        e.target.value = '';
+        return;
+      }
+      cvFilename = file.name;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        cvBase64 = evt.target.result;
+        document.getElementById('cvFileNameDisplay').textContent = file.name;
+        document.getElementById('cvFileSizeDisplay').textContent = Math.round(file.size / 1024) + ' Ko';
+        document.getElementById('cvFilePreview').style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeCvFile() {
+      cvBase64 = null;
+      cvFilename = null;
+      document.getElementById('talentCvFile').value = '';
+      document.getElementById('cvFilePreview').style.display = 'none';
+    }
+
     function addStackTag(tag) {
       const input = document.getElementById('talentStack');
       if (!input) return;
@@ -660,6 +722,9 @@ export function renderJoinTalentPoolPage(meta = {}) {
         bio_snippet: document.getElementById('talentBio').value,
         github_url: document.getElementById('talentGithub').value,
         portfolio_url: document.getElementById('talentPortfolio').value,
+        cv_url: document.getElementById('talentCvUrl')?.value || '',
+        cv_data: cvBase64 || '',
+        cv_filename: cvFilename || '',
         email: document.getElementById('talentEmail').value,
       };
 

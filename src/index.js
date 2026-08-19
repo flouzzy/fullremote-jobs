@@ -570,6 +570,52 @@ export default {
       }
     }
 
+    // API Consultation / Téléchargement CV Candidat : GET /api/talents/:id/cv
+    if (pathname.startsWith("/api/talents/") && pathname.endsWith("/cv") && request.method === "GET") {
+      try {
+        const talentId = decodeURIComponent(pathname.replace("/api/talents/", "").replace("/cv", "")).trim();
+        let talent = null;
+        if (env && env.DB) {
+          await initDb(env.DB);
+          talent = await getTalentById(env.DB, talentId);
+        }
+        if (!talent) {
+          return new Response("Profil Talent introuvable.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+        }
+        if (talent.cv_data && talent.cv_data.startsWith("data:")) {
+          const commaIdx = talent.cv_data.indexOf(",");
+          if (commaIdx !== -1) {
+            const metaPart = talent.cv_data.substring(0, commaIdx);
+            const base64Data = talent.cv_data.substring(commaIdx + 1);
+            const mimeMatch = metaPart.match(/data:([^;]+)/);
+            const mimeType = mimeMatch ? mimeMatch[1] : "application/pdf";
+            const binaryString = atob(base64Data);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const cleanFilename = talent.cv_filename || `CV_${talent.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+            return new Response(bytes.buffer, {
+              status: 200,
+              headers: {
+                "Content-Type": mimeType,
+                "Content-Disposition": `inline; filename="${cleanFilename}"`,
+                "Cache-Control": "public, max-age=3600",
+                ...corsHeaders,
+              },
+            });
+          }
+        }
+        if (talent.cv_url) {
+          return Response.redirect(talent.cv_url, 302);
+        }
+        return new Response("Aucun CV n'a été rattaché à ce profil.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      } catch (err) {
+        return new Response("Erreur lors de la récupération du CV : " + err.message, { status: 500, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      }
+    }
+
     // API Mise à jour Statut Talent (Pause / Actif / Recruté) : POST /api/talents/manage/status
     if (pathname === "/api/talents/manage/status" && request.method === "POST") {
       let token = "";

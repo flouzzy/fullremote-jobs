@@ -108,6 +108,9 @@ export async function initDb(db) {
         github_url TEXT,
         linkedin_url TEXT,
         portfolio_url TEXT,
+        cv_url TEXT,
+        cv_data TEXT,
+        cv_filename TEXT,
         email TEXT NOT NULL,
         manage_token TEXT NOT NULL UNIQUE,
         status TEXT DEFAULT 'active',
@@ -134,6 +137,15 @@ export async function initDb(db) {
       );
       CREATE INDEX IF NOT EXISTS idx_talent_contacts_tid ON talent_contacts(talent_id);
     `);
+
+    // Migration progressive pour colonnes CV si table déjà existante
+    try {
+      await db.exec(`
+        ALTER TABLE talents ADD COLUMN cv_url TEXT;
+        ALTER TABLE talents ADD COLUMN cv_data TEXT;
+        ALTER TABLE talents ADD COLUMN cv_filename TEXT;
+      `);
+    } catch (_) {}
   } catch (e) {
     console.warn("DB init notice:", e.message);
   }
@@ -586,9 +598,9 @@ export async function saveTalentProfile(db, data = {}) {
         `INSERT INTO talents (
           id, title, seniority, primary_stack, tags_json, salary_expectation,
           min_eur, tjm_eur, availability, location, bio_snippet,
-          github_url, linkedin_url, portfolio_url, email, manage_token,
+          github_url, linkedin_url, portfolio_url, cv_url, cv_data, cv_filename, email, manage_token,
           status, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT(id) DO UPDATE SET
           title = excluded.title,
           seniority = excluded.seniority,
@@ -603,6 +615,9 @@ export async function saveTalentProfile(db, data = {}) {
           github_url = excluded.github_url,
           linkedin_url = excluded.linkedin_url,
           portfolio_url = excluded.portfolio_url,
+          cv_url = excluded.cv_url,
+          cv_data = excluded.cv_data,
+          cv_filename = excluded.cv_filename,
           email = excluded.email,
           updated_at = CURRENT_TIMESTAMP`
       )
@@ -621,6 +636,9 @@ export async function saveTalentProfile(db, data = {}) {
         data.github_url || "",
         data.linkedin_url || "",
         data.portfolio_url || "",
+        data.cv_url || "",
+        data.cv_data || "",
+        data.cv_filename || "",
         data.email || "",
         manageToken
       )
