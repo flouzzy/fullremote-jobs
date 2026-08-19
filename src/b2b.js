@@ -460,7 +460,7 @@ export function renderPostJobPage(meta = {}) {
 
   <footer>
     <div class="container">
-      <strong>FullRemote.Jobs</strong> — Plateforme opérée par <a href="https://edounze.com" target="_blank" style="color:var(--primary);">Charles EDOU NZE</a>.
+      <strong>FullRemote.Jobs</strong> — Made with ❤️ by <a href="https://edounze.com" target="_blank" style="color:var(--primary);">Charles EDOU NZE</a>.
     </div>
   </footer>
 
