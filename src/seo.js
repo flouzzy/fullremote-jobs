@@ -1289,18 +1289,72 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
       </div>
     </section>
 
+    <!-- Command Search Bar & Filtres Dynamiques -->
+    <section style="margin-bottom: 2rem;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1rem; box-shadow: 0 4px 14px rgba(0,0,0,0.04);">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+          <span style="font-size:1.15rem; color:var(--text-muted);">🔍</span>
+          <input
+            type="text"
+            id="pageSearchInput"
+            placeholder="Filtrer parmi les offres ${escapeHtml(config.tech)} (ex: React, Paris, CDI, Lead, 60k...)"
+            style="flex:1; border:none; background:transparent; font-family:inherit; font-size:0.95rem; font-weight:500; color:var(--text); outline:none;"
+            autocomplete="off"
+          />
+          <button id="pageSearchClear" style="display:none; background:transparent; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;" title="Effacer">✕</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:0.5rem; padding-top:0.6rem; border-top:1px solid var(--border);">
+          <select id="pageRegionSelect" style="background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:0.8rem; font-weight:600; padding:0.45rem 0.6rem; border-radius:6px; outline:none; cursor:pointer;">
+            <option value="all">🌍 Toutes les régions</option>
+            <option value="france">🇫🇷 France & Francophonie</option>
+            <option value="europe">🇪🇺 Europe & UK</option>
+            <option value="worldwide">🌍 Worldwide</option>
+          </select>
+
+          <select id="pageContractSelect" style="background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:0.8rem; font-weight:600; padding:0.45rem 0.6rem; border-radius:6px; outline:none; cursor:pointer;">
+            <option value="all">📋 Tous les contrats</option>
+            <option value="cdi_fulltime">💼 CDI / Full-time</option>
+            <option value="freelance_contract">⚡ Freelance</option>
+            <option value="internship">🎓 Stage / Alternance</option>
+            <option value="cdd_parttime">⏳ CDD / Part-time</option>
+          </select>
+
+          <select id="pageSalarySelect" style="background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:0.8rem; font-weight:600; padding:0.45rem 0.6rem; border-radius:6px; outline:none; cursor:pointer;">
+            <option value="0">💰 Tous les salaires</option>
+            <option value="40000">💰 > 40k € / $</option>
+            <option value="60000">💰 > 60k € / $</option>
+            <option value="80000">💰 > 80k € / $</option>
+            <option value="100000">💰 > 100k € / $</option>
+          </select>
+
+          <select id="pageSortSelect" style="background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:0.8rem; font-weight:600; padding:0.45rem 0.6rem; border-radius:6px; outline:none; cursor:pointer;">
+            <option value="recent">⚡ Plus récentes</option>
+            <option value="salary_desc">💰 Salaire décroissant</option>
+            <option value="company">🏢 Entreprise (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Chips Dynamiques -->
+      <div id="pageChipsRow" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem; margin-top:0.75rem;"></div>
+    </section>
+
     <!-- Liste des opportunités ciblées -->
     <section>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
         <h2 style="font-size:1.35rem; font-weight:800; color:var(--text);">
           Dernières offres 100% télétravail ${escapeHtml(config.tech)}
         </h2>
-        <span style="font-size:0.85rem; color:var(--text-dim);">
-          Triées par fraîcheur
-        </span>
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <span style="font-size:0.85rem; color:var(--text-dim);">
+            <strong id="pageVisibleCount" style="color:var(--text); font-weight:700;">${matchingJobs.length}</strong> offre(s) affichée(s)
+          </span>
+          <button onclick="resetPageFilters()" style="font-size:0.75rem; color:var(--primary); background:transparent; border:none; cursor:pointer; font-weight:600; text-decoration:underline;">Réinitialiser</button>
+        </div>
       </div>
 
-      <div class="job-grid">
+      <div class="job-grid" id="landingJobGrid">
         ${matchingJobs.map((j) => {
           const detailUrl = `${siteUrl}/jobs/${encodeURIComponent(j.id)}`;
           const initial = (j.company || "C").charAt(0).toUpperCase();
@@ -1350,6 +1404,14 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
           `;
         }).join("")}
       </div>
+
+      <!-- Empty State -->
+      <div id="pageEmptyState" style="display:none; text-align:center; padding:3rem 1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:14px; margin-bottom:2rem;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">🔎</div>
+        <h3 style="font-size:1.15rem; font-weight:700; color:var(--text); margin-bottom:0.35rem;">Aucune offre ne correspond à ces critères</h3>
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Essayez d'ajuster vos filtres de recherche ou de réinitialiser.</p>
+        <button onclick="resetPageFilters()" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; border:none; padding:0.6rem 1.2rem; border-radius:8px; cursor:pointer;">Réinitialiser les filtres</button>
+      </div>
     </section>
 
     <!-- Navigation Programmatique SEO Cross-linking -->
@@ -1368,6 +1430,196 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
       </div>
     </section>
   </main>
+
+  <script>
+    const PAGE_JOBS = ${JSON.stringify(matchingJobs)};
+    let activeJobs = [...PAGE_JOBS];
+    let selectedChip = null;
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderCard(j) {
+      const detailUrl = '${siteUrl}/jobs/' + encodeURIComponent(j.id);
+      const initial = (j.company || 'C').charAt(0).toUpperCase();
+      const avatar = j.company_logo
+        ? \`<img src="\${escapeHtml(j.company_logo)}" alt="\${escapeHtml(j.company)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.textContent='\${initial}'" />\`
+        : initial;
+      const cleanDesc = (j.description_snippet || '').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim();
+      const tagsHtml = (j.tags || []).slice(0, 4).map(t => \`<span style="font-size:0.72rem; color:var(--text-dim); background:var(--meta-bg); border:1px solid var(--border); padding:2px 6px; border-radius:4px;">#\${escapeHtml(t)}</span>\`).join(' ');
+
+      return \`
+      <div class="job-card">
+        <div>
+          <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:0.85rem;">
+            <div style="width:44px; height:44px; border-radius:10px; background:var(--meta-bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.15rem; color:var(--primary); flex-shrink:0; overflow:hidden;">
+              \${avatar}
+            </div>
+            <div style="min-width:0;">
+              <div style="font-size:0.83rem; font-weight:600; color:var(--text-muted);">\${escapeHtml(j.company)}</div>
+              <h3 style="font-size:1.05rem; font-weight:700; color:var(--text); line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${escapeHtml(j.title)}</h3>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.85rem;">
+            <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:6px; background:rgba(99,102,241,0.1); color:#6366f1;">\${j.contractIcon || '💼'} \${escapeHtml(j.contractType || 'CDI')}</span>
+            <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:6px; background:rgba(37,99,235,0.1); color:#2563eb;">\${j.regionFlag || '🌍'} \${escapeHtml(j.region || 'Worldwide')}</span>
+            \${j.salary ? \`<span style="font-size:0.75rem; font-weight:700; color:var(--emerald); background:var(--emerald-bg); padding:3px 8px; border-radius:6px; border:1px solid rgba(16,185,129,0.25);">💰 \${escapeHtml(j.salary)}</span>\` : ''}
+          </div>
+
+          \${cleanDesc ? \`<p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; margin-bottom:0.85rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">\${escapeHtml(cleanDesc)}</p>\` : ''}
+        </div>
+
+        <div>
+          <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.85rem;">
+            \${tagsHtml}
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; border-top:1px solid var(--border); padding-top:0.85rem;">
+            <a href="\${detailUrl}" style="font-size:0.82rem; font-weight:700; text-align:center; color:var(--primary); background:rgba(37,99,235,0.06); padding:8px 10px; border-radius:8px; border:1px solid rgba(37,99,235,0.2); transition:all 0.15s ease; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:0.25rem;">
+              📄 Détails & Pitch IA
+            </a>
+            <a href="\${escapeHtml(j.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem; font-weight:700; text-align:center; background:var(--primary); color:white; padding:8px 10px; border-radius:8px; transition:background 0.15s ease; text-decoration:none; display:flex; align-items:center; justify-content:center;">
+              Postuler ↗
+            </a>
+          </div>
+        </div>
+      </div>
+      \`;
+    }
+
+    function applyFilters() {
+      const q = (document.getElementById('pageSearchInput')?.value || '').toLowerCase().trim();
+      const region = document.getElementById('pageRegionSelect')?.value || 'all';
+      const contract = document.getElementById('pageContractSelect')?.value || 'all';
+      const minSalary = parseInt(document.getElementById('pageSalarySelect')?.value || '0', 10);
+      const sort = document.getElementById('pageSortSelect')?.value || 'recent';
+
+      const clearBtn = document.getElementById('pageSearchClear');
+      if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+      activeJobs = PAGE_JOBS.filter(j => {
+        if (q) {
+          const haystack = (j.title + ' ' + j.company + ' ' + (j.tags || []).join(' ') + ' ' + (j.location || '') + ' ' + (j.salary || '')).toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        if (selectedChip) {
+          const haystack = (j.title + ' ' + (j.tags || []).join(' ')).toLowerCase();
+          if (!haystack.includes(selectedChip.toLowerCase())) return false;
+        }
+        if (region !== 'all') {
+          const reg = (j.regionId || '').toLowerCase();
+          if (region === 'france' && reg !== 'france') return false;
+          if (region === 'europe' && reg !== 'europe' && reg !== 'france') return false;
+          if (region === 'worldwide' && reg !== 'worldwide') return false;
+        }
+        if (contract !== 'all') {
+          if (j.contractTypeId !== contract) return false;
+        }
+        if (minSalary > 0) {
+          const sMin = j.salary_min_eur || j.salary_min_usd || 0;
+          const sMax = j.salary_max_eur || j.salary_max_usd || 0;
+          if (Math.max(sMin, sMax) < minSalary) return false;
+        }
+        return true;
+      });
+
+      if (sort === 'salary_desc') {
+        activeJobs.sort((a, b) => (Math.max(b.salary_max_eur || 0, b.salary_min_eur || 0) - Math.max(a.salary_max_eur || 0, a.salary_min_eur || 0)));
+      } else if (sort === 'company') {
+        activeJobs.sort((a, b) => (a.company || '').localeCompare(b.company || ''));
+      } else {
+        activeJobs.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
+      }
+
+      const grid = document.getElementById('landingJobGrid');
+      const countEl = document.getElementById('pageVisibleCount');
+      const emptyEl = document.getElementById('pageEmptyState');
+
+      if (countEl) countEl.textContent = activeJobs.length;
+
+      if (grid) {
+        if (activeJobs.length === 0) {
+          grid.style.display = 'none';
+          if (emptyEl) emptyEl.style.display = 'block';
+        } else {
+          grid.style.display = 'grid';
+          grid.innerHTML = activeJobs.map(renderCard).join('');
+          if (emptyEl) emptyEl.style.display = 'none';
+        }
+      }
+    }
+
+    function renderQuickChips() {
+      const container = document.getElementById('pageChipsRow');
+      if (!container) return;
+
+      const tagCounts = {};
+      PAGE_JOBS.forEach(j => {
+        (j.tags || []).forEach(t => {
+          tagCounts[t] = (tagCounts[t] || 0) + 1;
+        });
+      });
+
+      const topTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+
+      if (topTags.length === 0) return;
+
+      let html = '<span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-right:0.25rem;">💡 Filtres rapides :</span>';
+      topTags.forEach(([tag, count]) => {
+        const isSel = selectedChip === tag;
+        html += \`<button onclick="toggleChip('\${escapeHtml(tag)}')" style="font-size:0.75rem; font-weight:600; padding:3px 9px; border-radius:999px; border:1px solid \${isSel ? 'var(--primary)' : 'var(--border)'}; background:\${isSel ? 'var(--primary)' : 'var(--bg-card)'}; color:\${isSel ? '#ffffff' : 'var(--text-muted)'}; cursor:pointer; transition:all 0.15s ease;">\${escapeHtml(tag)} <span style="font-size:0.7rem; opacity:0.8;">(\${count})</span></button>\`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    window.toggleChip = function(tag) {
+      selectedChip = (selectedChip === tag) ? null : tag;
+      renderQuickChips();
+      applyFilters();
+    };
+
+    window.resetPageFilters = function() {
+      const search = document.getElementById('pageSearchInput');
+      if (search) search.value = '';
+      const reg = document.getElementById('pageRegionSelect');
+      if (reg) reg.value = 'all';
+      const c = document.getElementById('pageContractSelect');
+      if (c) c.value = 'all';
+      const sal = document.getElementById('pageSalarySelect');
+      if (sal) sal.value = '0';
+      const s = document.getElementById('pageSortSelect');
+      if (s) s.value = 'recent';
+      selectedChip = null;
+      renderQuickChips();
+      applyFilters();
+    };
+
+    const sInput = document.getElementById('pageSearchInput');
+    if (sInput) sInput.addEventListener('input', () => applyFilters());
+
+    const sClear = document.getElementById('pageSearchClear');
+    if (sClear) sClear.onclick = () => {
+      sInput.value = '';
+      applyFilters();
+    };
+
+    ['pageRegionSelect', 'pageContractSelect', 'pageSalarySelect', 'pageSortSelect'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', () => applyFilters());
+    });
+
+    renderQuickChips();
+  </script>
 </body>
 </html>`;
 }
