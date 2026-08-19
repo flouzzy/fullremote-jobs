@@ -292,23 +292,28 @@ export function categorizeJob(title = "", rawCategory = "", tags = []) {
 }
 
 /**
- * Patterns des technologies et langages majeurs (Top TIOBE + Frameworks modernes)
+ * Patterns des technologies et langages majeurs (Top 50 TIOBE + Top 100 High-Demand Remote)
  */
 export const TIOBE_TECH_PATTERNS = [
-  // 1. PHP & Frameworks (Laravel, Symfony, WordPress)
-  { tag: "PHP", regex: /\b(php|php8|php7)\b/i },
-  { tag: "Laravel", regex: /\b(laravel|livewire|filament|blade)\b/i },
-  { tag: "Symfony", regex: /\b(symfony|doctrine|twig|api platform)\b/i },
-  { tag: "WordPress", regex: /\b(wordpress|woocommerce)\b/i },
-  { tag: "Drupal", regex: /\b(drupal)\b/i },
-
-  // 2. Python & IA / Data (TIOBE #1)
+  // --- TOP 1 à 20 TIOBE ---
+  // 1. Python & IA / Data (TIOBE #1)
   { tag: "Python", regex: /\b(python|python3|django|fastapi|flask|pytest|pandas|numpy|pytorch|tensorflow|scikit)\b/i },
   { tag: "Django", regex: /\b(django)\b/i },
   { tag: "FastAPI", regex: /\b(fastapi)\b/i },
   { tag: "AI & LLM", regex: /\b(ai|llm|machine learning|deep learning|genai|openai|langchain|rag|claude|agentic)\b/i },
 
-  // 3. JavaScript / TypeScript & Front / Fullstack (TIOBE #6)
+  // 2. C / C++ (TIOBE #2, #3)
+  { tag: "C++", regex: /\b(c\+\+|cpp)\b/i },
+  { tag: "C", regex: /\b(c language|embedded c|c\/c\+\+)\b/i },
+
+  // 3. Java & JVM (TIOBE #4)
+  { tag: "Java", regex: /\b(java|java17|java21|spring|spring boot|hibernate|quarkus|micronaut)\b/i },
+
+  // 4. C# & .NET (TIOBE #5)
+  { tag: "C#", regex: /\b(c#|csharp|\.net|dotnet|asp\.net)\b/i },
+  { tag: ".NET", regex: /\b(\.net|dotnet|asp\.net core)\b/i },
+
+  // 5. JavaScript / TypeScript & Front / Fullstack (TIOBE #6, #44)
   { tag: "TypeScript", regex: /\b(typescript|ts)\b/i },
   { tag: "JavaScript", regex: /\b(javascript|js|es6)\b/i },
   { tag: "React", regex: /\b(react|react\.js|reactjs|next\.js|nextjs)\b/i },
@@ -316,42 +321,137 @@ export const TIOBE_TECH_PATTERNS = [
   { tag: "Angular", regex: /\b(angular|angularjs)\b/i },
   { tag: "Node.js", regex: /\b(node|node\.js|nodejs|express|nestjs)\b/i },
 
-  // 4. Java & JVM (TIOBE #4)
-  { tag: "Java", regex: /\b(java|java17|java21|spring|spring boot|hibernate|quarkus|micronaut)\b/i },
-  { tag: "Kotlin", regex: /\b(kotlin)\b/i },
-  { tag: "Scala", regex: /\b(scala)\b/i },
+  // 6. SQL & Bases de données (TIOBE #8)
+  { tag: "SQL", regex: /\b(sql|postgresql|postgres|mysql|mariadb|sqlite|mongodb|redis)\b/i },
+  { tag: "PostgreSQL", regex: /\b(postgresql|postgres)\b/i },
 
-  // 5. C# & .NET (TIOBE #5)
-  { tag: "C#", regex: /\b(c#|csharp|\.net|dotnet|asp\.net)\b/i },
-  { tag: ".NET", regex: /\b(\.net|dotnet|asp\.net core)\b/i },
-
-  // 6. C / C++ (TIOBE #2, #3)
-  { tag: "C++", regex: /\b(c\+\+|cpp)\b/i },
-  { tag: "C", regex: /\b(c language|embedded c|c\/c\+\+)\b/i },
-
-  // 7. Go / Golang (TIOBE #14)
-  { tag: "Go", regex: /\b(golang|go dev|go engineer|go backend)\b/i },
+  // 7. R & Data Science (TIOBE #9)
+  { tag: "R", regex: /\b(r language|rstats|r-studio|r shiny)\b/i },
 
   // 8. Rust (TIOBE #10)
   { tag: "Rust", regex: /\b(rust|rustlang|tokio|actix|solana)\b/i },
 
-  // 9. Ruby & Rails (TIOBE #16)
+  // 9. PHP & Frameworks (TIOBE #13)
+  { tag: "PHP", regex: /\b(php|php8|php7)\b/i },
+  { tag: "Laravel", regex: /\b(laravel|livewire|filament|blade)\b/i },
+  { tag: "Symfony", regex: /\b(symfony|doctrine|twig|api platform)\b/i },
+  { tag: "WordPress", regex: /\b(wordpress|woocommerce)\b/i },
+  { tag: "Drupal", regex: /\b(drupal)\b/i },
+
+  // 10. Go / Golang (TIOBE #14)
+  { tag: "Go", regex: /\b(golang|go dev|go engineer|go backend)\b/i },
+
+  // 11. Fortran (TIOBE #15)
+  { tag: "Fortran", regex: /\b(fortran|fortran90|fortran77)\b/i },
+
+  // 12. Ruby & Rails (TIOBE #16)
   { tag: "Ruby", regex: /\b(ruby|ruby on rails|rails)\b/i },
 
-  // 10. Swift & Mobile (TIOBE #17)
+  // 13. Swift & Mobile (TIOBE #17)
   { tag: "Swift", regex: /\b(swift|swiftui|ios)\b/i },
   { tag: "Android", regex: /\b(android|kotlin mobile)\b/i },
   { tag: "Flutter", regex: /\b(flutter|dart)\b/i },
   { tag: "React Native", regex: /\b(react native)\b/i },
 
-  // 11. SQL & Bases de données (TIOBE #8)
-  { tag: "SQL", regex: /\b(sql|postgresql|postgres|mysql|mariadb|sqlite|mongodb|redis)\b/i },
-  { tag: "PostgreSQL", regex: /\b(postgresql|postgres)\b/i },
+  // 14. Perl (TIOBE #18)
+  { tag: "Perl", regex: /\b(perl|perl5|perl6)\b/i },
 
-  // 12. R & Data Science (TIOBE #9)
-  { tag: "R", regex: /\b(r language|rstats|r-studio|r shiny)\b/i },
+  // 15. COBOL (TIOBE #19)
+  { tag: "COBOL", regex: /\b(cobol|mainframe)\b/i },
 
-  // 13. DevOps & Cloud
+  // 16. Assembly (TIOBE #20)
+  { tag: "Assembly", regex: /\b(assembly|x86 asm|arm asm)\b/i },
+
+  // --- TOP 21 à 50 TIOBE ---
+  // 17. Ada (TIOBE #21)
+  { tag: "Ada", regex: /\b(ada language|ada 2012|ada programming)\b/i },
+
+  // 18. Visual Basic / VBA (TIOBE #22, #42)
+  { tag: "Visual Basic", regex: /\b(vba|visual basic|vb\.net|vbscript)\b/i },
+
+  // 19. Objective-C (TIOBE #23)
+  { tag: "Objective-C", regex: /\b(objective-c|objc)\b/i },
+
+  // 20. SAS (TIOBE #24)
+  { tag: "SAS", regex: /\b(sas programming|sas data|sas language)\b/i },
+
+  // 21. MATLAB (TIOBE #25)
+  { tag: "MATLAB", regex: /\b(matlab|simulink)\b/i },
+
+  // 22. Julia (TIOBE #26)
+  { tag: "Julia", regex: /\b(julia language|julialang)\b/i },
+
+  // 23. PL/SQL (TIOBE #27)
+  { tag: "PL/SQL", regex: /\b(pl\/sql|plsql|oracle sql)\b/i },
+
+  // 24. Kotlin (TIOBE #28)
+  { tag: "Kotlin", regex: /\b(kotlin|kmp|kotlin multiplatform)\b/i },
+
+  // 25. OCaml / Caml (TIOBE #29, #33)
+  { tag: "OCaml", regex: /\b(ocaml|caml|dune ocaml)\b/i },
+
+  // 26. T-SQL / Transact-SQL (TIOBE #30)
+  { tag: "T-SQL", regex: /\b(t-sql|transact-sql|sql server)\b/i },
+
+  // 27. LabVIEW (TIOBE #31)
+  { tag: "LabVIEW", regex: /\b(labview|ni labview)\b/i },
+
+  // 28. Dart (TIOBE #32)
+  { tag: "Dart", regex: /\b(dart|flutter)\b/i },
+
+  // 29. Lua (TIOBE #34)
+  { tag: "Lua", regex: /\b(lua|luajit|neovim lua)\b/i },
+
+  // 30. VHDL / Verilog (TIOBE #36)
+  { tag: "VHDL", regex: /\b(vhdl|verilog|fpga)\b/i },
+
+  // 31. Prolog (TIOBE #37)
+  { tag: "Prolog", regex: /\b(prolog|swi-prolog)\b/i },
+
+  // 32. ABAP / SAP (TIOBE #38)
+  { tag: "ABAP", regex: /\b(abap|sap abap|sap dev|sap consultant)\b/i },
+
+  // 33. PowerShell (TIOBE #39)
+  { tag: "PowerShell", regex: /\b(powershell|pwsh)\b/i },
+
+  // 34. Lisp (TIOBE #40)
+  { tag: "Lisp", regex: /\b(lisp|common lisp|clisp|racket)\b/i },
+
+  // 35. Zig (TIOBE #41)
+  { tag: "Zig", regex: /\b(zig language|ziglang)\b/i },
+
+  // 36. Haskell (TIOBE #48)
+  { tag: "Haskell", regex: /\b(haskell|ghc)\b/i },
+
+  // 37. Scala (TIOBE #49)
+  { tag: "Scala", regex: /\b(scala|akka|play framework|spark)\b/i },
+
+  // --- TOP 51 à 100 & Écosystème Remote Moderne ---
+  // 38. Elixir & Phoenix (#51-100)
+  { tag: "Elixir", regex: /\b(elixir|phoenix framework|liveview)\b/i },
+
+  // 39. Erlang (#51-100)
+  { tag: "Erlang", regex: /\b(erlang|beam|otp)\b/i },
+
+  // 40. Clojure (#51-100)
+  { tag: "Clojure", regex: /\b(clojure|clojurescript)\b/i },
+
+  // 41. Solidity / Web3 (#51-100)
+  { tag: "Solidity", regex: /\b(solidity|smart contracts|web3|ethereum|hardhat|foundry)\b/i },
+
+  // 42. Salesforce Apex (#51-100)
+  { tag: "Apex", regex: /\b(apex|salesforce developer|salesforce apex)\b/i },
+
+  // 43. F# (#51-100)
+  { tag: "F#", regex: /\b(f#|fsharp)\b/i },
+
+  // 44. Groovy (#51-100)
+  { tag: "Groovy", regex: /\b(groovy|grails|jenkins pipeline)\b/i },
+
+  // 45. Bash / Shell (#51-100)
+  { tag: "Bash", regex: /\b(bash|shell script|zsh)\b/i },
+
+  // --- DevOps, Cloud & Infra ---
   { tag: "DevOps", regex: /\b(devops|sre|ci\/cd|github actions|gitlab ci)\b/i },
   { tag: "Kubernetes", regex: /\b(kubernetes|k8s|helm)\b/i },
   { tag: "Docker", regex: /\b(docker|containerization)\b/i },
@@ -380,12 +480,24 @@ export function extractTechStack(title = "", description = "", rawTags = []) {
     }
   }
 
-  // Association hiérarchique : Laravel ou Symfony implique PHP
-  if (detected.has("Laravel") || detected.has("Symfony")) {
+  // Relations hiérarchiques et d'écosystèmes
+  if (detected.has("Laravel") || detected.has("Symfony") || detected.has("WordPress") || detected.has("Drupal")) {
     detected.add("PHP");
   }
+  if (detected.has("Django") || detected.has("FastAPI")) {
+    detected.add("Python");
+  }
+  if (detected.has("Flutter")) {
+    detected.add("Dart");
+  }
+  if (detected.has("Phoenix")) {
+    detected.add("Elixir");
+  }
+  if (detected.has("PL/SQL") || detected.has("T-SQL") || detected.has("PostgreSQL")) {
+    detected.add("SQL");
+  }
 
-  return Array.from(detected).slice(0, 6);
+  return Array.from(detected).slice(0, 7);
 }
 
 /**
