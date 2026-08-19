@@ -1765,9 +1765,9 @@ export function renderHTML(jobs = [], meta = {}) {
       if (!container) return;
 
       const techKeywords = [
-        'React', 'Go', 'Python', 'DevOps', 'TypeScript', 'Node', 'AWS', 'Kubernetes',
-        'Rust', 'Java', 'Next.js', 'Vue', 'PostgreSQL', 'Docker', 'AI', 'Fullstack',
-        'Backend', 'Frontend', 'Product', 'Data', 'Stripe', 'Lead'
+        'Python', 'PHP', 'Laravel', 'Symfony', 'Java', 'C#', 'C++', 'Go', 'Rust',
+        'Ruby', 'React', 'TypeScript', 'JavaScript', 'Node', 'Vue', 'SQL', 'Swift',
+        'DevOps', 'Kubernetes', 'AWS', 'Docker', 'AI', 'Fullstack', 'Backend'
       ];
 
       const counts = {};
