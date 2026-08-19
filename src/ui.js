@@ -2114,9 +2114,14 @@ export function renderHTML(jobs = [], meta = {}) {
             \${j.description_snippet ? \`<div style="font-size:0.83rem; color:var(--text-muted); line-height:1.45; margin-bottom:0.75rem; max-height:40px; overflow:hidden;">\${escapeHtml(cleanSnippet(j.description_snippet))}</div>\` : ''}
           </div>
 
-          <div class="job-card-footer">
-            <div>\${tagsHtml}</div>
-            <span class="btn-apply-card">\${escapeHtml(detailsLabel)}</span>
+          <div>
+            <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.65rem;">
+              \${tagsHtml}
+            </div>
+            <div class="job-card-footer">
+              <span style="font-size:0.75rem; color:var(--text-dim); display:flex; align-items:center; gap:0.25rem;">⏱️ \${escapeHtml(timeAgo(j.published_at, currentLang))}</span>
+              <span class="btn-apply-card">\${escapeHtml(detailsLabel)}</span>
+            </div>
           </div>
         </div>
       \`;

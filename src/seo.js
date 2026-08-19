@@ -1194,13 +1194,18 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
               ${cleanDesc ? `<p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; margin-bottom:0.85rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(cleanDesc)}</p>` : ""}
             </div>
 
-            <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); padding-top:0.85rem;">
-              <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">${tagsHtml}</div>
-              <div style="display:flex; gap:0.5rem;">
-                <a href="${detailUrl}" style="font-size:0.82rem; font-weight:700; color:var(--primary); padding:4px 8px; border-radius:6px; border:1px solid rgba(37,99,235,0.2);">
-                  Détails & Pitch IA
+            </div>
+
+            <div>
+              <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.85rem;">
+                ${tagsHtml}
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; border-top:1px solid var(--border); padding-top:0.85rem;">
+                <a href="${detailUrl}" style="font-size:0.82rem; font-weight:700; text-align:center; color:var(--primary); background:rgba(37,99,235,0.06); padding:8px 10px; border-radius:8px; border:1px solid rgba(37,99,235,0.2); transition:all 0.15s ease; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:0.25rem;">
+                  📄 Détails & Pitch IA
                 </a>
-                <a href="${escapeHtml(j.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem; font-weight:700; background:var(--primary); color:white; padding:4px 10px; border-radius:6px;">
+                <a href="${escapeHtml(j.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem; font-weight:700; text-align:center; background:var(--primary); color:white; padding:8px 10px; border-radius:8px; transition:background 0.15s ease; text-decoration:none; display:flex; align-items:center; justify-content:center;">
                   Postuler ↗
                 </a>
               </div>
