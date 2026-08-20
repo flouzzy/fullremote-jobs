@@ -19,7 +19,7 @@ export function renderSalaryCalculatorPage(meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Simulateur Salaire Télétravail International (US, UK, Suisse vers France) — FullRemote.Jobs</title>
   <meta name="description" content="Calculez votre salaire net en France pour une entreprise américaine (USD), britannique (GBP), suisse (CHF) ou européenne. Comparez Portage Salarial (Deel, Remote), Micro-Entreprise et SASU." />
   <link rel="canonical" href="${siteUrl}/simulateur-salaire-remote" />
@@ -293,8 +293,12 @@ export function renderSalaryCalculatorPage(meta = {}) {
     }
 
     @media (max-width: 840px) {
-      .calc-layout { grid-template-columns: 1fr; }
-      .results-grid { grid-template-columns: 1fr; }
+      .container { padding: 1.25rem 1rem; }
+      .hero-calc { padding: 1.5rem 0 1rem; }
+      .hero-calc h1 { font-size: 1.65rem; }
+      .calc-layout { grid-template-columns: 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+      .results-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .form-input, .form-select { font-size: 16px !important; }
     }
   </style>
 </head>

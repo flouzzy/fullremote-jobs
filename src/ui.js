@@ -24,7 +24,7 @@ export function renderHTML(jobs = [], meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Full Remote Jobs — Les meilleurs postes 100% Télétravail (FR / EN)</title>
   <meta name="description" content="L'annuaire mondial et agrégateur intelligent de postes vérifiés 100% télétravail (CDI, Freelance, CDD, Stage). Accès direct, libre et sans inscription." />
   <meta property="og:title" content="Full Remote Jobs — 100% Télétravail vérifié (CDI / Freelance / CDD)" />
@@ -964,17 +964,206 @@ export function renderHTML(jobs = [], meta = {}) {
       transform: translateY(0);
     }
 
+    /* ══════════════════════════════════════════════════
+       MOBILE-FIRST HYPER-RESPONSIVE SYSTEM (< 768px)
+    ══════════════════════════════════════════════════ */
     @media (max-width: 860px) {
       .header-nav { display: none; }
-      .search-filters-row { grid-template-columns: 1fr 1fr; }
+      .hero-title { font-size: 1.9rem; }
       .footer-grid { grid-template-columns: 1fr 1fr; }
-      .hero-title { font-size: 1.85rem; }
     }
+
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+      }
+      .container {
+        padding: 0 1rem;
+      }
+      .header-inner {
+        height: 54px;
+        gap: 0.5rem;
+      }
+      .brand {
+        font-size: 1.05rem;
+      }
+      .live-count-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+      }
+      .search-section {
+        top: 54px;
+        padding: 0.4rem 0 0.5rem;
+      }
+      .master-search-card {
+        border-radius: 12px;
+        padding: 0.4rem;
+      }
+      .main-search-input {
+        font-size: 16px !important; /* Prevents iOS Safari auto-zoom */
+      }
+      .filter-select, .form-input, .form-select {
+        font-size: 16px !important; /* Prevents iOS Safari auto-zoom */
+        min-height: 42px;
+      }
+      .search-filters-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+      }
+      .quick-chips-row {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 0.25rem 0.25rem 0.5rem;
+        margin-top: 0.4rem;
+        gap: 0.4rem;
+      }
+      .quick-chips-row::-webkit-scrollbar {
+        display: none;
+      }
+      .quick-chip {
+        flex-shrink: 0;
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+      }
+      .jobs-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      .job-card {
+        padding: 1rem;
+        border-radius: 14px;
+        touch-action: manipulation;
+      }
+      .job-card:active {
+        transform: scale(0.985);
+      }
+      .btn-card-fav {
+        width: 44px;
+        height: 44px;
+        top: 6px;
+        right: 6px;
+        font-size: 1.1rem;
+      }
+
+      /* Native-like Bottom Sheets for Modals */
+      .modal-backdrop {
+        align-items: flex-end;
+        padding: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .modal-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: 90vh !important;
+        border-radius: 22px 22px 0 0 !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        margin: 0 !important;
+        padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)) !important;
+        animation: slideUpSheet 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        position: relative;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+      }
+      .modal-dialog::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 99px;
+        margin: 0.65rem auto 0.25rem auto;
+      }
+      .modal-header {
+        padding: 0.75rem 1.25rem;
+      }
+      .modal-body {
+        padding: 1rem 1.25rem;
+        -webkit-overflow-scrolling: touch;
+      }
+      .modal-footer {
+        padding: 0.75rem 1.25rem;
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border);
+        z-index: 10;
+      }
+
+      /* Mobile Bottom Navigation Bar */
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(56px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: var(--header-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border);
+        z-index: 95;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        height: 100%;
+        color: var(--text-muted);
+        text-decoration: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        gap: 2px;
+        transition: color 0.15s ease;
+        padding: 4px 0;
+        font-family: var(--font-sans);
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-nav-item:active {
+        transform: scale(0.92);
+      }
+      .mobile-nav-item.active {
+        color: var(--primary);
+      }
+      .mobile-nav-icon {
+        font-size: 1.15rem;
+        line-height: 1;
+      }
+      .mobile-nav-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+    }
+
     @media (max-width: 540px) {
       .search-filters-row { grid-template-columns: 1fr; }
-      .jobs-grid { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr; }
-      .hide-mobile { display: none; }
+      .hide-mobile { display: none !important; }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-bottom-nav {
+        display: none !important;
+      }
+    }
+
+    @keyframes slideUpSheet {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
   </style>
 </head>
@@ -1425,6 +1614,30 @@ export function renderHTML(jobs = [], meta = {}) {
     </div>
   </footer>
 
+  <!-- Mobile Bottom Navigation Bar (Thumb Zone) -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <a href="/" class="mobile-nav-item active" id="mNavExplore">
+      <span class="mobile-nav-icon">🔍</span>
+      <span class="mobile-nav-label" data-i18n="nav_explore">Explorer</span>
+    </a>
+    <a href="/talents" class="mobile-nav-item" id="mNavTalents">
+      <span class="mobile-nav-icon">🚀</span>
+      <span class="mobile-nav-label">Talents</span>
+    </a>
+    <button class="mobile-nav-item" id="mNavFavs" onclick="toggleMobileFavorites()" type="button">
+      <span class="mobile-nav-icon">❤️</span>
+      <span class="mobile-nav-label"><span data-i18n="nav_favs">Favoris</span> (<span id="mFavCount">0</span>)</span>
+    </button>
+    <a href="/simulateur-salaire-remote" class="mobile-nav-item" id="mNavCalc">
+      <span class="mobile-nav-icon">💶</span>
+      <span class="mobile-nav-label" data-i18n="nav_calc">Simulateur</span>
+    </a>
+    <a href="/talents/login" class="mobile-nav-item" id="mNavAccount">
+      <span class="mobile-nav-icon" id="mNavAccountIcon">👤</span>
+      <span class="mobile-nav-label" id="mNavAccountLabel" data-i18n="nav_login">Compte</span>
+    </a>
+  </nav>
+
   <!-- Toast Notification -->
   <div id="toast" class="toast">
     <span>✓</span> <span id="toastMsg">Action effectuée</span>
@@ -1451,6 +1664,8 @@ export function renderHTML(jobs = [], meta = {}) {
     function updateFavCounters() {
       const fc = document.getElementById('favCount');
       if (fc) fc.textContent = favorites.size;
+      const mfc = document.getElementById('mFavCount');
+      if (mfc) mfc.textContent = favorites.size;
     }
     updateFavCounters();
 
@@ -1774,6 +1989,8 @@ export function renderHTML(jobs = [], meta = {}) {
         const userBtn = document.getElementById('headerUserBtn');
         const menuLoginLink = document.getElementById('menuLoginLink');
         const menuTalentLink = document.getElementById('menuTalentLink');
+        const mNavAccount = document.getElementById('mNavAccount');
+        const mNavAccountLabel = document.getElementById('mNavAccountLabel');
 
         if (token) {
           if (loginBtn) loginBtn.style.display = 'none';
@@ -1789,14 +2006,38 @@ export function renderHTML(jobs = [], meta = {}) {
           if (menuTalentLink) {
             menuTalentLink.style.display = 'none';
           }
+          if (mNavAccount) {
+            mNavAccount.href = '/talents/manage?token=' + encodeURIComponent(token);
+          }
+          if (mNavAccountLabel) {
+            mNavAccountLabel.textContent = currentLang === 'fr' ? 'Espace' : 'Space';
+          }
         } else {
           if (loginBtn) loginBtn.style.display = '';
           if (registerBtn) registerBtn.style.display = 'inline-flex';
           if (userBtn) userBtn.style.display = 'none';
           if (menuTalentLink) menuTalentLink.style.display = '';
+          if (mNavAccount) {
+            mNavAccount.href = '/talents/login';
+          }
+          if (mNavAccountLabel) {
+            mNavAccountLabel.textContent = currentLang === 'fr' ? 'Compte' : 'Account';
+          }
         }
       } catch (e) {}
     }
+
+    window.toggleMobileFavorites = function() {
+      onlyFavorites = !onlyFavorites;
+      const favHeaderBtn = document.getElementById('favHeaderBtn');
+      if (favHeaderBtn) favHeaderBtn.classList.toggle('active', onlyFavorites);
+      const mNavFavs = document.getElementById('mNavFavs');
+      if (mNavFavs) mNavFavs.classList.toggle('active', onlyFavorites);
+      renderActiveView();
+      if (onlyFavorites) {
+        showToast(currentLang === 'fr' ? 'Filtre Favoris activé ❤️' : 'Favorites filter active ❤️');
+      }
+    };
 
     window.toggleLanguage = function() {
       const nextLang = currentLang === 'fr' ? 'en' : 'fr';

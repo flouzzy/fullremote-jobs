@@ -177,7 +177,7 @@ export function renderJobDetailPage(job, meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}" />
   <link rel="canonical" href="${canonicalUrl}" />
@@ -332,6 +332,99 @@ export function renderJobDetailPage(job, meta = {}) {
     }
     .meta-item-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
     .meta-item-val { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+
+    /* ══════════════════════════════════════════════════
+       MOBILE-FIRST HYPER-RESPONSIVE SYSTEM (< 768px)
+    ══════════════════════════════════════════════════ */
+    .mobile-sticky-apply-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--header-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom, 0px)) 1rem;
+      z-index: 95;
+      gap: 0.6rem;
+      align-items: center;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    }
+    .btn-apply-mobile {
+      flex: 1;
+      background: var(--primary);
+      color: #ffffff !important;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+    .btn-apply-mobile:active {
+      transform: scale(0.98);
+    }
+    .btn-icon-mobile {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-icon-mobile:active {
+      transform: scale(0.92);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      }
+      .container {
+        padding: 0 1rem;
+      }
+      .job-sheet {
+        padding: 1.25rem;
+        margin-top: 1rem;
+        border-radius: 14px;
+      }
+      .job-header {
+        gap: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      .company-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 10px;
+        font-size: 1.25rem;
+      }
+      .job-header h1 {
+        font-size: 1.35rem !important;
+      }
+      .meta-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        padding: 0.85rem;
+        margin-bottom: 1.25rem;
+      }
+      .mobile-sticky-apply-bar {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
@@ -680,6 +773,19 @@ export function renderJobDetailPage(job, meta = {}) {
         </div>
       </div>
     </div>
+
+    <!-- Floating Sticky Apply Bar on Mobile Devices -->
+    <div class="mobile-sticky-apply-bar">
+      <button class="btn-icon-mobile" onclick="shareCurrentJob()" title="Partager cette opportunité">
+        <span>🔗</span>
+      </button>
+      <button class="btn-icon-mobile" id="detailMobileFavBtn" onclick="toggleJobDetailFavorite()" title="Ajouter aux favoris">
+        <span id="detailMobileFavIcon">🤍</span>
+      </button>
+      <a href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer" class="btn-apply-mobile" onclick="handleApplyClick('${escapeHtml(job.id)}', '${escapeHtml(job.url)}', event)">
+        <span data-i18n="btn_apply_direct">Postuler directement ↗</span>
+      </a>
+    </div>
   </main>
   <script>
     const JOB_CURRENT = ${JSON.stringify({
@@ -947,13 +1053,49 @@ export function renderJobDetailPage(job, meta = {}) {
     applyLanguage(currentLang);
     updatePitchDisplay();
 
-    const shareBtn = document.getElementById('shareOfferBtn');
-    if (shareBtn) {
-      shareBtn.onclick = () => {
+    window.shareCurrentJob = function() {
+      if (navigator.share) {
+        navigator.share({
+          title: document.title,
+          text: 'Opportunité 100% télétravail : ' + (JOB_CURRENT.title || '') + ' chez ' + (JOB_CURRENT.company || ''),
+          url: window.location.href
+        }).catch(() => {});
+      } else {
         const dict = I18N_SEO[currentLang] || I18N_SEO.fr;
         navigator.clipboard.writeText(window.location.href).then(() => {
           alert(dict.toast_copied);
         });
+      }
+    };
+
+    window.toggleJobDetailFavorite = function() {
+      try {
+        let favs = JSON.parse(localStorage.getItem('fr_favs') || '[]');
+        const id = JOB_CURRENT.id;
+        const icon = document.getElementById('detailMobileFavIcon');
+        if (favs.includes(id)) {
+          favs = favs.filter(x => x !== id);
+          if (icon) icon.textContent = '🤍';
+        } else {
+          favs.push(id);
+          if (icon) icon.textContent = '❤️';
+        }
+        localStorage.setItem('fr_favs', JSON.stringify(favs));
+      } catch (e) {}
+    };
+
+    try {
+      const favs = JSON.parse(localStorage.getItem('fr_favs') || '[]');
+      const icon = document.getElementById('detailMobileFavIcon');
+      if (icon && favs.includes(JOB_CURRENT.id)) {
+        icon.textContent = '❤️';
+      }
+    } catch (e) {}
+
+    const shareBtn = document.getElementById('shareOfferBtn');
+    if (shareBtn) {
+      shareBtn.onclick = () => {
+        window.shareCurrentJob();
       };
     }
 
@@ -1462,7 +1604,7 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}" />
   <link rel="canonical" href="${canonicalUrl}" />
@@ -1564,6 +1706,13 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
       border-color: var(--primary);
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(37,99,235,0.08);
+    }
+    @media (max-width: 768px) {
+      .container { padding: 1.25rem 1rem; }
+      .header-inner { padding: 0 1rem; }
+      .hero-box { padding: 1.5rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; }
+      .hero-box h1 { font-size: 1.65rem !important; }
+      .job-grid { grid-template-columns: 1fr; gap: 0.85rem; }
     }
   </style>
 </head>

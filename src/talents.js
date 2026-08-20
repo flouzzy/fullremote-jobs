@@ -48,7 +48,7 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Vivier de Talents 100% Télétravail (Reverse Recruiting) — FullRemote.Jobs</title>
   <meta name="description" content="Découvrez les meilleurs développeurs, ingénieurs et profils tech 100% télétravail disponibles. Contactez-les en direct sans intermédiaire ni commission." />
   <link rel="canonical" href="${canonicalUrl}" />
@@ -196,6 +196,16 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
       font-size: 0.9rem;
       color: var(--text);
       font-family: inherit;
+    }
+    @media (max-width: 768px) {
+      .container { padding: 1.25rem 1rem; }
+      .header-inner { padding: 0 1rem; }
+      .hero-box { padding: 1.5rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; }
+      .hero-box h1 { font-size: 1.65rem !important; }
+      .talents-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+      .form-input, .form-textarea { font-size: 16px !important; }
+      .modal-backdrop { align-items: flex-end; padding: 0; }
+      .modal-dialog { max-width: 100% !important; border-radius: 20px 20px 0 0 !important; border-bottom: none !important; padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
     }
   </style>
 </head>
@@ -481,7 +491,7 @@ export function renderJoinTalentPoolPage(meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Rejoindre le Vivier de Talents 100% Télétravail — FullRemote.Jobs</title>
   <meta name="description" content="Inscrivez-vous gratuitement au vivier vérifié de talents full remote. Profil anonymisé, sollicitations directes par des entreprises sans intermédiaire." />
   <link rel="canonical" href="${siteUrl}/talents/join" />
@@ -531,7 +541,15 @@ export function renderJoinTalentPoolPage(meta = {}) {
       border: none;
       cursor: pointer;
       width: 100%;
+      min-height: 48px;
       transition: background 0.15s ease;
+    }
+    @media (max-width: 768px) {
+      .container { padding: 1.25rem 1rem; }
+      .header-inner { padding: 0 1rem; }
+      .form-card { padding: 1.5rem 1.25rem; border-radius: 12px; }
+      .form-card h1 { font-size: 1.5rem !important; }
+      .form-input, .form-select, .form-textarea { font-size: 16px !important; }
     }
     .btn-submit:hover { background: #1d4ed8; }
   </style>
@@ -826,7 +844,7 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Espace Privé Talent — FullRemote.Jobs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -861,6 +879,13 @@ export function renderManageTalentPage(talent, successMsg = "", errorMsg = "", m
     .btn-hired { background: #10b981; color: white !important; }
     .btn-hired:hover { background: #059669; }
     .form-select { width: 100%; background: var(--meta-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.9rem; color: var(--text); font-family: inherit; }
+    @media (max-width: 768px) {
+      .container { padding: 1.25rem 1rem; }
+      .header-inner { padding: 0 1rem; }
+      .card { padding: 1.5rem 1.25rem; border-radius: 12px; }
+      .form-select, .form-input { font-size: 16px !important; }
+      .app-item-card { padding: 1.15rem 1rem !important; }
+    }
   </style>
 </head>
 <body>
@@ -1412,7 +1437,7 @@ export function renderTalentLoginPage(meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Connexion Espace Talent (Magic Link) — FullRemote.Jobs</title>
   <meta name="description" content="Accédez à votre espace privé de gestion candidat sans mot de passe grâce à votre lien de connexion magique." />
   <link rel="canonical" href="${siteUrl}/talents/login" />
@@ -1441,8 +1466,14 @@ export function renderTalentLoginPage(meta = {}) {
     .login-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem 2rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
     .form-input { width: 100%; background: var(--meta-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.95rem; color: var(--text); font-family: inherit; margin-bottom: 1rem; }
     .form-input:focus { outline: none; border-color: var(--primary); background: #ffffff; }
-    .btn-submit { background: var(--primary); color: white; font-weight: 800; font-size: 0.95rem; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; width: 100%; transition: background 0.15s ease; }
+    .btn-submit { background: var(--primary); color: white; font-weight: 800; font-size: 0.95rem; padding: 0.85rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; width: 100%; min-height: 48px; transition: background 0.15s ease; }
     .btn-submit:hover { background: var(--primary-hover); }
+    @media (max-width: 768px) {
+      .container { padding: 1.25rem 1rem; }
+      .header-inner { padding: 0 1rem; }
+      .login-card { padding: 1.5rem 1.25rem; border-radius: 12px; }
+      .form-input { font-size: 16px !important; }
+    }
   </style>
 </head>
 <body>

@@ -19,7 +19,7 @@ export function renderPostJobPage(meta = {}) {
 <html lang="fr" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Publier une offre d'emploi 100% Full Remote (49 €) — FullRemote.Jobs</title>
   <meta name="description" content="Recrutez les meilleurs talents en 100% télétravail. Diffusion immédiate pendant 30 jours, mise en avant en tête de liste et inclusion dans la newsletter quotidienne." />
   <link rel="canonical" href="${siteUrl}/post-a-job" />
@@ -309,9 +309,15 @@ export function renderPostJobPage(meta = {}) {
     }
 
     @media (max-width: 640px) {
+      .container { padding: 1.25rem 1rem; }
+      .hero-post { padding: 1.5rem 0 1rem; }
+      .hero-post h1 { font-size: 1.65rem; }
+      .form-card { padding: 1.5rem 1.25rem; border-radius: 12px; }
       .form-grid-2 { grid-template-columns: 1fr; }
       .pricing-box { flex-direction: column; align-items: flex-start; }
       .pricing-badge { text-align: left; }
+      .form-input, .form-select, .form-textarea { font-size: 16px !important; }
+      .btn-submit { min-height: 48px; }
     }
   </style>
 </head>
