@@ -31,7 +31,7 @@
 ## 5. UI/UX & SEO
 - **Command Search Bar Sticky** : La barre de recherche unifiée reste ancrée (`position: sticky; top: 56px; z-index: 80;`).
 - **Bilinguisme (i18n)** : Détection auto (`navigator.language` / `localStorage`) + sélecteur manuel (`#langToggleBtn`) + attributs `data-i18n`.
-- **Schema.org JobPosting** : Lier explicitement `url` et `mainEntityOfPage` à `https://remote-jobs.edounze.com/jobs/:id` avec `jobLocationType: "TELECOMMUTE"` et `directApply: true`.
+- **Schema.org JobPosting** : Lier explicitement `url` et `mainEntityOfPage` à `https://remote-jobs.app/jobs/:id` avec `jobLocationType: "TELECOMMUTE"` et `directApply: true`.
 
 ## 6. Politique Anti-Spam & Fréquence Notifications
 - **Emails (Resend)** : **STRICT MAXIMUM 1 email par jour / par 24h** pour le digest d'annonces (`isAlertEligibleForEmail()`). Ne jamais envoyer plus d'un digest quotidien, même lors de rafraîchissements manuels ou d'exécutions répétées du scraper. Capé aux 10 meilleures opportunités.
@@ -45,4 +45,17 @@
 ## 8. Programmatic SEO & Outils 10x Candidats
 - **Pages d'Atterrissage Dédiées** : Maintenir le dictionnaire `PROGRAMMATIC_PAGES` dans [src/seo.js](file:///var/www/edounze/fullremote-jobs/src/seo.js) pour les routes dédiées par technologie et par région (`/remote-laravel-jobs`, `/remote-python-jobs`, etc.) et les référencer dans `generateSitemap()`.
 - **Direct-to-DM Pitch & Geo-Arbitrage** : Intégrer systématiquement le générateur de pitch IA et le radar de pouvoir d'achat sur les pages `/jobs/:id` et dans la modal interactive de la page d'accueil.
+
+## 9. Mobile-First UX & Ergonomie
+- **Bottom Navigation Bar (Thumb Zone)** : Maintenir la barre fixe inférieure sur mobile (`< 768px`) avec accès direct à *Explorer*, *Talents*, *Favoris*, *Simulateur* et *Mon Espace*.
+- **Bottom Sheets Natives** : Les fenêtres modales glissent depuis le bas de l'écran sur mobile avec poignée (`___`) et boutons d'action sticky.
+- **Sticky Apply Bar sur `/jobs/:id`** : Barre fixe en bas pour postuler et partager via la Web Share API native (`navigator.share`).
+- **Anti-Zoom iOS (16px+)** : Tous les `<input>`, `<select>` et `<textarea>` doivent avoir au minimum `font-size: 16px;` pour éviter le zoom automatique de Safari Mobile.
+- **Safe Area Insets** : Toujours inclure `env(safe-area-inset-bottom)` pour la barre d'accueil iPhone X-16.
+
+## 10. Sécurité des Tokens & Confidentialité
+- **Génération CSPRNG** : Utiliser `crypto.randomUUID()` pour les tokens d'authentification (`manage_token`).
+- **Zero Leak Publique** : Ne jamais retourner `manage_token`, `email`, ou `ip_address` dans les réponses de l'annuaire public `/api/talents`.
+- **Cookies Verrouillés** : Définir les cookies avec `SameSite=Lax; Secure; path=/;`.
+- **Auto-Désactivation des Liens Morts** : Dès 2 signalements distincts d'expiration sur une offre (`job_reports`), désactiver automatiquement l'annonce (`is_active = 0`).
 
