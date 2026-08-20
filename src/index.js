@@ -48,6 +48,9 @@ import {
   deleteTalentApplication,
   reportDeadJob,
   getTrackingKpis,
+  saveRecruiterSubscriber,
+  getActiveRecruiters,
+  getTopWeeklyTalents,
 } from "./db.js";
 import {
   sendResendEmail,
@@ -58,6 +61,7 @@ import {
   buildTalentMagicLinkEmailHtml,
   buildAdminMagicLinkEmailHtml,
   buildTalentContactNotificationEmailHtml,
+  buildWeeklyTalentDropEmailHtml,
 } from "./email.js";
 import {
   DEFAULT_VAPID_PUBLIC_KEY,
@@ -572,7 +576,8 @@ export default {
       const match = cookieHeader.match(/talent_token=([^;]+)/);
       const talentToken = match ? decodeURIComponent(match[1]) : "";
       const talents = env && env.DB ? await queryTalentsFromDb(env.DB) : [];
-      const html = renderTalentsDirectoryPage(talents, { siteUrl, talentToken });
+      const isRecruiterSuccess = url.searchParams.get("recruiter_success") === "true";
+      const html = renderTalentsDirectoryPage(talents, { siteUrl, talentToken, recruiterSuccess: isRecruiterSuccess });
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
@@ -1258,6 +1263,130 @@ export default {
           JSON.stringify({ success: false, error: err.message }),
           { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
         );
+      }
+    }
+
+    // 9.bis API Stripe Checkout Recruiter Pass B2B (149 € / mois) : POST /api/checkout/recruiter-pass
+    if (pathname === "/api/checkout/recruiter-pass" && request.method === "POST") {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const email = (body.email || "").trim().toLowerCase();
+        const company = (body.company || "").trim();
+
+        if (!email) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Veuillez fournir un email professionnel valide." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        const stripeKey = env.STRIPE_SECRET_KEY;
+        if (!stripeKey) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Configuration Stripe manquante sur le serveur." }),
+            { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        const canonicalUrl = siteUrl;
+        const stripeParams = new URLSearchParams();
+        stripeParams.append("payment_method_types[]", "card");
+        stripeParams.append("mode", "payment");
+        stripeParams.append("line_items[0][price_data][currency]", "eur");
+        stripeParams.append("line_items[0][price_data][unit_amount]", "14900");
+        stripeParams.append("line_items[0][price_data][product_data][name]", "Recruiter Pass B2B — Accès Vivier & Talent Drops (30 jours)");
+        stripeParams.append("line_items[0][price_data][product_data][description]", "Contacts directs illimités des talents + Réception hebdomadaire du Weekly Talent Drop");
+        stripeParams.append("line_items[0][quantity]", "1");
+        stripeParams.append("customer_email", email);
+        stripeParams.append("success_url", `${canonicalUrl}/talents?recruiter_success=true&session_id={CHECKOUT_SESSION_ID}`);
+        stripeParams.append("cancel_url", `${canonicalUrl}/talents?canceled=true`);
+        stripeParams.append("metadata[company]", company);
+        stripeParams.append("metadata[email]", email);
+        stripeParams.append("metadata[plan]", "talent_drop_pass");
+
+        const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${stripeKey}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: stripeParams.toString(),
+        });
+
+        const session = await stripeRes.json();
+        if (!stripeRes.ok) {
+          console.error("[STRIPE] Erreur Recruiter Pass :", session);
+          return new Response(
+            JSON.stringify({ success: false, error: session.error?.message || "Erreur Stripe." }),
+            { status: 400, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+          );
+        }
+
+        // Sauvegarde immédiate du recruteur abonné dans D1
+        if (env && env.DB) {
+          await initDb(env.DB);
+          await saveRecruiterSubscriber(env.DB, {
+            email,
+            company,
+            plan: "talent_drop_pass",
+            stripeCustomerId: session.customer || "",
+            stripeSubscriptionId: session.subscription || session.id
+          });
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, checkout_url: session.url, session_id: session.id }),
+          { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      } catch (err) {
+        console.error("[RECRUITER_PASS] Exception :", err);
+        return new Response(
+          JSON.stringify({ success: false, error: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders } }
+        );
+      }
+    }
+
+    // 9.ter Route Cron Envoi Weekly Talent Drop : POST /api/cron/talent-drop
+    if (pathname === "/api/cron/talent-drop" && request.method === "POST") {
+      try {
+        if (!env || !env.DB) {
+          return new Response(JSON.stringify({ success: false, error: "Base de données non disponible" }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+        }
+
+        await initDb(env.DB);
+        const [recruiters, topTalents] = await Promise.all([
+          getActiveRecruiters(env.DB),
+          getTopWeeklyTalents(env.DB, 10)
+        ]);
+
+        if (topTalents.length === 0) {
+          return new Response(JSON.stringify({ success: true, message: "Aucun talent actif à diffuser cette semaine." }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
+        }
+
+        const resendApiKey = env.RESEND_API_KEY;
+        const fromEmail = env.RESEND_FROM_EMAIL || "FullRemote Jobs <alerts@hey.edounze.com>";
+        const emailHtml = buildWeeklyTalentDropEmailHtml({ talents: topTalents, siteUrl });
+
+        let sentCount = 0;
+        for (const recruiter of recruiters) {
+          try {
+            await sendResendEmail({
+              apiKey: resendApiKey,
+              from: fromEmail,
+              to: recruiter.email,
+              subject: "👑 Weekly Talent Drop : Les 10 Meilleurs Profils 100% Remote — FullRemote.Jobs",
+              html: emailHtml
+            });
+            sentCount++;
+          } catch (recErr) {
+            console.error("[TALENT_DROP] Erreur envoi recruteur :", recruiter.email, recErr);
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, sent_to: sentCount, talents_count: topTalents.length }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
       }
     }
 

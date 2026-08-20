@@ -585,6 +585,90 @@ export function buildTalentContactNotificationEmailHtml({ talent = {}, contact =
 </html>`;
 }
 
+/**
+ * Construit l'email hebdomadaire B2B "Weekly Talent Drop" pour les recruteurs abonnés
+ */
+export function buildWeeklyTalentDropEmailHtml({ talents = [], siteUrl = DEFAULT_SITE_URL }) {
+  const talentsUrl = `${siteUrl}/talents`;
+  const dateStr = new Date().toLocaleDateString("fr-FR", { dateStyle: "long" });
+
+  const talentsListHtml = (talents || []).map((t, idx) => {
+    const tags = Array.isArray(t.tags) ? t.tags : [];
+    const tagsHtml = tags.slice(0, 4).map(tag => `<span style="display:inline-block; font-size:11px; color:#475569; background-color:#f1f5f9; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; margin-right:4px;">#${escapeHtml(tag)}</span>`).join("");
+    const salStr = t.salary_expectation ? `<span style="font-size:12px; font-weight:700; color:#b45309; background:#fef3c7; padding:2px 6px; border-radius:4px; margin-left:6px;">💰 ${escapeHtml(t.salary_expectation)}</span>` : "";
+
+    return `
+    <div style="background-color:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+        <div>
+          <span style="font-size:11px; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em;">Talent #${idx + 1}</span>
+          <h3 style="font-size:16px; font-weight:800; color:#0f172a; margin:2px 0 0 0;">${escapeHtml(t.title)}</h3>
+        </div>
+        <span style="font-size:12px; font-weight:700; color:#059669; background:#d1fae5; padding:3px 8px; border-radius:6px;">
+          ${escapeHtml(t.seniority ? t.seniority.toUpperCase() : "SENIOR")}
+        </span>
+      </div>
+
+      <div style="font-size:13px; color:#64748b; margin-bottom:10px;">
+        🌍 <strong>${escapeHtml(t.location || "France / Europe")}</strong> • ⚡ <strong>${escapeHtml(t.primary_stack || "")}</strong> ${salStr}
+      </div>
+
+      ${t.bio_snippet ? `<p style="font-size:13px; color:#334155; line-height:1.5; margin:0 0 10px 0;">${escapeHtml(t.bio_snippet.slice(0, 180))}...</p>` : ""}
+
+      <div style="margin-bottom:12px;">
+        ${tagsHtml}
+      </div>
+
+      <div style="text-align:right;">
+        <a href="${talentsUrl}" style="display:inline-block; font-size:12px; font-weight:700; background-color:#2563eb; color:#ffffff !important; padding:6px 14px; border-radius:6px; text-decoration:none;">
+          ✉️ Contacter en direct ↗
+        </a>
+      </div>
+    </div>
+    `;
+  }).join("");
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Talent Drop — FullRemote.Jobs</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#0f172a;">
+  <div style="max-width:620px; margin:0 auto; padding:32px 16px;">
+    <div style="text-align:center; margin-bottom:24px;">
+      <span style="display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; color:#2563eb; background:rgba(37,99,235,0.1); padding:4px 12px; border-radius:99px; letter-spacing:0.05em; margin-bottom:8px;">
+        👑 Recruiter Pass • ${dateStr}
+      </span>
+      <h1 style="font-size:24px; font-weight:800; color:#0f172a; margin:0 0 8px 0; letter-spacing:-0.03em;">
+        Weekly Talent Drop : Les 10 Meilleurs Profils 100% Remote
+      </h1>
+      <p style="font-size:14px; color:#64748b; margin:0 auto; max-width:520px; line-height:1.5;">
+        Voici la sélection exclusive des profils confirmés et seniors prêts à démarrer en télétravail cette semaine. Contactez-les en direct sans intermédiaire ni commission.
+      </p>
+    </div>
+
+    <!-- Liste des profils -->
+    <div>
+      ${talentsListHtml}
+    </div>
+
+    <!-- CTA Visiter l'annuaire complet -->
+    <div style="text-align:center; margin:32px 0;">
+      <a href="${talentsUrl}" style="display:inline-block; background-color:#0f172a; color:#ffffff !important; font-weight:800; font-size:15px; padding:14px 28px; border-radius:8px; text-decoration:none;">
+        🚀 Consulter tous les talents disponibles sur FullRemote.Jobs ↗
+      </a>
+    </div>
+
+    <div style="border-top:1px solid #e2e8f0; padding-top:16px; text-align:center; font-size:12px; color:#94a3b8;">
+      © 2026 FullRemote.Jobs — Recruiter Pass & Weekly Talent Drops.
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 function escapeHtml(text = "") {
   return String(text)
     .replace(/&/g, "&amp;")

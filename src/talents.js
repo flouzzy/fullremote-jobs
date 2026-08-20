@@ -232,6 +232,13 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
   </header>
 
   <main class="container">
+    ${meta.recruiterSuccess ? `
+      <div style="background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(37,99,235,0.1) 100%); border: 1px solid rgba(16,185,129,0.35); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+        <div style="font-size: 1.75rem; margin-bottom: 0.25rem;">🎉</div>
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: #047857; margin-bottom: 0.25rem;">Félicitations ! Votre Recruiter Pass est activé.</h3>
+        <p style="font-size: 0.88rem; color: var(--text);">Vous avez désormais un accès prioritaire illimité pour contacter tous les talents du vivier et recevrez chaque mardi matin le Weekly Talent Drop.</p>
+      </div>
+    ` : ""}
     <section class="hero-box">
       <div style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(37,99,235,0.12); color:var(--primary); padding:4px 12px; border-radius:999px; font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;">
         ⚡ Reverse Recruiting & Talent Drops
@@ -258,6 +265,26 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
         `}
       </div>
     </section>
+
+    <!-- 👑 B2B Recruiter Pass Banner (Thiel & YC Monetization) -->
+    <div style="background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(16,185,129,0.08) 100%); border: 1px solid rgba(37,99,235,0.25); border-radius: 16px; padding: 1.5rem 1.75rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
+      <div style="max-width: 680px;">
+        <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 0.05em; margin-bottom: 0.35rem;">
+          <span>👑</span> Espace Recruteurs & Entreprises Tech
+        </div>
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 0.35rem;">
+          Accédez au Recruiter Pass & Weekly Talent Drop (149 € / mois)
+        </h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+          Débloquez les contacts directs illimités de tous les ingénieurs confirmés du vivier et recevez chaque mardi matin les 10 meilleurs profils 100% remote directement par email. 0 commission de recrutement.
+        </p>
+      </div>
+      <div>
+        <button onclick="openRecruiterPassModal()" style="background: var(--primary); color: white; border: none; font-weight: 800; font-size: 0.92rem; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(37,99,235,0.25); white-space: nowrap;">
+          <span>⚡</span> Débloquer l'Accès Recruteur
+        </button>
+      </div>
+    </div>
 
     <!-- Grille des Talents -->
     <section>
@@ -288,6 +315,8 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
             const availability = AVAILABILITY_MAP[t.availability] || AVAILABILITY_MAP["30_days"];
             const tags = Array.isArray(t.tags) ? t.tags : [];
             const tagsHtml = tags.slice(0, 5).map(tag => `<span style="font-size:0.72rem; color:var(--text-dim); background:var(--meta-bg); border:1px solid var(--border); padding:2px 6px; border-radius:4px;">#${escapeHtml(tag)}</span>`).join(" ");
+            const ghMatch = (t.github_url || "").match(/github\.com\/([a-zA-Z0-9\-_]+)/i);
+            const ghUser = ghMatch ? ghMatch[1] : (t.github_url && !t.github_url.includes('/') ? t.github_url : null);
 
             return `
             <div class="talent-card">
@@ -311,6 +340,11 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
                   </span>
                   ${t.salary_expectation ? `<span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(245,158,11,0.08); color:#d97706;">💰 ${escapeHtml(t.salary_expectation)}</span>` : ""}
                   ${(t.cv_data || t.cv_url) ? `<span style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(16,185,129,0.1); color:var(--emerald); border:1px solid rgba(16,185,129,0.25);">📄 CV vérifié</span>` : ""}
+                  ${ghUser ? `
+                    <a href="https://github.com/${escapeAttr(ghUser)}" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(30,41,59,0.08); color:var(--text); border:1px solid var(--border); text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Vérifier le code et les contributions GitHub">
+                      <span>🐙</span> @${escapeHtml(ghUser)} <span style="color:var(--emerald); font-weight:800;">✓ Proof-of-Work</span>
+                    </a>
+                  ` : ""}
                 </div>
 
                 ${t.bio_snippet ? `<p style="font-size:0.86rem; color:var(--text-muted); line-height:1.5; margin-bottom:0.85rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(t.bio_snippet)}</p>` : ""}
@@ -396,6 +430,49 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
     </div>
   </div>
 
+  <!-- Modal Recruiter Pass Checkout (149 € / mois) -->
+  <div id="recruiterPassModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 580px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; font-weight:800; text-transform:uppercase; color:var(--primary);">
+            <span>👑</span> Recruiter Pass B2B
+          </div>
+          <h3 style="font-size:1.25rem; font-weight:800; color:var(--text); margin-top:0.15rem;">Accès Illimité au Vivier & Talent Drops</h3>
+        </div>
+        <button onclick="closeRecruiterPassModal()" style="background:none; border:none; font-size:1.25rem; color:var(--text-muted); cursor:pointer;">✕</button>
+      </div>
+
+      <div style="background:var(--meta-bg); border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
+        <div style="font-size:1.45rem; font-weight:800; color:var(--text); margin-bottom:0.25rem;">
+          149 € <span style="font-size:0.9rem; font-weight:600; color:var(--text-muted);">/ mois (sans engagement)</span>
+        </div>
+        <ul style="list-style:none; font-size:0.88rem; color:var(--text); display:flex; flex-direction:column; gap:0.5rem; margin-top:0.75rem;">
+          <li>✓ <strong>Contacts directs illimités</strong> avec tous les profils seniors et confirmés.</li>
+          <li>✓ <strong>Weekly Talent Drop</strong> : Les 10 meilleurs talents de la semaine livrés chaque mardi matin par email.</li>
+          <li>✓ <strong>Accès aux CVs complets</strong>, GitHub vérifiés et prétentions salariales transparentes.</li>
+          <li>✓ <strong>0 commission de recrutement</strong> sur les embauches.</li>
+        </ul>
+      </div>
+
+      <form id="recruiterPassForm" onsubmit="handleRecruiterPassCheckout(event)">
+        <div class="form-group">
+          <label class="form-label">Email professionnel de l'entreprise *</label>
+          <input type="email" id="recruiterPassEmail" required class="form-input" placeholder="recrutement@entreprise.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom de l'entreprise *</label>
+          <input type="text" id="recruiterPassCompany" required class="form-input" placeholder="ex: Doctolib, Alan, Stripe..." />
+        </div>
+
+        <button type="submit" id="recruiterPassSubmitBtn" style="width:100%; background:var(--primary); color:white; font-weight:800; font-size:0.98rem; padding:0.85rem; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+          <span>🔒</span> Passer au paiement sécurisé Stripe (149 € / mois)
+        </button>
+        <div id="recruiterPassFeedback" style="display:none; margin-top:0.75rem; font-size:0.85rem; font-weight:600; text-align:center;"></div>
+      </form>
+    </div>
+  </div>
+
   <script>
     function openContactModal(talentId, title) {
       document.getElementById('contactTalentId').value = talentId;
@@ -406,6 +483,50 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
     function closeContactModal() {
       document.getElementById('contactModal').classList.remove('open');
       document.getElementById('contactFeedback').style.display = 'none';
+    }
+
+    function openRecruiterPassModal() {
+      document.getElementById('recruiterPassModal').classList.add('open');
+    }
+
+    function closeRecruiterPassModal() {
+      document.getElementById('recruiterPassModal').classList.remove('open');
+      document.getElementById('recruiterPassFeedback').style.display = 'none';
+    }
+
+    async function handleRecruiterPassCheckout(e) {
+      e.preventDefault();
+      const btn = document.getElementById('recruiterPassSubmitBtn');
+      const feedback = document.getElementById('recruiterPassFeedback');
+      const email = document.getElementById('recruiterPassEmail').value.trim();
+      const company = document.getElementById('recruiterPassCompany').value.trim();
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Redirection vers Stripe...';
+
+      try {
+        const res = await fetch('/api/checkout/recruiter-pass', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, company: company })
+        });
+        const data = await res.json();
+        if (data.success && data.checkout_url) {
+          window.location.href = data.checkout_url;
+        } else {
+          feedback.style.display = 'block';
+          feedback.style.color = '#ef4444';
+          feedback.textContent = '❌ ' + (data.error || 'Erreur lors de la création de la session de paiement.');
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔒</span> Passer au paiement sécurisé Stripe (149 € / mois)';
+        }
+      } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#ef4444';
+        feedback.textContent = '❌ Erreur de communication réseau.';
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔒</span> Passer au paiement sécurisé Stripe (149 € / mois)';
+      }
     }
 
     async function submitTalentContact(e) {

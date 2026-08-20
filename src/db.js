@@ -183,6 +183,20 @@ export async function initDb(db) {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
       CREATE INDEX IF NOT EXISTS idx_reports_job ON job_reports(job_id);
+
+      CREATE TABLE IF NOT EXISTS recruiter_subscribers (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        company TEXT,
+        plan TEXT DEFAULT 'talent_drop_pass',
+        stripe_customer_id TEXT,
+        stripe_subscription_id TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_recruiters_email ON recruiter_subscribers(email);
+      CREATE INDEX IF NOT EXISTS idx_recruiters_active ON recruiter_subscribers(is_active);
     `);
 
     // Migration progressive pour colonnes CV si table déjà existante
@@ -1337,6 +1351,69 @@ export async function getTrackingKpis(db) {
   } catch (err) {
     console.error("Erreur getTrackingKpis D1 :", err);
     return null;
+  }
+}
+
+/**
+ * Enregistre ou active un abonné Recruiter Pass B2B
+ */
+export async function saveRecruiterSubscriber(db, { email, company = "", plan = "talent_drop_pass", stripeCustomerId = "", stripeSubscriptionId = "" }) {
+  if (!db || !email) return null;
+  const id = `recruiter_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  try {
+    await db.prepare(`
+      INSERT INTO recruiter_subscribers (id, email, company, plan, stripe_customer_id, stripe_subscription_id, is_active, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT(email) DO UPDATE SET
+        company = excluded.company,
+        plan = excluded.plan,
+        stripe_customer_id = excluded.stripe_customer_id,
+        stripe_subscription_id = excluded.stripe_subscription_id,
+        is_active = 1,
+        updated_at = CURRENT_TIMESTAMP
+    `).bind(id, email.toLowerCase().trim(), company, plan, stripeCustomerId, stripeSubscriptionId).run();
+    return { id, email, company, plan };
+  } catch (err) {
+    console.error("Erreur saveRecruiterSubscriber D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère tous les recruteurs abonnés actifs
+ */
+export async function getActiveRecruiters(db) {
+  if (!db) return [];
+  try {
+    const res = await db.prepare("SELECT * FROM recruiter_subscribers WHERE is_active = 1 ORDER BY created_at DESC").all();
+    return res.results || [];
+  } catch (err) {
+    console.error("Erreur getActiveRecruiters D1 :", err);
+    return [];
+  }
+}
+
+/**
+ * Récupère les meilleurs profils de talents actifs de la semaine pour le Talent Drop
+ */
+export async function getTopWeeklyTalents(db, limit = 10) {
+  if (!db) return [];
+  try {
+    const res = await db.prepare(`
+      SELECT id, title, seniority, primary_stack, tags_json, salary_expectation, tjm_eur, availability, location, bio_snippet, github_url, linkedin_url, portfolio_url, has_cv, created_at
+      FROM talents
+      WHERE status = 'active'
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).bind(limit).all();
+
+    return (res.results || []).map(r => ({
+      ...r,
+      tags: JSON.parse(r.tags_json || "[]")
+    }));
+  } catch (err) {
+    console.error("Erreur getTopWeeklyTalents D1 :", err);
+    return [];
   }
 }
 
