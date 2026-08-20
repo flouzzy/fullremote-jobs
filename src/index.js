@@ -49,6 +49,7 @@ import {
   reportDeadJob,
   getTrackingKpis,
   saveRecruiterSubscriber,
+  getRecruiterByToken,
   getActiveRecruiters,
   getTopWeeklyTalents,
 } from "./db.js";
@@ -573,18 +574,52 @@ export default {
     if (pathname === "/talents") {
       if (env && env.DB) await initDb(env.DB);
       const cookieHeader = request.headers.get("cookie") || "";
-      const match = cookieHeader.match(/talent_token=([^;]+)/);
-      const talentToken = match ? decodeURIComponent(match[1]) : "";
+      const talentMatch = cookieHeader.match(/talent_token=([^;]+)/);
+      const talentToken = talentMatch ? decodeURIComponent(talentMatch[1]) : (url.searchParams.get("token") || "");
+      
+      const recruiterMatch = cookieHeader.match(/recruiter_token=([^;]+)/);
+      const recruiterToken = recruiterMatch ? decodeURIComponent(recruiterMatch[1]) : (url.searchParams.get("recruiter_token") || "");
+      
+      let isPaidRecruiter = false;
+      let loggedInTalent = null;
+      let newRecruiterCookie = null;
+      if (env && env.DB) {
+        const sessionId = url.searchParams.get("session_id");
+        if (sessionId) {
+          const recBySession = await env.DB.prepare("SELECT * FROM recruiter_subscribers WHERE stripe_subscription_id = ?").bind(sessionId).first();
+          if (recBySession && recBySession.auth_token) {
+            isPaidRecruiter = true;
+            newRecruiterCookie = `recruiter_token=${encodeURIComponent(recBySession.auth_token)}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`;
+          }
+        }
+        if (!isPaidRecruiter && recruiterToken) {
+          const rec = await getRecruiterByToken(env.DB, recruiterToken);
+          if (rec && rec.is_active) isPaidRecruiter = true;
+        }
+        if (talentToken) {
+          loggedInTalent = await getTalentByToken(env.DB, talentToken);
+        }
+      }
+
       const talents = env && env.DB ? await queryTalentsFromDb(env.DB) : [];
       const isRecruiterSuccess = url.searchParams.get("recruiter_success") === "true";
-      const html = renderTalentsDirectoryPage(talents, { siteUrl, talentToken, recruiterSuccess: isRecruiterSuccess });
-      return new Response(html, {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "private, max-age=0",
-          ...corsHeaders,
-        },
+      const html = renderTalentsDirectoryPage(talents, {
+        siteUrl,
+        talentToken,
+        loggedInTalentId: loggedInTalent?.id || "",
+        recruiterToken,
+        isRecruiter: isPaidRecruiter,
+        recruiterSuccess: isRecruiterSuccess
       });
+      const responseHeaders = {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "private, max-age=0",
+        ...corsHeaders,
+      };
+      if (newRecruiterCookie) {
+        responseHeaders["Set-Cookie"] = newRecruiterCookie;
+      }
+      return new Response(html, { headers: responseHeaders });
     }
 
     if (pathname === "/talents/join" || pathname === "/rejoindre-le-vivier") {
@@ -986,14 +1021,77 @@ export default {
     if (pathname.startsWith("/api/talents/") && pathname.endsWith("/cv") && request.method === "GET") {
       try {
         const talentId = decodeURIComponent(pathname.replace("/api/talents/", "").replace("/cv", "")).trim();
-        let talent = null;
-        if (env && env.DB) {
-          await initDb(env.DB);
-          talent = await getTalentById(env.DB, talentId);
+        if (!env || !env.DB) {
+          return new Response("Service indisponible.", { status: 500, headers: { "Content-Type": "text/plain; charset=utf-8" } });
         }
+        await initDb(env.DB);
+        const talent = await getTalentById(env.DB, talentId);
         if (!talent) {
           return new Response("Profil Talent introuvable.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
         }
+
+        // Authentification : token en query param, cookie ou header Authorization
+        const cookieHeader = request.headers.get("cookie") || "";
+        const talentCookie = (cookieHeader.match(/talent_token=([^;]+)/) || [])[1];
+        const recruiterCookie = (cookieHeader.match(/recruiter_token=([^;]+)/) || [])[1];
+        const adminCookie = (cookieHeader.match(/admin_token=([^;]+)/) || [])[1];
+        const authHeader = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+
+        const token = url.searchParams.get("token") || recruiterCookie || talentCookie || adminCookie || authHeader;
+
+        let isAuthorized = false;
+
+        // 1. Vérifier si c'est le propriétaire du profil
+        if (token && (talent.manage_token === token || (await getTalentByToken(env.DB, token))?.id === talentId)) {
+          isAuthorized = true;
+        }
+
+        // 2. Vérifier si c'est un administrateur
+        if (!isAuthorized && token && ((await getAdminByToken(env.DB, token)) || token === env.ADMIN_SECRET_TOKEN)) {
+          isAuthorized = true;
+        }
+
+        // 3. Vérifier si c'est un recruteur payant actif
+        if (!isAuthorized && token) {
+          const recruiter = await getRecruiterByToken(env.DB, token);
+          if (recruiter && recruiter.is_active) {
+            isAuthorized = true;
+          }
+        }
+
+        if (!isAuthorized) {
+          return new Response(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accès CV Réservé — FullRemote.Jobs</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+  <style>
+    body { margin: 0; padding: 2rem 1rem; font-family: 'Inter', -apple-system, sans-serif; background: #f8fafc; color: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2.5rem 2rem; max-width: 520px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(37,99,235,0.1); color: #2563eb; font-weight: 800; font-size: 0.8rem; padding: 4px 12px; border-radius: 999px; text-transform: uppercase; margin-bottom: 1rem; }
+    h1 { font-size: 1.45rem; font-weight: 800; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+    p { font-size: 0.92rem; color: #64748b; line-height: 1.6; margin: 0 0 1.5rem; }
+    .btn-primary { display: inline-block; background: #2563eb; color: #ffffff !important; text-decoration: none; font-weight: 800; font-size: 0.95rem; padding: 0.85rem 1.75rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+    .btn-secondary { display: block; margin-top: 1.25rem; font-size: 0.85rem; color: #64748b; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">🔒 Accès CV Protégé</div>
+    <h1>Consultation réservée aux Recruteurs</h1>
+    <p>Pour consulter les CVs complets et contacter directement nos talents confirmés, vous devez être connecté avec un compte <strong>Recruiter Pass B2B</strong> actif (149 € / mois) ou être le propriétaire de ce profil.</p>
+    <a href="/talents" class="btn-primary">👑 Débloquer le Recruiter Pass (149 € / mois)</a>
+    <a href="/talents/login" class="btn-secondary">Vous êtes ce candidat ? Connectez-vous à votre espace</a>
+  </div>
+</body>
+</html>`, {
+            status: 403,
+            headers: { "Content-Type": "text/html; charset=utf-8", ...corsHeaders }
+          });
+        }
+
         if (talent.cv_data && talent.cv_data.startsWith("data:")) {
           const commaIdx = talent.cv_data.indexOf(",");
           if (commaIdx !== -1) {
@@ -1013,7 +1111,7 @@ export default {
               headers: {
                 "Content-Type": mimeType,
                 "Content-Disposition": `inline; filename="${cleanFilename}"`,
-                "Cache-Control": "public, max-age=3600",
+                "Cache-Control": "private, no-cache, no-store",
                 ...corsHeaders,
               },
             });

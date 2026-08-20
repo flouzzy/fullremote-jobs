@@ -189,6 +189,7 @@ export async function initDb(db) {
         email TEXT NOT NULL UNIQUE,
         company TEXT,
         plan TEXT DEFAULT 'talent_drop_pass',
+        auth_token TEXT UNIQUE,
         stripe_customer_id TEXT,
         stripe_subscription_id TEXT,
         is_active INTEGER DEFAULT 1,
@@ -196,15 +197,21 @@ export async function initDb(db) {
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
       CREATE INDEX IF NOT EXISTS idx_recruiters_email ON recruiter_subscribers(email);
+      CREATE INDEX IF NOT EXISTS idx_recruiters_token ON recruiter_subscribers(auth_token);
       CREATE INDEX IF NOT EXISTS idx_recruiters_active ON recruiter_subscribers(is_active);
     `);
 
-    // Migration progressive pour colonnes CV si table déjà existante
+    // Migration progressive pour colonnes CV et auth_token si table déjà existante
     try {
       await db.exec(`
         ALTER TABLE talents ADD COLUMN cv_url TEXT;
         ALTER TABLE talents ADD COLUMN cv_data TEXT;
         ALTER TABLE talents ADD COLUMN cv_filename TEXT;
+      `);
+    } catch (_) {}
+    try {
+      await db.exec(`
+        ALTER TABLE recruiter_subscribers ADD COLUMN auth_token TEXT;
       `);
     } catch (_) {}
   } catch (e) {
@@ -1360,21 +1367,40 @@ export async function getTrackingKpis(db) {
 export async function saveRecruiterSubscriber(db, { email, company = "", plan = "talent_drop_pass", stripeCustomerId = "", stripeSubscriptionId = "" }) {
   if (!db || !email) return null;
   const id = `recruiter_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const authToken = crypto.randomUUID();
   try {
     await db.prepare(`
-      INSERT INTO recruiter_subscribers (id, email, company, plan, stripe_customer_id, stripe_subscription_id, is_active, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+      INSERT INTO recruiter_subscribers (id, email, company, plan, auth_token, stripe_customer_id, stripe_subscription_id, is_active, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       ON CONFLICT(email) DO UPDATE SET
         company = excluded.company,
         plan = excluded.plan,
+        auth_token = COALESCE(recruiter_subscribers.auth_token, excluded.auth_token),
         stripe_customer_id = excluded.stripe_customer_id,
         stripe_subscription_id = excluded.stripe_subscription_id,
         is_active = 1,
         updated_at = CURRENT_TIMESTAMP
-    `).bind(id, email.toLowerCase().trim(), company, plan, stripeCustomerId, stripeSubscriptionId).run();
-    return { id, email, company, plan };
+    `).bind(id, email.toLowerCase().trim(), company, plan, authToken, stripeCustomerId, stripeSubscriptionId).run();
+    
+    // Récupérer le token effectif
+    const recruiter = await db.prepare("SELECT * FROM recruiter_subscribers WHERE email = ?").bind(email.toLowerCase().trim()).first();
+    return recruiter || { id, email, company, plan, auth_token: authToken };
   } catch (err) {
     console.error("Erreur saveRecruiterSubscriber D1 :", err);
+    return null;
+  }
+}
+
+/**
+ * Récupère un recruteur abonné actif par son auth_token ou son email
+ */
+export async function getRecruiterByToken(db, token = "") {
+  if (!db || !token) return null;
+  try {
+    const res = await db.prepare("SELECT * FROM recruiter_subscribers WHERE (auth_token = ? OR email = ?) AND is_active = 1 LIMIT 1").bind(token, token.toLowerCase().trim()).first();
+    return res || null;
+  } catch (err) {
+    console.error("Erreur getRecruiterByToken D1 :", err);
     return null;
   }
 }

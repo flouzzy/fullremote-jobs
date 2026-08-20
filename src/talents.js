@@ -357,9 +357,19 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
 
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:0.85rem; flex-wrap:wrap; gap:0.5rem;">
                   ${(t.cv_data || t.cv_url) ? `
-                    <a href="/api/talents/${encodeURIComponent(t.id)}/cv" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem;">
-                      📄 Voir le CV ↗
-                    </a>
+                    ${(meta.talentToken && (t.manage_token === meta.talentToken || t.id === meta.loggedInTalentId)) ? `
+                      <a href="/api/talents/${encodeURIComponent(t.id)}/cv?token=${encodeURIComponent(meta.talentToken)}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; font-weight:700; color:var(--emerald); text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem;">
+                        📄 Mon CV (Propriétaire) ↗
+                      </a>
+                    ` : meta.isRecruiter ? `
+                      <a href="/api/talents/${encodeURIComponent(t.id)}/cv?token=${encodeURIComponent(meta.recruiterToken || '')}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem;">
+                        📄 Voir le CV ↗
+                      </a>
+                    ` : `
+                      <button onclick="openRecruiterPassModal()" style="background:none; border:none; padding:0; font-size:0.78rem; font-weight:700; color:var(--primary); cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;">
+                        🔒 CV vérifié (Recruiter Pass 👑)
+                      </button>
+                    `}
                   ` : `
                     <span style="font-size:0.75rem; color:var(--text-dim);">🔒 Contact protégé</span>
                   `}
