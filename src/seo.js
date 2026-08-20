@@ -424,19 +424,22 @@ export function renderJobDetailPage(job, meta = {}) {
       .mobile-sticky-apply-bar {
         display: flex;
       }
+      .hide-mobile {
+        display: none !important;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="header-inner">
-      <a href="/" class="back-btn" data-i18n="back_home">← Retour à l'annuaire FullRemote.Jobs</a>
-      <div style="display:flex; align-items:center; gap:0.5rem;">
-        <a href="/talents/login" id="headerLoginBtn" style="font-size:0.82rem; font-weight:600; color:var(--text-muted); text-decoration:none; padding:0.35rem 0.55rem; border-radius:6px;" data-i18n="nav_login">Connexion</a>
+      <a href="/" class="back-btn" data-i18n="back_home">← <span class="hide-mobile">Retour à l'</span>Annuaire</a>
+      <div style="display:flex; align-items:center; gap:0.4rem;">
+        <a href="/talents/login" id="headerLoginBtn" class="hide-mobile" style="font-size:0.82rem; font-weight:600; color:var(--text-muted); text-decoration:none; padding:0.35rem 0.55rem; border-radius:6px;" data-i18n="nav_login">Connexion</a>
         <a href="/talents/join" id="headerRegisterBtn" style="font-size:0.82rem; font-weight:700; color:var(--primary); background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.25); text-decoration:none; padding:0.35rem 0.65rem; border-radius:6px;" data-i18n="nav_register"><span>✨</span> <span data-i18n="nav_register_text">S'inscrire</span></a>
         <a href="/talents/manage" id="headerUserBtn" style="display:none; font-size:0.82rem; font-weight:700; color:var(--text); background:var(--meta-bg); border:1px solid var(--border); text-decoration:none; padding:0.35rem 0.65rem; border-radius:6px;" title="Accéder à mon espace Talent"><span>👤</span> <span data-i18n="nav_my_space">Mon Espace</span></a>
-        <a href="/post-a-job" style="font-size:0.82rem; font-weight:600; color:var(--primary); text-decoration:none;" data-i18n="post_link">Publier</a>
-        <button id="langToggleBtn" onclick="toggleLanguage()" style="background:var(--bg-card); border:1px solid var(--border); padding:0.35rem 0.5rem; border-radius:6px; cursor:pointer; font-size:0.75rem; font-weight:700; color:var(--text);" title="Changer de langue / Switch Language">🇬🇧 EN</button>
+        <a href="/post-a-job" class="hide-mobile" style="font-size:0.82rem; font-weight:600; color:var(--primary); text-decoration:none;" data-i18n="post_link">Publier</a>
+        <button id="langToggleBtn" class="hide-mobile" onclick="toggleLanguage()" style="background:var(--bg-card); border:1px solid var(--border); padding:0.35rem 0.5rem; border-radius:6px; cursor:pointer; font-size:0.75rem; font-weight:700; color:var(--text);" title="Changer de langue / Switch Language">🇬🇧 EN</button>
         <button id="themeToggleBtn" style="background:var(--bg-card); border:1px solid var(--border); padding:0.35rem 0.65rem; border-radius:6px; cursor:pointer;" title="Changer le thème">🌙</button>
       </div>
     </div>
@@ -1713,6 +1716,7 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
       .hero-box { padding: 1.5rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; }
       .hero-box h1 { font-size: 1.65rem !important; }
       .job-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+      .hide-mobile { display: none !important; }
     }
   </style>
 </head>
@@ -1722,11 +1726,11 @@ export function renderProgrammaticLandingPage(config, matchingJobs = [], allJobs
       <a href="/" style="font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 0.4rem; color: var(--text);">
         <span>🌍</span> FullRemote<span style="color: var(--primary);">.Jobs</span>
       </a>
-      <div style="display:flex; align-items:center; gap:0.6rem;">
-        <a href="/" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">← Annuaire</a>
-        <a href="/talents/login" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">Connexion</a>
-        <a href="/talents/join" style="font-size:0.85rem; font-weight:700; color:var(--primary); background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.25); text-decoration:none; padding:0.4rem 0.75rem; border-radius:6px;">✨ S'inscrire</a>
-        <a href="/post-a-job" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.4rem 0.85rem; border-radius:6px; text-decoration:none;">+ Publier</a>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <a href="/" class="hide-mobile" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">← Annuaire</a>
+        <a href="/talents/login" class="hide-mobile" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">Connexion</a>
+        <a href="/talents/join" style="font-size:0.82rem; font-weight:700; color:var(--primary); background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.25); text-decoration:none; padding:0.35rem 0.65rem; border-radius:6px;">✨ S'inscrire</a>
+        <a href="/post-a-job" class="hide-mobile" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.4rem 0.85rem; border-radius:6px; text-decoration:none;">+ Publier</a>
       </div>
     </div>
   </header>

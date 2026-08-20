@@ -92,6 +92,16 @@ export function renderHTML(jobs = [], meta = {}) {
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      -webkit-text-size-adjust: 100%;
+    }
 
     body {
       background-color: var(--bg);
@@ -103,6 +113,7 @@ export function renderHTML(jobs = [], meta = {}) {
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
       transition: background-color 0.2s ease, color 0.2s ease;
+      position: relative;
     }
 
     a { color: inherit; text-decoration: none; }
@@ -1097,13 +1108,16 @@ export function renderHTML(jobs = [], meta = {}) {
         z-index: 10;
       }
 
-      /* Mobile Bottom Navigation Bar */
+      /* Mobile Bottom Navigation Bar (4-Tabs Maximum) */
       .mobile-bottom-nav {
         display: flex;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
+        width: 100vw;
+        max-width: 100%;
+        box-sizing: border-box;
         height: calc(56px + env(safe-area-inset-bottom, 0px));
         padding-bottom: env(safe-area-inset-bottom, 0px);
         background: var(--header-bg);
@@ -1111,8 +1125,9 @@ export function renderHTML(jobs = [], meta = {}) {
         -webkit-backdrop-filter: blur(20px);
         border-top: 1px solid var(--border);
         z-index: 95;
-        justify-content: space-around;
+        justify-content: space-between;
         align-items: center;
+        overflow: hidden;
       }
       .mobile-nav-item {
         display: flex;
@@ -1120,6 +1135,9 @@ export function renderHTML(jobs = [], meta = {}) {
         align-items: center;
         justify-content: center;
         flex: 1;
+        width: 25%;
+        max-width: 25%;
+        min-width: 0;
         height: 100%;
         color: var(--text-muted);
         text-decoration: none;
@@ -1128,9 +1146,11 @@ export function renderHTML(jobs = [], meta = {}) {
         cursor: pointer;
         gap: 2px;
         transition: color 0.15s ease;
-        padding: 4px 0;
+        padding: 4px 2px;
         font-family: var(--font-sans);
         -webkit-tap-highlight-color: transparent;
+        overflow: hidden;
+        box-sizing: border-box;
       }
       .mobile-nav-item:active {
         transform: scale(0.92);
@@ -1141,12 +1161,50 @@ export function renderHTML(jobs = [], meta = {}) {
       .mobile-nav-icon {
         font-size: 1.15rem;
         line-height: 1;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .mobile-nav-label {
         font-size: 0.68rem;
         font-weight: 700;
         letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
       }
+      .mobile-badge {
+        position: absolute;
+        top: -5px;
+        right: -9px;
+        background: var(--rose);
+        color: white;
+        font-size: 0.58rem;
+        font-weight: 800;
+        border-radius: 99px;
+        padding: 1px 5px;
+        min-width: 14px;
+        text-align: center;
+        line-height: 1.2;
+      }
+      .menu-sheet-item {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.75rem 0.9rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--text);
+        transition: background 0.15s ease;
+      }
+      .menu-sheet-item:active {
+        background: var(--bg-card-hover);
+      }
+      .hide-mobile { display: none !important; }
     }
 
     @media (max-width: 540px) {
@@ -1156,7 +1214,7 @@ export function renderHTML(jobs = [], meta = {}) {
     }
 
     @media (min-width: 769px) {
-      .mobile-bottom-nav {
+      .mobile-bottom-nav, #moreMenuSheet {
         display: none !important;
       }
     }
@@ -1193,7 +1251,7 @@ export function renderHTML(jobs = [], meta = {}) {
 
       <!-- Right: Action CTA & Utilities -->
       <div class="header-right">
-        <button id="favHeaderBtn" class="btn-fav-header" title="Afficher mes offres sauvegardées">
+        <button id="favHeaderBtn" class="btn-fav-header hide-mobile" title="Afficher mes offres sauvegardées">
           <span>❤️</span> <span id="favCount">0</span>
         </button>
 
@@ -1212,7 +1270,7 @@ export function renderHTML(jobs = [], meta = {}) {
           <span>+</span> <span data-i18n="nav_post">Publier</span>
         </a>
 
-        <button id="langToggleBtn" class="btn-icon-header" onclick="toggleLanguage()" title="Changer de langue / Switch Language" style="font-size:0.75rem; font-weight:700; width:auto; padding:0 0.45rem;">
+        <button id="langToggleBtn" class="btn-icon-header hide-mobile" onclick="toggleLanguage()" title="Changer de langue / Switch Language" style="font-size:0.75rem; font-weight:700; width:auto; padding:0 0.45rem;">
           🇬🇧 EN
         </button>
 
@@ -1220,8 +1278,8 @@ export function renderHTML(jobs = [], meta = {}) {
           🌙
         </button>
 
-        <!-- Dropdown "···" for secondary developer resources -->
-        <div class="dropdown-container">
+        <!-- Dropdown "···" for secondary developer resources (Desktop only) -->
+        <div class="dropdown-container hide-mobile">
           <button id="moreDropdownBtn" class="btn-icon-header" title="Plus d'outils">
             ···
           </button>
@@ -1614,7 +1672,7 @@ export function renderHTML(jobs = [], meta = {}) {
     </div>
   </footer>
 
-  <!-- Mobile Bottom Navigation Bar (Thumb Zone) -->
+  <!-- Mobile Bottom Navigation Bar (4 Essential Tabs) -->
   <nav class="mobile-bottom-nav" id="mobileBottomNav">
     <a href="/" class="mobile-nav-item active" id="mNavExplore">
       <span class="mobile-nav-icon">🔍</span>
@@ -1625,18 +1683,95 @@ export function renderHTML(jobs = [], meta = {}) {
       <span class="mobile-nav-label">Talents</span>
     </a>
     <button class="mobile-nav-item" id="mNavFavs" onclick="toggleMobileFavorites()" type="button">
-      <span class="mobile-nav-icon">❤️</span>
-      <span class="mobile-nav-label"><span data-i18n="nav_favs">Favoris</span> (<span id="mFavCount">0</span>)</span>
+      <span class="mobile-nav-icon">
+        ❤️
+        <span id="mFavBadge" class="mobile-badge" style="display:none;">0</span>
+      </span>
+      <span class="mobile-nav-label" data-i18n="nav_favs">Favoris</span>
     </button>
-    <a href="/simulateur-salaire-remote" class="mobile-nav-item" id="mNavCalc">
-      <span class="mobile-nav-icon">💶</span>
-      <span class="mobile-nav-label" data-i18n="nav_calc">Simulateur</span>
-    </a>
-    <a href="/talents/login" class="mobile-nav-item" id="mNavAccount">
-      <span class="mobile-nav-icon" id="mNavAccountIcon">👤</span>
-      <span class="mobile-nav-label" id="mNavAccountLabel" data-i18n="nav_login">Compte</span>
-    </a>
+    <button class="mobile-nav-item" id="mNavMore" onclick="openMoreMenuSheet()" type="button">
+      <span class="mobile-nav-icon">☰</span>
+      <span class="mobile-nav-label">Plus</span>
+    </button>
   </nav>
+
+  <!-- Mobile "Plus" Bottom Sheet Drawer (#moreMenuSheet) -->
+  <div id="moreMenuSheet" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 0.5rem;">
+        <div>
+          <span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--primary); letter-spacing:0.05em;">Menu & Outils</span>
+          <h3 style="font-size:1.15rem; font-weight:800; color:var(--text); margin-top:0.1rem;">FullRemote<span style="color:var(--primary);">.Jobs</span></h3>
+        </div>
+        <button onclick="closeMoreMenuSheet()" style="background:none; border:none; font-size:1.3rem; color:var(--text-muted); cursor:pointer; padding:0.25rem;">✕</button>
+      </div>
+
+      <!-- Auth Zone in Sheet -->
+      <div style="background:var(--meta-bg); border:1px solid var(--border); border-radius:12px; padding:0.85rem; margin-bottom:0.85rem;">
+        <div id="mSheetAuthGuest">
+          <div style="font-size:0.88rem; font-weight:700; color:var(--text); margin-bottom:0.2rem;">Espace Candidat & Recruteur</div>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.65rem;">Créez votre profil anonyme ou gérez vos candidatures.</p>
+          <div style="display:flex; gap:0.5rem;">
+            <a href="/talents/login" style="flex:1; text-align:center; padding:0.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; font-size:0.82rem; font-weight:600; color:var(--text);">Connexion</a>
+            <a href="/talents/join" style="flex:1; text-align:center; padding:0.5rem; background:var(--primary); border-radius:8px; font-size:0.82rem; font-weight:700; color:white;">✨ S'inscrire</a>
+          </div>
+        </div>
+        <div id="mSheetAuthUser" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-size:0.88rem; font-weight:800; color:var(--text);">👤 Mon Espace Talent</div>
+              <div style="font-size:0.75rem; color:var(--emerald); font-weight:600;">Session active</div>
+            </div>
+            <a href="/talents/manage" id="mSheetManageLink" style="padding:0.45rem 0.75rem; background:var(--primary); color:white; border-radius:8px; font-size:0.82rem; font-weight:700;">Gérer profil →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- List of Actions -->
+      <div style="display:flex; flex-direction:column; gap:0.45rem; margin-bottom:0.85rem;">
+        <a href="/simulateur-salaire-remote" class="menu-sheet-item">
+          <span style="font-size:1.15rem;">💶</span>
+          <div>
+            <div style="font-size:0.88rem; font-weight:700; color:var(--text);">Simulateur de Salaire Net</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Calculez votre net US/UK/Suisse vers France</div>
+          </div>
+        </a>
+        <a href="/post-a-job" class="menu-sheet-item">
+          <span style="font-size:1.15rem;">📢</span>
+          <div>
+            <div style="font-size:0.88rem; font-weight:700; color:var(--text);">Publier une Offre (49 €)</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Diffusion 30 jours + accès vivier</div>
+          </div>
+        </a>
+        <button onclick="closeMoreMenuSheet(); openAlertModal();" class="menu-sheet-item" style="background:var(--bg-card); border:1px solid var(--border); width:100%; text-align:left; cursor:pointer;">
+          <span style="font-size:1.15rem;">🔔</span>
+          <div>
+            <div style="font-size:0.88rem; font-weight:700; color:var(--text);">Créer une Alerte Email</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Recevez les nouvelles offres adaptées</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Quick Toggles: Language & Theme -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; border-top:1px solid var(--border); padding-top:0.85rem;">
+        <button onclick="toggleLanguage(); updateLanguageDisplay();" style="display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.55rem; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-size:0.82rem; font-weight:700; cursor:pointer;">
+          <span id="mSheetLangFlag">🇬🇧</span> <span id="mSheetLangText">EN / FR</span>
+        </button>
+        <button onclick="toggleTheme()" style="display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.55rem; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-size:0.82rem; font-weight:700; cursor:pointer;">
+          <span>🌙</span> <span>Thème</span>
+        </button>
+      </div>
+
+      <!-- Footer developer links -->
+      <div style="margin-top:0.85rem; text-align:center; font-size:0.72rem; color:var(--text-dim); display:flex; justify-content:center; gap:0.75rem;">
+        <a href="/rss" target="_blank" style="text-decoration:underline;">Flux RSS</a>
+        <span>•</span>
+        <a href="/api/jobs" target="_blank" style="text-decoration:underline;">API JSON</a>
+        <span>•</span>
+        <a href="/llms.txt" style="text-decoration:underline;">llms.txt</a>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">
@@ -1666,6 +1801,11 @@ export function renderHTML(jobs = [], meta = {}) {
       if (fc) fc.textContent = favorites.size;
       const mfc = document.getElementById('mFavCount');
       if (mfc) mfc.textContent = favorites.size;
+      const mfb = document.getElementById('mFavBadge');
+      if (mfb) {
+        mfb.textContent = favorites.size;
+        mfb.style.display = favorites.size > 0 ? 'inline-block' : 'none';
+      }
     }
     updateFavCounters();
 
@@ -3086,6 +3226,23 @@ export function renderHTML(jobs = [], meta = {}) {
       return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    window.openMoreMenuSheet = function() {
+      const sheet = document.getElementById('moreMenuSheet');
+      if (sheet) sheet.classList.add('open');
+    };
+
+    window.closeMoreMenuSheet = function() {
+      const sheet = document.getElementById('moreMenuSheet');
+      if (sheet) sheet.classList.remove('open');
+    };
+
+    const moreMenuSheetEl = document.getElementById('moreMenuSheet');
+    if (moreMenuSheetEl) {
+      moreMenuSheetEl.onclick = (e) => {
+        if (e.target === moreMenuSheetEl) closeMoreMenuSheet();
+      };
+    }
+
     try {
       const tTok = localStorage.getItem('fullremote_talent_token');
       if (tTok) {
@@ -3100,6 +3257,14 @@ export function renderHTML(jobs = [], meta = {}) {
           mLink.innerHTML = '⚙️ Mon Espace Talent';
           mLink.style.fontWeight = '700';
           mLink.style.color = 'var(--primary)';
+        }
+        const sGuest = document.getElementById('mSheetAuthGuest');
+        const sUser = document.getElementById('mSheetAuthUser');
+        const sLink = document.getElementById('mSheetManageLink');
+        if (sGuest && sUser && sLink) {
+          sGuest.style.display = 'none';
+          sUser.style.display = 'block';
+          sLink.href = '/talents/manage?token=' + encodeURIComponent(tTok);
         }
       }
     } catch (_) {}

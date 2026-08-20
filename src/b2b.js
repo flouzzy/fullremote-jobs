@@ -308,6 +308,10 @@ export function renderPostJobPage(meta = {}) {
       text-align: center;
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; max-width: 100%; overflow-x: hidden; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
+
     @media (max-width: 640px) {
       .container { padding: 1.25rem 1rem; }
       .hero-post { padding: 1.5rem 0 1rem; }
@@ -318,6 +322,7 @@ export function renderPostJobPage(meta = {}) {
       .pricing-badge { text-align: left; }
       .form-input, .form-select, .form-textarea { font-size: 16px !important; }
       .btn-submit { min-height: 48px; }
+      .hide-mobile { display: none !important; }
     }
   </style>
 </head>
@@ -328,9 +333,9 @@ export function renderPostJobPage(meta = {}) {
         <span>🌍</span>
         <span>FullRemote<span style="color:var(--primary);">.Jobs</span></span>
       </a>
-      <div style="display:flex; align-items:center; gap:0.6rem;">
-        <a href="/" class="nav-btn">← Annuaire des offres</a>
-        <a href="/talents/login" class="nav-btn">Connexion</a>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <a href="/" class="nav-btn hide-mobile">← Annuaire</a>
+        <a href="/talents/login" class="nav-btn hide-mobile">Connexion</a>
         <a href="/talents/join" class="nav-btn" style="font-weight:700; color:var(--primary);">✨ S'inscrire</a>
         <button id="themeToggleBtn" class="nav-btn" title="Changer de thème">🌙</button>
       </div>

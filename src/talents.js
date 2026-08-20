@@ -187,6 +187,9 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
     }
     .form-group { margin-bottom: 1rem; }
     .form-label { display: block; font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; max-width: 100%; overflow-x: hidden; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
     .form-input, .form-textarea {
       width: 100%;
       background: var(--meta-bg);
@@ -206,6 +209,7 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
       .form-input, .form-textarea { font-size: 16px !important; }
       .modal-backdrop { align-items: flex-end; padding: 0; }
       .modal-dialog { max-width: 100% !important; border-radius: 20px 20px 0 0 !important; border-bottom: none !important; padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
+      .hide-mobile { display: none !important; }
     }
   </style>
 </head>
@@ -215,16 +219,16 @@ export function renderTalentsDirectoryPage(talents = [], meta = {}) {
       <a href="/" style="font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 0.4rem; color: var(--text);">
         <span>🌍</span> FullRemote<span style="color: var(--primary);">.Jobs</span>
       </a>
-      <div style="display:flex; align-items:center; gap:0.6rem;">
-        <a href="/" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">← Annuaire des offres</a>
-        <a href="/talents/login" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none; padding:0.4rem 0.6rem; border-radius:6px;">Connexion</a>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <a href="/" class="hide-mobile" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none;">← Annuaire des offres</a>
+        <a href="/talents/login" class="hide-mobile" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); text-decoration:none; padding:0.4rem 0.6rem; border-radius:6px;">Connexion</a>
         ${meta.talentToken ? `
-          <a href="/talents/manage?token=${encodeURIComponent(meta.talentToken)}" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:rgba(37,99,235,0.1); color:var(--primary); border:1px solid var(--primary); padding:0.45rem 0.9rem; border-radius:8px; text-decoration:none;">
-            ⚙️ Mon Espace Talent
+          <a href="/talents/manage?token=${encodeURIComponent(meta.talentToken)}" id="talentHeaderAuthBtn" style="font-size:0.82rem; font-weight:700; background:rgba(37,99,235,0.1); color:var(--primary); border:1px solid var(--primary); padding:0.4rem 0.75rem; border-radius:8px; text-decoration:none;">
+            ⚙️ Mon Espace
           </a>
         ` : `
-          <a href="/talents/join" id="talentHeaderAuthBtn" style="font-size:0.85rem; font-weight:700; background:var(--primary); color:white; padding:0.45rem 0.9rem; border-radius:8px; text-decoration:none;">
-            ✨ S'inscrire au Vivier (Gratuit)
+          <a href="/talents/join" id="talentHeaderAuthBtn" style="font-size:0.82rem; font-weight:700; background:var(--primary); color:white; padding:0.4rem 0.75rem; border-radius:8px; text-decoration:none;">
+            ✨ S'inscrire
           </a>
         `}
       </div>
